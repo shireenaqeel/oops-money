@@ -3,6 +3,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { Category, Expense, Recurring } from '../types';
 import { KEYS, clearAll, loadJSON, loadString, saveJSON, saveString } from '../storage';
+import { PASTEL_COLORS } from '../constants/categories';
 import { genId } from '../utils';
 
 // Everything the app shares. Actions persist to storage AND update state so the UI refreshes.
@@ -21,6 +22,8 @@ interface AppState {
   updateExpense: (id: string, changes: Omit<Expense, 'id'>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   setBudgetValue: (v: string) => Promise<void>;
+  addCustomCat: (name: string, emoji: string) => Promise<Category>;
+  deleteCustomCat: (id: string) => Promise<void>;
   resetAll: () => Promise<void>;
   reload: () => Promise<void>;
 }
@@ -125,6 +128,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await saveString(KEYS.budget, v);
   }, []);
 
+  // Create a new custom category (emoji + name), auto-assign a colour, save, and return it.
+  const addCustomCat = useCallback(
+    async (name: string, emoji: string): Promise<Category> => {
+      const color = PASTEL_COLORS[customCats.length % PASTEL_COLORS.length];
+      const cat: Category = { id: genId(), name: `${emoji} ${name}`, color, bg: '#FDF8FF', group: 'Custom' };
+      const next = [...customCats, cat];
+      setCustomCats(next);
+      await saveJSON(KEYS.customCats, next);
+      return cat;
+    },
+    [customCats]
+  );
+
+  // Remove a custom category and persist.
+  const deleteCustomCat = useCallback(
+    async (id: string) => {
+      const next = customCats.filter((c) => c.id !== id);
+      setCustomCats(next);
+      await saveJSON(KEYS.customCats, next);
+    },
+    [customCats]
+  );
+
   // Wipe everything and return to the onboarding screen (testing/reset helper).
   const resetAll = useCallback(async () => {
     await clearAll();
@@ -146,6 +172,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     updateExpense,
     deleteExpense,
     setBudgetValue,
+    addCustomCat,
+    deleteCustomCat,
     resetAll,
     reload,
   };

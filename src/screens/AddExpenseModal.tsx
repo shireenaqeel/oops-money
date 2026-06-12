@@ -14,6 +14,7 @@ import {
   Platform,
 } from 'react-native';
 import { useAppContext } from '../hooks/useAppContext';
+import AddCategoryModal from './AddCategoryModal';
 import { Expense } from '../types';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { CATS, CAT_GROUPS, findCat } from '../constants/categories';
@@ -32,8 +33,9 @@ export default function AddExpenseModal({
 }) {
   const { addExpense, updateExpense, customCats } = useAppContext();
   const allCats = [...CATS, ...customCats];
-  const groups = ['All', ...CAT_GROUPS];
+  const groups = ['All', ...CAT_GROUPS, ...(customCats.length > 0 ? ['Custom'] : [])];
   const isEditing = !!editing;
+  const [showCatModal, setShowCatModal] = useState(false);
 
   const [amount, setAmount] = useState('');
   const [group, setGroup] = useState('All');
@@ -145,6 +147,10 @@ export default function AddExpenseModal({
                 </Pressable>
               );
             })}
+            {/* create your own category */}
+            <Pressable onPress={() => setShowCatModal(true)} style={styles.addCatPill}>
+              <Text style={styles.addCatText}>+ apni category</Text>
+            </Pressable>
           </View>
 
           {/* mood */}
@@ -200,6 +206,16 @@ export default function AddExpenseModal({
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* create-your-own-category sheet; auto-selects the new category */}
+      <AddCategoryModal
+        visible={showCatModal}
+        onClose={() => setShowCatModal(false)}
+        onCreated={(cat) => {
+          setGroup('Custom');
+          setCatId(cat.id);
+        }}
+      />
     </Modal>
   );
 }
@@ -229,6 +245,8 @@ const styles = StyleSheet.create({
   catPill: { paddingVertical: spacing.sm, paddingHorizontal: spacing.md, borderRadius: radius.chips },
   catText: { fontSize: typography.small.fontSize, color: colors.text, fontWeight: '500' },
   catTextSelected: { color: colors.cardBg, fontWeight: '700' },
+  addCatPill: { paddingVertical: spacing.sm, paddingHorizontal: spacing.md, borderRadius: radius.chips, borderWidth: 1.5, borderColor: colors.lavender, borderStyle: 'dashed' },
+  addCatText: { fontSize: typography.small.fontSize, color: colors.textLight, fontWeight: '600' },
 
   moodRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   moodPill: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.xs, paddingHorizontal: spacing.md, borderRadius: radius.chips, backgroundColor: colors.cream },

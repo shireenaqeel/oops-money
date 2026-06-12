@@ -180,7 +180,7 @@ Budget safe zone         : "you're doing great babe 💚"
 - [x] 2. Onboarding screen (income → budget → splurge fund → done)
 - [x] 3. Home screen (budget card, alerts, recent expenses)
 - [x] 4. Add expense modal (amount, category, mood, note, splurge toggle)
-- [ ] 5. Categories (30+ with groups, custom category creation)
+- [x] 5. Categories (30+ with groups, custom category creation)
 - [ ] 6. Insights screen (7-day bar, 6-month trend, category % breakdown)
 - [ ] 7. Mood tracking + mood-spending correlation in insights
 - [ ] 8. Impulse Jail (24h timer, release/bury, graveyard)
@@ -282,7 +282,7 @@ After every feature, add an entry to DIARY.md:
 [x] Onboarding screen
 [x] Home screen
 [x] Add expense modal
-[ ] Categories system
+[x] Categories system
 [ ] Insights screen
 [ ] Mood tracking
 [ ] Impulse Jail

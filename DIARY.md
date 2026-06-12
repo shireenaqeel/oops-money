@@ -3,6 +3,24 @@
 
 ---
 
+## Feature 5: Categories — custom category creation — 13 Jun 2026
+**What:** The 30+ grouped categories already powered the Add modal; this adds **custom categories**. A "+ apni category" pill in the Add sheet opens a little maker: pick an emoji from a grid, type a name → it's created, saved, and auto-selected. A "Custom" group filter appears once you have any.
+**Why:** Everyone spends on something the defaults miss (Art, Plants, etc.). Used a curated emoji grid instead of a free-text emoji field (easier + prettier, no emoji-picker library). New categories get an auto-assigned pastel colour and persist in storage. Added `addCustomCat` (returns the new category so the Add modal can select it) and `deleteCustomCat` (wired for a future Settings option).
+**Files changed:**
+- `src/screens/AddCategoryModal.tsx` — emoji-grid + name maker (new)
+- `src/screens/AddExpenseModal.tsx` — "+ apni category" pill + Custom group
+- `src/hooks/useAppContext.tsx` — `addCustomCat`, `deleteCustomCat`
+**How to test:**
+1. Reload → Home → tap **"+"** → in the category area, scroll to the dashed **"+ apni category"** pill, tap it
+2. A maker pops up → type a name (e.g. "Plants") → pick an emoji 🪴 → tap **add ✦**
+3. It closes and your new category is **already selected** (under the new **Custom** filter)
+4. Log the expense → it shows up with your custom emoji + name on Home
+5. Add another custom category → its colour is different (auto-rotated)
+6. Custom categories stick around after closing/reopening the app
+**Next up:** Feature 6 — Insights screen (7-day bar, 6-month trend, category breakdown).
+
+---
+
 ## Feature 4.1: Edit logged expenses — 13 Jun 2026
 **What:** You can now tap any expense in the RECENT list to edit it — the same sheet opens pre-filled, and the button reads "save changes". (Before, you could only delete.)
 **Why:** Shireen noticed there was no way to fix a mistake after logging. Reused the Add modal with an `editing` prop instead of building a second screen. Date handling now keeps the original date when editing (shows it as a chip if it's not Today/Yesterday). Added `updateExpense` to the state hook. The ✕ still deletes (tap row = edit, tap ✕ = delete).
