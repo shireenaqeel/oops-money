@@ -3,6 +3,28 @@
 
 ---
 
+## Feature 4: Add Expense modal — 13 Jun 2026
+**What:** A floating pink "+" on Home opens a bottom-sheet form to log a spend — amount, category (group filter + pills), mood, note, Today/Yesterday, and a splurge-fund toggle. On save it shows "logged babe 🌸" and the expense instantly appears on Home with the budget updating.
+**Why:** This closes the core loop (log → see it → budget moves). Used React Native's built-in `Modal` (no extra package). Amount is digits-only; category defaults to the first so you can log fast. Mood + splurge are optional. Kept date simple (Today/Yesterday pills) to avoid adding a date-picker library — a full calendar can come later if needed.
+**Files changed:**
+- `src/screens/AddExpenseModal.tsx` — the full logging form (was a placeholder)
+- `src/screens/HomeScreen.tsx` — floating + button + renders the modal
+- `src/constants/moods.ts` — mood options (new)
+- `src/utils/index.ts` — added `getYesterday()`
+**How to test:**
+1. Reload the app → **🏠 Home** tab → tap the pink **"+"** (bottom-right)
+2. A sheet slides up. Type an amount → ₹ shows big
+3. Pick a **category** (try the group filter pills: All / Beauty / Food...)
+4. Optionally tap a **mood** and add a **note**
+5. Toggle **Today/Yesterday**, and try the **Splurge fund** switch
+6. Tap **"log this spend ✦"** → button turns green "logged babe 🌸", sheet closes
+7. Back on Home: the expense appears under RECENT, "spent in June" goes up, and the **budget bar moves** 🎉
+8. Add a few more → watch the bar change colour (green → peach near 75% → pink over 100%) and alerts appear
+9. Tap the **✕** on an expense → confirm → it's removed and budget recalculates
+**Next up:** Feature 5 — Categories system (custom category creation with emoji picker; the 30+ groups already power this modal).
+
+---
+
 ## Feature 3: Home screen — 13 Jun 2026
 **What:** Built the main Home screen — a budget card (spent this month, money left/over, coloured progress bar), danger alerts, and a recent-expenses list with delete.
 **Why:** This is the screen the user sees most, so it shows the budget at a glance. Bar colour follows the design system: green (0–74%), peach (75–99%), pink (100%+). Pulled the budget/alert maths into `utils/calculations.ts` so Insights (Feature 6) can reuse it. Alerts mirror the prototype (near-budget, over-budget, one category dominating, heavy day). Delete asks for confirmation so nothing vanishes by accident.

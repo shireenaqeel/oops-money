@@ -1,7 +1,8 @@
 // HomeScreen.tsx — the main screen: budget card, danger alerts, and recent expenses (Feature 3).
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet, ScrollView, Alert as RNAlert } from 'react-native';
 import { Screen } from '../components/shared';
+import AddExpenseModal from './AddExpenseModal';
 import { useAppContext } from '../hooks/useAppContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { fmtINR, fmtDateLabel, getToday } from '../utils';
@@ -13,6 +14,7 @@ const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'Ju
 
 export default function HomeScreen() {
   const { expenses, budget, customCats, deleteExpense } = useAppContext();
+  const [showAdd, setShowAdd] = useState(false);
 
   const now = new Date();
   const month = now.getMonth();
@@ -78,7 +80,7 @@ export default function HomeScreen() {
           <View style={styles.empty}>
             <Text style={styles.emptyEmoji}>🌷</Text>
             <Text style={styles.emptyText}>{COPY.empty}</Text>
-            <Text style={styles.emptyHint}>kharche add karne ka button Feature 4 mein aayega</Text>
+            <Text style={styles.emptyHint}>neeche pink "+" dabake apna pehla kharcha add karo ✨</Text>
           </View>
         ) : (
           recent.map((e) => {
@@ -108,6 +110,13 @@ export default function HomeScreen() {
           })
         )}
       </ScrollView>
+
+      {/* floating + button to log a new expense */}
+      <Pressable style={styles.fab} onPress={() => setShowAdd(true)}>
+        <Text style={styles.fabPlus}>+</Text>
+      </Pressable>
+
+      <AddExpenseModal visible={showAdd} onClose={() => setShowAdd(false)} />
     </Screen>
   );
 }
@@ -181,5 +190,24 @@ const styles = StyleSheet.create({
   empty: { alignItems: 'center', paddingVertical: spacing.xl },
   emptyEmoji: { fontSize: 40, marginBottom: spacing.sm },
   emptyText: { fontSize: typography.body.fontSize, color: colors.textLight, fontStyle: 'italic' },
-  emptyHint: { fontSize: typography.small.fontSize, color: colors.textMuted, marginTop: spacing.xs },
+  emptyHint: { fontSize: typography.small.fontSize, color: colors.textMuted, marginTop: spacing.xs, textAlign: 'center' },
+
+  // floating action button
+  fab: {
+    position: 'absolute',
+    right: spacing.lg,
+    bottom: spacing.lg,
+    width: 58,
+    height: 58,
+    borderRadius: 999,
+    backgroundColor: colors.rose,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.rose,
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  fabPlus: { color: colors.cardBg, fontSize: 30, fontWeight: '400', marginTop: -2 },
 });

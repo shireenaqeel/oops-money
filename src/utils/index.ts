@@ -14,6 +14,13 @@ export function getToday(): string {
   return toISO(new Date());
 }
 
+// Yesterday's date as yyyy-mm-dd.
+export function getYesterday(): string {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return toISO(d);
+}
+
 // Format a number as Indian-grouped rupees, no decimals. e.g. 150000 -> "₹1,50,000".
 // Done manually (not toLocaleString) because React Native's Hermes engine has flaky locale support.
 export function fmtINR(n: number): string {
