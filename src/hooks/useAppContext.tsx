@@ -18,6 +18,7 @@ interface AppState {
   completeOnboarding: () => Promise<void>;
   saveOnboarding: (data: { income: string; budget: string; splurgeFund: string }) => Promise<void>;
   addExpense: (e: Omit<Expense, 'id'>) => Promise<void>;
+  updateExpense: (id: string, changes: Omit<Expense, 'id'>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   setBudgetValue: (v: string) => Promise<void>;
   resetAll: () => Promise<void>;
@@ -98,6 +99,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [expenses]
   );
 
+  // Edit an existing expense (keeps its id) and persist.
+  const updateExpense = useCallback(
+    async (id: string, changes: Omit<Expense, 'id'>) => {
+      const next = expenses.map((e) => (e.id === id ? { ...changes, id } : e));
+      setExpenses(next);
+      await saveJSON(KEYS.expenses, next);
+    },
+    [expenses]
+  );
+
   // Remove an expense by id and persist.
   const deleteExpense = useCallback(
     async (id: string) => {
@@ -132,6 +143,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     completeOnboarding,
     saveOnboarding,
     addExpense,
+    updateExpense,
     deleteExpense,
     setBudgetValue,
     resetAll,

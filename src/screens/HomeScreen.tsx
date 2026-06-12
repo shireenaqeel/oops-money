@@ -4,6 +4,7 @@ import { View, Text, Pressable, StyleSheet, ScrollView, Alert as RNAlert } from 
 import { Screen } from '../components/shared';
 import AddExpenseModal from './AddExpenseModal';
 import { useAppContext } from '../hooks/useAppContext';
+import { Expense } from '../types';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { fmtINR, fmtDateLabel, getToday } from '../utils';
 import { monthExpenses, sumExpenses, getBudgetState, getAlerts } from '../utils/calculations';
@@ -15,6 +16,19 @@ const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'Ju
 export default function HomeScreen() {
   const { expenses, budget, customCats, deleteExpense } = useAppContext();
   const [showAdd, setShowAdd] = useState(false);
+  const [editing, setEditing] = useState<Expense | null>(null);
+
+  // Open the modal to log a new expense.
+  function openAdd() {
+    setEditing(null);
+    setShowAdd(true);
+  }
+
+  // Open the modal pre-filled to edit an existing expense.
+  function openEdit(e: Expense) {
+    setEditing(e);
+    setShowAdd(true);
+  }
 
   const now = new Date();
   const month = now.getMonth();
@@ -88,7 +102,7 @@ export default function HomeScreen() {
             const emoji = cat.name.split(' ')[0];
             const label = cat.name.slice(cat.name.indexOf(' ') + 1);
             return (
-              <View key={e.id} style={styles.histItem}>
+              <Pressable key={e.id} style={styles.histItem} onPress={() => openEdit(e)}>
                 <View style={[styles.histIcon, { backgroundColor: cat.bg }]}>
                   <Text style={styles.histEmoji}>{emoji}</Text>
                 </View>
@@ -99,24 +113,35 @@ export default function HomeScreen() {
                       {e.note}
                     </Text>
                   ) : null}
-                  <Text style={styles.histDate}>{fmtDateLabel(e.date)}</Text>
+                  <Text style={styles.histDate}>
+                    {fmtDateLabel(e.date)}
+                    {e.mood ? ` · ${e.mood}` : ''}
+                    {e.isSplurge ? ' · splurge 🛍️' : ''}
+                  </Text>
                 </View>
                 <Text style={styles.histAmount}>{fmtINR(e.amount)}</Text>
                 <Pressable onPress={() => askDelete(e.id)} hitSlop={10} style={styles.delBtn}>
                   <Text style={styles.delText}>✕</Text>
                 </Pressable>
-              </View>
+              </Pressable>
             );
           })
         )}
       </ScrollView>
 
       {/* floating + button to log a new expense */}
-      <Pressable style={styles.fab} onPress={() => setShowAdd(true)}>
+      <Pressable style={styles.fab} onPress={openAdd}>
         <Text style={styles.fabPlus}>+</Text>
       </Pressable>
 
-      <AddExpenseModal visible={showAdd} onClose={() => setShowAdd(false)} />
+      <AddExpenseModal
+        visible={showAdd}
+        editing={editing}
+        onClose={() => {
+          setShowAdd(false);
+          setEditing(null);
+        }}
+      />
     </Screen>
   );
 }

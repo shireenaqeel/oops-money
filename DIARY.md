@@ -3,6 +3,22 @@
 
 ---
 
+## Feature 4.1: Edit logged expenses — 13 Jun 2026
+**What:** You can now tap any expense in the RECENT list to edit it — the same sheet opens pre-filled, and the button reads "save changes". (Before, you could only delete.)
+**Why:** Shireen noticed there was no way to fix a mistake after logging. Reused the Add modal with an `editing` prop instead of building a second screen. Date handling now keeps the original date when editing (shows it as a chip if it's not Today/Yesterday). Added `updateExpense` to the state hook. The ✕ still deletes (tap row = edit, tap ✕ = delete).
+**Files changed:**
+- `src/screens/AddExpenseModal.tsx` — add/edit modes, pre-fill, real date state
+- `src/screens/HomeScreen.tsx` — rows are tappable → edit; shows mood/splurge tags
+- `src/hooks/useAppContext.tsx` — `updateExpense`
+**How to test:**
+1. Reload → Home → **tap** any logged expense (not the ✕)
+2. The sheet opens with everything filled in → change the amount/category/note
+3. Tap **"save changes ✦"** → the expense updates and budget recalculates
+4. The ✕ still deletes as before
+**Next up:** Feature 5 — custom categories (emoji picker).
+
+---
+
 ## Feature 4: Add Expense modal — 13 Jun 2026
 **What:** A floating pink "+" on Home opens a bottom-sheet form to log a spend — amount, category (group filter + pills), mood, note, Today/Yesterday, and a splurge-fund toggle. On save it shows "logged babe 🌸" and the expense instantly appears on Home with the budget updating.
 **Why:** This closes the core loop (log → see it → budget moves). Used React Native's built-in `Modal` (no extra package). Amount is digits-only; category defaults to the first so you can log fast. Mood + splurge are optional. Kept date simple (Today/Yesterday pills) to avoid adding a date-picker library — a full calendar can come later if needed.

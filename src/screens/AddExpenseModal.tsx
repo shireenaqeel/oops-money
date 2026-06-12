@@ -1,6 +1,6 @@
-// AddExpenseModal.tsx — bottom-sheet form to log a spend: amount, category, mood, note, date, splurge (Feature 4).
-// Controlled by a `visible` prop; calls addExpense() then closes. Uses React Native's built-in Modal (no extra package).
-import React, { useState } from 'react';
+// AddExpenseModal.tsx — bottom-sheet form to ADD or EDIT a spend: amount, category, mood, note, date, splurge.
+// Controlled by `visible`. Pass `editing` to edit an existing expense (form pre-fills, button says "save changes").
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -14,78 +14,101 @@ import {
   Platform,
 } from 'react-native';
 import { useAppContext } from '../hooks/useAppContext';
+import { Expense } from '../types';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { CATS, CAT_GROUPS, findCat } from '../constants/categories';
 import { MOODS } from '../constants/moods';
 import { COPY } from '../constants/copy';
-import { fmtINR, getToday, getYesterday } from '../utils';
+import { fmtDateLabel, getToday, getYesterday } from '../utils';
 
-export default function AddExpenseModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const { addExpense, customCats } = useAppContext();
+export default function AddExpenseModal({
+  visible,
+  onClose,
+  editing,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  editing?: Expense | null;
+}) {
+  const { addExpense, updateExpense, customCats } = useAppContext();
   const allCats = [...CATS, ...customCats];
   const groups = ['All', ...CAT_GROUPS];
+  const isEditing = !!editing;
 
   const [amount, setAmount] = useState('');
   const [group, setGroup] = useState('All');
   const [catId, setCatId] = useState(CATS[0].id);
   const [mood, setMood] = useState('');
   const [note, setNote] = useState('');
-  const [yesterday, setYesterday] = useState(false);
+  const [date, setDate] = useState(getToday());
   const [isSplurge, setIsSplurge] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  // When the sheet opens, pre-fill from the expense being edited, or reset to defaults for a new one.
+  useEffect(() => {
+    if (!visible) return;
+    setSaved(false);
+    setGroup('All');
+    if (editing) {
+      setAmount(String(editing.amount));
+      setCatId(editing.catId);
+      setMood(editing.mood ?? '');
+      setNote(editing.note ?? '');
+      setDate(editing.date);
+      setIsSplurge(!!editing.isSplurge);
+    } else {
+      setAmount('');
+      setCatId(CATS[0].id);
+      setMood('');
+      setNote('');
+      setDate(getToday());
+      setIsSplurge(false);
+    }
+  }, [visible, editing]);
 
   const num = parseInt(amount, 10) || 0;
   const canLog = num > 0;
   const visibleCats = group === 'All' ? allCats : allCats.filter((c) => c.group === group);
-
-  // Reset every field back to defaults.
-  function reset() {
-    setAmount('');
-    setNote('');
-    setMood('');
-    setIsSplurge(false);
-    setYesterday(false);
-    setGroup('All');
-    setCatId(CATS[0].id);
-    setSaved(false);
-  }
-
-  // Clear the form and close the sheet.
-  function close() {
-    reset();
-    onClose();
-  }
+  const isToday = date === getToday();
+  const isYesterday = date === getYesterday();
+  const isOtherDate = !isToday && !isYesterday;
 
   // Keep only digits as the amount is typed (rupees, no decimals).
   function onAmount(text: string) {
     setAmount(text.replace(/[^0-9]/g, ''));
   }
 
-  // Save the expense, show a quick success state, then close.
+  // Close the sheet (parent clears editing state).
+  function close() {
+    onClose();
+  }
+
+  // Save: update if editing, otherwise add. Show a quick success state then close.
   async function onLog() {
     if (!canLog) return;
     const cat = findCat(catId, customCats);
-    await addExpense({
+    const payload = {
       amount: num,
       catId,
       note: note.trim(),
-      date: yesterday ? getYesterday() : getToday(),
+      date,
       color: cat.color,
       mood: mood || undefined,
       isSplurge,
-    });
+    };
+    if (editing) await updateExpense(editing.id, payload);
+    else await addExpense(payload);
     setSaved(true);
     setTimeout(close, 900);
   }
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={close}>
-      {/* tap the dark area to dismiss */}
       <Pressable style={styles.overlay} onPress={close} />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheetWrap}>
         <ScrollView style={styles.sheet} contentContainerStyle={styles.sheetContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.grabber} />
-          <Text style={styles.title}>naya kharcha ✦</Text>
+          <Text style={styles.title}>{isEditing ? 'kharcha edit karo ✦' : 'naya kharcha ✦'}</Text>
 
           {/* amount */}
           <Text style={styles.label}>{COPY.amountPlaceholder}</Text>
@@ -98,7 +121,7 @@ export default function AddExpenseModal({ visible, onClose }: { visible: boolean
               placeholder="0"
               placeholderTextColor={colors.textMuted}
               keyboardType="number-pad"
-              autoFocus
+              autoFocus={!isEditing}
             />
           </View>
 
@@ -117,11 +140,7 @@ export default function AddExpenseModal({ visible, onClose }: { visible: boolean
             {visibleCats.map((c) => {
               const selected = c.id === catId;
               return (
-                <Pressable
-                  key={c.id}
-                  onPress={() => setCatId(c.id)}
-                  style={[styles.catPill, { backgroundColor: selected ? c.color : c.bg }]}
-                >
+                <Pressable key={c.id} onPress={() => setCatId(c.id)} style={[styles.catPill, { backgroundColor: selected ? c.color : c.bg }]}>
                   <Text style={[styles.catText, selected && styles.catTextSelected]}>{c.name}</Text>
                 </Pressable>
               );
@@ -153,12 +172,17 @@ export default function AddExpenseModal({ visible, onClose }: { visible: boolean
 
           {/* date toggle */}
           <View style={styles.dateRow}>
-            <Pressable onPress={() => setYesterday(false)} style={[styles.datePill, !yesterday && styles.datePillActive]}>
-              <Text style={[styles.dateText, !yesterday && styles.dateTextActive]}>Today</Text>
+            <Pressable onPress={() => setDate(getToday())} style={[styles.datePill, isToday && styles.datePillActive]}>
+              <Text style={[styles.dateText, isToday && styles.dateTextActive]}>Today</Text>
             </Pressable>
-            <Pressable onPress={() => setYesterday(true)} style={[styles.datePill, yesterday && styles.datePillActive]}>
-              <Text style={[styles.dateText, yesterday && styles.dateTextActive]}>Yesterday</Text>
+            <Pressable onPress={() => setDate(getYesterday())} style={[styles.datePill, isYesterday && styles.datePillActive]}>
+              <Text style={[styles.dateText, isYesterday && styles.dateTextActive]}>Yesterday</Text>
             </Pressable>
+            {isOtherDate ? (
+              <View style={[styles.datePill, styles.datePillActive]}>
+                <Text style={styles.dateTextActive}>{fmtDateLabel(date)}</Text>
+              </View>
+            ) : null}
           </View>
 
           {/* splurge toggle */}
@@ -167,17 +191,12 @@ export default function AddExpenseModal({ visible, onClose }: { visible: boolean
               <Text style={styles.splurgeTitle}>Splurge fund se? 🛍️</Text>
               <Text style={styles.splurgeSub}>guilt-free zone — no shame babe</Text>
             </View>
-            <Switch
-              value={isSplurge}
-              onValueChange={setIsSplurge}
-              trackColor={{ false: colors.border, true: colors.rose }}
-              thumbColor={colors.cardBg}
-            />
+            <Switch value={isSplurge} onValueChange={setIsSplurge} trackColor={{ false: colors.border, true: colors.rose }} thumbColor={colors.cardBg} />
           </View>
 
-          {/* log button */}
+          {/* log / save button */}
           <Pressable style={[styles.logBtn, saved && styles.logBtnSaved, !canLog && styles.logBtnDisabled]} onPress={onLog} disabled={!canLog || saved}>
-            <Text style={styles.logText}>{saved ? COPY.logged : 'log this spend ✦'}</Text>
+            <Text style={styles.logText}>{saved ? COPY.logged : isEditing ? 'save changes ✦' : 'log this spend ✦'}</Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -224,7 +243,7 @@ const styles = StyleSheet.create({
   datePill: { flex: 1, alignItems: 'center', paddingVertical: spacing.sm, borderRadius: radius.chips, backgroundColor: colors.cream },
   datePillActive: { backgroundColor: colors.skyBlue },
   dateText: { fontSize: typography.small.fontSize, color: colors.textLight, fontWeight: '600' },
-  dateTextActive: { color: colors.cardBg },
+  dateTextActive: { fontSize: typography.small.fontSize, color: colors.cardBg, fontWeight: '600' },
 
   splurgeRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.lg, backgroundColor: colors.blush, borderRadius: radius.inputs, padding: spacing.md },
   splurgeTitle: { fontSize: typography.body.fontSize, fontWeight: '700', color: colors.text },
