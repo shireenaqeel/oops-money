@@ -183,7 +183,7 @@ Budget safe zone         : "you're doing great babe 💚"
 - [x] 5. Categories (30+ with groups, custom category creation)
 - [x] 6. Insights screen (7-day bar, 6-month trend, category % breakdown)
 - [x] 7. Mood tracking + mood-spending correlation in insights
-- [ ] 8. Impulse Jail (24h timer, release/bury, graveyard)
+- [x] 8. Impulse Jail (24h timer, release/bury, graveyard)
 - [ ] 9. Regret audit (7-day post-purchase prompt, regret patterns)
 - [ ] 10. Recurring bills (add, due-date countdown, one-tap log)
 - [ ] 11. Future-me letters (write, shows during impulse jail)
@@ -285,7 +285,7 @@ After every feature, add an entry to DIARY.md:
 [x] Categories system
 [x] Insights screen
 [x] Mood tracking
-[ ] Impulse Jail
+[x] Impulse Jail
 [ ] Regret audit
 [ ] Recurring bills
 [ ] Future-me letters

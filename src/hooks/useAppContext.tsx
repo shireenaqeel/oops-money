@@ -1,7 +1,7 @@
 // useAppContext.tsx — MAIN STATE MANAGEMENT. The single source of truth for app data.
 // Loads everything from storage once on launch, then every screen reads/writes through this hook.
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { Category, Expense, Recurring } from '../types';
+import { Category, Expense, ImpulseItem, Recurring } from '../types';
 import { KEYS, clearAll, loadJSON, loadString, saveJSON, saveString } from '../storage';
 import { PASTEL_COLORS } from '../constants/categories';
 import { genId } from '../utils';
@@ -12,6 +12,7 @@ interface AppState {
   onboarded: boolean; // false on first ever launch
   expenses: Expense[];
   recurring: Recurring[];
+  impulse: ImpulseItem[];
   customCats: Category[];
   budget: string;
   income: string;
@@ -21,6 +22,10 @@ interface AppState {
   addExpense: (e: Omit<Expense, 'id'>) => Promise<void>;
   updateExpense: (id: string, changes: Omit<Expense, 'id'>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
+  addImpulse: (name: string, amount: number, note: string) => Promise<void>;
+  buryImpulse: (id: string) => Promise<void>;
+  releaseImpulse: (id: string) => Promise<void>;
+  deleteImpulse: (id: string) => Promise<void>;
   setBudgetValue: (v: string) => Promise<void>;
   addCustomCat: (name: string, emoji: string) => Promise<Category>;
   deleteCustomCat: (id: string) => Promise<void>;
@@ -36,6 +41,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [onboarded, setOnboarded] = useState(false);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [recurring, setRecurring] = useState<Recurring[]>([]);
+  const [impulse, setImpulse] = useState<ImpulseItem[]>([]);
   const [customCats, setCustomCats] = useState<Category[]>([]);
   const [budget, setBudget] = useState('');
   const [income, setIncome] = useState('');
@@ -43,9 +49,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Pull all persisted data from storage into state.
   const reload = useCallback(async () => {
-    const [exp, rec, cc, bud, inc, spl, onb] = await Promise.all([
+    const [exp, rec, imp, cc, bud, inc, spl, onb] = await Promise.all([
       loadJSON<Expense[]>(KEYS.expenses, []),
       loadJSON<Recurring[]>(KEYS.recurring, []),
+      loadJSON<ImpulseItem[]>(KEYS.impulse, []),
       loadJSON<Category[]>(KEYS.customCats, []),
       loadString(KEYS.budget),
       loadString(KEYS.income),
@@ -54,6 +61,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     ]);
     setExpenses(exp);
     setRecurring(rec);
+    setImpulse(imp);
     setCustomCats(cc);
     setBudget(bud);
     setIncome(inc);
@@ -122,6 +130,43 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [expenses]
   );
 
+  // Put a new tempting item into impulse jail (status "jailed", 24h clock starts now).
+  const addImpulse = useCallback(
+    async (name: string, amount: number, note: string) => {
+      const item: ImpulseItem = { id: genId(), name, amount, note: note || undefined, createdAt: Date.now(), status: 'jailed' };
+      const next = [item, ...impulse];
+      setImpulse(next);
+      await saveJSON(KEYS.impulse, next);
+    },
+    [impulse]
+  );
+
+  // Change an impulse item's status (bury = resisted, release = gave in) and persist.
+  const setImpulseStatus = useCallback(
+    async (id: string, status: 'released' | 'buried') => {
+      const next = impulse.map((i) => (i.id === id ? { ...i, status, decidedAt: Date.now() } : i));
+      setImpulse(next);
+      await saveJSON(KEYS.impulse, next);
+    },
+    [impulse]
+  );
+
+  // Resist the urge — money saved. Goes to the graveyard.
+  const buryImpulse = useCallback((id: string) => setImpulseStatus(id, 'buried'), [setImpulseStatus]);
+
+  // Give in — you bought it.
+  const releaseImpulse = useCallback((id: string) => setImpulseStatus(id, 'released'), [setImpulseStatus]);
+
+  // Remove an impulse item entirely.
+  const deleteImpulse = useCallback(
+    async (id: string) => {
+      const next = impulse.filter((i) => i.id !== id);
+      setImpulse(next);
+      await saveJSON(KEYS.impulse, next);
+    },
+    [impulse]
+  );
+
   // Save the monthly budget (stored as a plain string, like the prototype).
   const setBudgetValue = useCallback(async (v: string) => {
     setBudget(v);
@@ -162,6 +207,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     onboarded,
     expenses,
     recurring,
+    impulse,
     customCats,
     budget,
     income,
@@ -171,6 +217,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addExpense,
     updateExpense,
     deleteExpense,
+    addImpulse,
+    buryImpulse,
+    releaseImpulse,
+    deleteImpulse,
     setBudgetValue,
     addCustomCat,
     deleteCustomCat,

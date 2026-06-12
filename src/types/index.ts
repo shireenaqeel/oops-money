@@ -23,6 +23,17 @@ export interface Expense {
   isSplurge?: boolean; // counted against the splurge fund (feature 4)
 }
 
+// An item put in "impulse jail" — something you're tempted to buy but are waiting on.
+export interface ImpulseItem {
+  id: string;
+  name: string;
+  amount: number;
+  note?: string; // why you want it (optional)
+  createdAt: number; // ms timestamp when it was jailed
+  status: 'jailed' | 'released' | 'buried'; // jailed = waiting, released = you bought it, buried = you resisted
+  decidedAt?: number; // ms timestamp of the release/bury decision
+}
+
 // A recurring monthly bill (rent, subscriptions, etc.).
 export interface Recurring {
   id: string;

@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export const KEYS = {
   expenses: 'om_expenses',
   recurring: 'om_recurring',
+  impulse: 'om_impulse',
   customCats: 'om_custom_cats',
   budget: 'om_budget',
   income: 'om_income',

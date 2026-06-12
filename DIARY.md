@@ -3,6 +3,27 @@
 
 ---
 
+## Feature 8: Impulse Jail — 13 Jun 2026
+**What:** The 🔒 Jail tab lets you "sentence" a tempting purchase (name, amount, why) to a 24-hour cool-off. A live countdown ticks down. You can **bury** (resist → money saved, goes to the graveyard) anytime, but **release** (buy) only unlocks after 24h. Shows total money saved, a receipts graveyard 🪦, and a "you caved" list.
+**Why:** The signature behavioural feature — delaying impulse buys kills most of them. Locking "release" for 24h enforces the cool-off; allowing "bury" anytime rewards early resistance. New `ImpulseItem` type + storage key + 4 state actions. Countdown uses a 1-second tick that only runs while something is jailed (battery-friendly). Long-press removes graveyard/caved items.
+**Files changed:**
+- `src/types/index.ts` — `ImpulseItem`
+- `src/storage/index.ts` — `om_impulse` key
+- `src/hooks/useAppContext.tsx` — `addImpulse`, `buryImpulse`, `releaseImpulse`, `deleteImpulse`
+- `src/screens/AddToJailModal.tsx` — sentence form (new)
+- `src/screens/ImpulseJailScreen.tsx` — jail + graveyard (rewritten)
+**How to test:**
+1. Reload → **🔒 Jail** tab → tap the purple **"+"**
+2. Add something tempting (e.g. "zara dress", ₹3000, "saw it on insta") → "sentence it 🔒"
+3. It appears IN JAIL with a **live countdown** (watch the seconds tick)
+4. **release** is locked ("release locked 🔒") until 24h pass — that's intentional
+5. Tap **bury it 🪦** → a "you saved ₹X" alert → it moves to the **graveyard**, and the green "saved" banner updates
+6. Add + bury a few → watch total saved grow 👑
+7. Long-press a graveyard item to remove it
+**Next up:** Feature 9 — Regret audit (7-day post-purchase "was it worth it?" prompt + regret patterns).
+
+---
+
 ## Feature 7: Mood ↔ spending insights — 13 Jun 2026
 **What:** Insights now has a "MOOD vs MONEY" card — spending grouped by the mood you tagged, biggest first, with % bars and a sassy headline about your top spending mood (e.g. stress-shopping callout).
 **Why:** The mood was already captured at log time but never shown. This surfaces emotional spending patterns gently/funnily (no shame, just sass — the app's whole vibe). Only counts expenses that have a mood; shows a hint to start tagging if none yet. No new package — reused the breakdown-bar style.
