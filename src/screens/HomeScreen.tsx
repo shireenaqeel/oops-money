@@ -4,6 +4,7 @@ import { View, Text, Pressable, StyleSheet, ScrollView, Alert as RNAlert } from 
 import { Screen } from '../components/shared';
 import AddExpenseModal from './AddExpenseModal';
 import RegretAuditModal from './RegretAuditModal';
+import AlertList from '../components/AlertList';
 import { useAppContext } from '../hooks/useAppContext';
 import { Expense } from '../types';
 import { colors, spacing, radius, typography } from '../constants/theme';
@@ -16,7 +17,7 @@ const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'Ju
 const REGRET_EMOJI: Record<string, string> = { worth: '😍', meh: '😐', regret: '😭' };
 
 export default function HomeScreen() {
-  const { expenses, budget, customCats, deleteExpense } = useAppContext();
+  const { expenses, budget, splurgeFund, customCats, deleteExpense } = useAppContext();
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
   const [showRegret, setShowRegret] = useState(false);
@@ -43,7 +44,7 @@ export default function HomeScreen() {
   const thisMonth = monthExpenses(expenses, month, year);
   const spent = sumExpenses(thisMonth);
   const bs = getBudgetState(spent, budget);
-  const alerts = getAlerts(expenses, budget, customCats, month, year, getToday());
+  const alerts = getAlerts(expenses, budget, splurgeFund, customCats, month, year, getToday());
   const recent = thisMonth.slice(0, 8); // newest first (expenses are stored newest-first)
 
   // Confirm, then delete an expense.
@@ -96,15 +97,7 @@ export default function HomeScreen() {
         ) : null}
 
         {/* ── danger alerts ── */}
-        {alerts.map((a, i) => (
-          <View key={i} style={styles.alertCard}>
-            <Text style={styles.alertEmoji}>{a.emoji}</Text>
-            <View style={styles.flex1}>
-              <Text style={styles.alertTitle}>{a.title}</Text>
-              <Text style={styles.alertSub}>{a.sub}</Text>
-            </View>
-          </View>
-        ))}
+        <AlertList alerts={alerts} />
 
         {/* ── recent expenses ── */}
         <Text style={styles.sectionLabel}>RECENT</Text>

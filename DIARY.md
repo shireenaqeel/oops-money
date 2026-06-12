@@ -3,6 +3,23 @@
 
 ---
 
+## Feature 13: Danger alerts — 13 Jun 2026
+**What:** The 4 danger alerts (80%+ budget, over budget, one category dominating, today 2× the daily average) now show on **both** Home and Insights, plus a new **"splurge fund khatam!"** alert when splurge spending exceeds your splurge fund. Pulled the alert card into a reusable `<AlertList>`.
+**Why:** Alerts are the app's "tap on the shoulder" — they should appear wherever you look at money, not just Home. The splurge alert closes the loop on the splurge-fund feature. DRY'd the card markup so the look can't drift between screens.
+**Note:** In-app alerts only for now. Push/scheduled notifications (expo-notifications) are deferred — Expo Go on SDK 54 has limited notification support; they'll slot in cleanly for the EAS build since the alert logic is already centralised in `getAlerts`.
+**Files changed:**
+- `src/utils/calculations.ts` — `getAlerts` takes splurge fund + adds the splurge alert
+- `src/components/AlertList.tsx` — reusable alert cards (new)
+- `src/screens/HomeScreen.tsx` + `src/screens/InsightsScreen.tsx` — use AlertList
+**How to test:**
+1. Log expenses until you cross ~80% of budget → ⚠️ "Danger zone, babe!" appears on Home AND Insights
+2. Go over budget → 💀 "oops, budget gaya"
+3. Put most spend in one category → 💸 dominance alert
+4. Mark expenses as splurge 🛍️ beyond your splurge fund → 🛍️ "splurge fund khatam!"
+**Next up:** Feature 14 — Streaks (budget-within days, no-spend-day celebrations).
+
+---
+
 ## Feature 12: Broke Math translator — 13 Jun 2026
 **What:** As you type an amount (in Add Expense and in Impulse Jail), little "broke math 🧮" chips appear translating it into relatable units: coffees (₹250), days of your salary, months of Netflix (₹649), auto rides (₹50).
 **Why:** "₹3000" feels abstract; "12 coffees / 3 days of your salary" hits different — great for second-guessing impulse buys. Made `brokeMath(amount, income)` (pure) + a reusable `<BrokeMath amount>` component that reads income from context. Days-of-salary only shows if income is set.

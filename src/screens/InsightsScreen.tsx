@@ -3,10 +3,11 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Screen } from '../components/shared';
 import BarChart, { BarDatum } from '../components/BarChart';
+import AlertList from '../components/AlertList';
 import { useAppContext } from '../hooks/useAppContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
-import { fmtINR } from '../utils';
-import { monthExpenses, sumExpenses } from '../utils/calculations';
+import { fmtINR, getToday } from '../utils';
+import { monthExpenses, sumExpenses, getAlerts } from '../utils/calculations';
 import { findCat } from '../constants/categories';
 import { MOODS } from '../constants/moods';
 
@@ -21,7 +22,7 @@ function toISO(d: Date): string {
 }
 
 export default function InsightsScreen() {
-  const { expenses, budget, customCats } = useAppContext();
+  const { expenses, budget, splurgeFund, customCats } = useAppContext();
 
   const now = new Date();
   const month = now.getMonth();
@@ -106,6 +107,9 @@ export default function InsightsScreen() {
     <Screen>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.heading}>Insights ✿</Text>
+
+        {/* danger alerts (same as Home) */}
+        <AlertList alerts={getAlerts(expenses, budget, splurgeFund, customCats, month, year, getToday())} />
 
         {/* summary cards */}
         <View style={styles.grid}>

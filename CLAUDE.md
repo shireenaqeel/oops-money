@@ -188,7 +188,7 @@ Budget safe zone         : "you're doing great babe 💚"
 - [x] 10. Recurring bills (add, due-date countdown, one-tap log)
 - [x] 11. Future-me letters (write, shows during impulse jail)
 - [x] 12. Broke Math translator (₹X = Y days salary / Z coffees)
-- [ ] 13. Danger alerts (80% budget, over budget, category dominance, daily 2x)
+- [x] 13. Danger alerts (80% budget, over budget, category dominance, daily 2x)
 - [ ] 14. Streaks (budget-within days, no-spend day celebrations)
 - [ ] 15. Receipts Graveyard (tombstones for buried impulse items)
 - [ ] 16. Monthly Wrapped card (shareable recap)
@@ -290,7 +290,7 @@ After every feature, add an entry to DIARY.md:
 [x] Recurring bills
 [x] Future-me letters
 [x] Broke Math
-[ ] Danger alerts
+[x] Danger alerts
 [ ] Streaks
 [ ] Receipts Graveyard
 [ ] Monthly Wrapped

@@ -53,6 +53,7 @@ export interface Alert {
 export function getAlerts(
   expenses: Expense[],
   budgetStr: string,
+  splurgeFundStr: string,
   customCats: Category[],
   month: number,
   year: number,
@@ -62,7 +63,17 @@ export function getAlerts(
   const monthExp = monthExpenses(expenses, month, year);
   const total = sumExpenses(monthExp);
   const budget = Number(budgetStr) || 0;
-  if (budget <= 0 || total === 0) return alerts; // nothing to warn about yet
+
+  // Splurge fund overspent (works even without a monthly budget set).
+  const splurgeFund = Number(splurgeFundStr) || 0;
+  if (splurgeFund > 0) {
+    const splurgeSpent = sumExpenses(monthExp.filter((e) => e.isSplurge));
+    if (splurgeSpent > splurgeFund) {
+      alerts.push({ emoji: '🛍️', title: 'splurge fund khatam!', sub: `${fmtINR(splurgeSpent)} splurge pe — fund se ${fmtINR(splurgeSpent - splurgeFund)} zyada` });
+    }
+  }
+
+  if (budget <= 0 || total === 0) return alerts; // no budget alerts to add yet
 
   const pct = (total / budget) * 100;
   const remaining = budget - total;
