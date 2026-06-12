@@ -28,6 +28,9 @@ interface AppState {
   releaseImpulse: (id: string) => Promise<void>;
   rejailImpulse: (id: string) => Promise<void>;
   deleteImpulse: (id: string) => Promise<void>;
+  addRecurring: (name: string, amount: number, catId: string, day: number) => Promise<void>;
+  deleteRecurring: (id: string) => Promise<void>;
+  logRecurring: (id: string) => Promise<void>;
   setBudgetValue: (v: string) => Promise<void>;
   addCustomCat: (name: string, emoji: string) => Promise<Category>;
   deleteCustomCat: (id: string) => Promise<void>;
@@ -204,6 +207,41 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [impulse]
   );
 
+  // Add a recurring monthly bill (rent, subscriptions, etc.).
+  const addRecurring = useCallback(
+    async (name: string, amount: number, catId: string, day: number) => {
+      const cat = findCat(catId, customCats);
+      const item: Recurring = { id: genId(), name, amount, catId, color: cat.color, day };
+      const next = [...recurring, item];
+      setRecurring(next);
+      await saveJSON(KEYS.recurring, next);
+    },
+    [recurring, customCats]
+  );
+
+  // Remove a recurring bill.
+  const deleteRecurring = useCallback(
+    async (id: string) => {
+      const next = recurring.filter((r) => r.id !== id);
+      setRecurring(next);
+      await saveJSON(KEYS.recurring, next);
+    },
+    [recurring]
+  );
+
+  // One-tap log a bill as today's expense (without deleting the bill).
+  const logRecurring = useCallback(
+    async (id: string) => {
+      const rec = recurring.find((r) => r.id === id);
+      if (!rec) return;
+      const exp: Expense = { id: genId(), amount: rec.amount, catId: rec.catId, note: `${rec.name} (recurring)`, date: getToday(), color: rec.color };
+      const next = [exp, ...expenses];
+      setExpenses(next);
+      await saveJSON(KEYS.expenses, next);
+    },
+    [recurring, expenses]
+  );
+
   // Save the monthly budget (stored as a plain string, like the prototype).
   const setBudgetValue = useCallback(async (v: string) => {
     setBudget(v);
@@ -260,6 +298,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     releaseImpulse,
     rejailImpulse,
     deleteImpulse,
+    addRecurring,
+    deleteRecurring,
+    logRecurring,
     setBudgetValue,
     addCustomCat,
     deleteCustomCat,

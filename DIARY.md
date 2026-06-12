@@ -3,6 +3,24 @@
 
 ---
 
+## Feature 10: Recurring bills — 13 Jun 2026
+**What:** A new **🔁 Bills** tab (5th tab). Add a recurring bill (name, amount, due day, category), see a due-date countdown ("3 days left" / "due today!"), a monthly fixed-cost total, and a one-tap **"log now"** that drops it into today's expenses.
+**Why:** Rent/subscriptions/gym repeat every month — re-typing them is annoying. Bills are templates; "log now" creates a normal expense (note "<name> (recurring)") so it flows into budget/insights. Sorted by soonest due. Reused the existing `Recurring` type + storage key.
+**Files changed:**
+- `src/hooks/useAppContext.tsx` — `addRecurring`, `deleteRecurring`, `logRecurring`
+- `src/screens/AddRecurringModal.tsx` — add-bill form (new)
+- `src/screens/RecurringScreen.tsx` — bills list + countdown (new)
+- `App.tsx` — added the Bills tab
+**How to test:**
+1. Reload → new **🔁 Bills** tab → tap the blue **"+"**
+2. Add a bill (e.g. "Netflix", ₹649, day 15, Subscriptions) → save
+3. See it with "X days left" + a monthly total banner
+4. Tap **"log now"** → "logged babe 🌸" → check **🏠 Home**: it's in today's expenses, budget updated
+5. ✕ deletes a bill (with confirm); list is sorted by soonest due
+**Next up:** Feature 11 — Future-me letters (write a note that shows during impulse jail).
+
+---
+
 ## Feature 9.1: Edit regret verdict — 13 Jun 2026
 **What:** You can now change a purchase's verdict any time — tapping an expense (edit) shows a "was it worth it?" selector (😍/😐/😭, tap again to clear). The verdict shows as a small emoji on the Home row, and Insights' REGRET CHECK updates automatically.
 **Why:** Shireen wanted to re-rate, not just rate once. Folded it into the existing edit modal (no separate flow). `regret` flows through the normal add/update payload, so all the regret insights recompute for free.

@@ -185,7 +185,7 @@ Budget safe zone         : "you're doing great babe 💚"
 - [x] 7. Mood tracking + mood-spending correlation in insights
 - [x] 8. Impulse Jail (24h timer, release/bury, graveyard)
 - [x] 9. Regret audit (7-day post-purchase prompt, regret patterns)
-- [ ] 10. Recurring bills (add, due-date countdown, one-tap log)
+- [x] 10. Recurring bills (add, due-date countdown, one-tap log)
 - [ ] 11. Future-me letters (write, shows during impulse jail)
 - [ ] 12. Broke Math translator (₹X = Y days salary / Z coffees)
 - [ ] 13. Danger alerts (80% budget, over budget, category dominance, daily 2x)
@@ -287,7 +287,7 @@ After every feature, add an entry to DIARY.md:
 [x] Mood tracking
 [x] Impulse Jail
 [x] Regret audit
-[ ] Recurring bills
+[x] Recurring bills
 [ ] Future-me letters
 [ ] Broke Math
 [ ] Danger alerts

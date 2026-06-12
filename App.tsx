@@ -10,6 +10,7 @@ import { AppProvider, useAppContext } from './src/hooks/useAppContext';
 import { colors } from './src/constants/theme';
 import HomeScreen from './src/screens/HomeScreen';
 import InsightsScreen from './src/screens/InsightsScreen';
+import RecurringScreen from './src/screens/RecurringScreen';
 import ImpulseJailScreen from './src/screens/ImpulseJailScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import OnboardingScreen from './src/screens/OnboardingScreen';
@@ -37,6 +38,7 @@ function MainTabs() {
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarIcon: tabIcon('🏠') }} />
       <Tab.Screen name="Insights" component={InsightsScreen} options={{ tabBarIcon: tabIcon('✿') }} />
+      <Tab.Screen name="Bills" component={RecurringScreen} options={{ tabBarIcon: tabIcon('🔁') }} />
       <Tab.Screen name="Jail" component={ImpulseJailScreen} options={{ tabBarIcon: tabIcon('🔒') }} />
       <Tab.Screen name="Settings" component={SettingsScreen} options={{ tabBarIcon: tabIcon('🎀') }} />
     </Tab.Navigator>
