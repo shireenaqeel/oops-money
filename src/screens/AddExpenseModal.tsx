@@ -16,6 +16,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAppContext } from '../hooks/useAppContext';
 import AddCategoryModal from './AddCategoryModal';
+import BrokeMath from '../components/BrokeMath';
 import { Expense } from '../types';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { CATS, CAT_GROUPS, findCat } from '../constants/categories';
@@ -146,6 +147,7 @@ export default function AddExpenseModal({
               autoFocus={!isEditing}
             />
           </View>
+          <BrokeMath amount={num} />
 
           {/* category groups */}
           <Text style={styles.label}>category</Text>

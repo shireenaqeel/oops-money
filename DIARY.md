@@ -3,6 +3,21 @@
 
 ---
 
+## Feature 12: Broke Math translator — 13 Jun 2026
+**What:** As you type an amount (in Add Expense and in Impulse Jail), little "broke math 🧮" chips appear translating it into relatable units: coffees (₹250), days of your salary, months of Netflix (₹649), auto rides (₹50).
+**Why:** "₹3000" feels abstract; "12 coffees / 3 days of your salary" hits different — great for second-guessing impulse buys. Made `brokeMath(amount, income)` (pure) + a reusable `<BrokeMath amount>` component that reads income from context. Days-of-salary only shows if income is set.
+**Files changed:**
+- `src/utils/index.ts` — `brokeMath` helper
+- `src/components/BrokeMath.tsx` — chips component (new)
+- `src/screens/AddExpenseModal.tsx` + `src/screens/AddToJailModal.tsx` — show it live under the amount
+**How to test:**
+1. Home → "+" → type an amount (e.g. 3000) → "broke math 🧮" chips appear (☕ coffees, 💼 din ki kamai, etc.)
+2. Same in **🔒 Jail** → "+" → type an amount → see the chips (makes you reconsider 👀)
+3. Bigger amount = more/bigger numbers
+**Next up:** Feature 13 — Danger alerts (80%/over/category dominance/daily 2x — Home already has these; will round out + notifications check).
+
+---
+
 ## Feature 11: Future-me letters — 13 Jun 2026
 **What:** In Settings you can write notes to your future self ("dear future me, please mat khareedna..."). One of your letters then shows as a 💌 card at the top of the Impulse Jail screen, reminding you why you're saving right when you're tempted.
 **Why:** A message from past-you (calm, goal-focused) is a strong nudge against impulse buys. New `Letter` type + storage key + `addLetter`/`deleteLetter`. The jail screen picks one letter per visit (random seed on mount) so it varies.

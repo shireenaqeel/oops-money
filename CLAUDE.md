@@ -187,7 +187,7 @@ Budget safe zone         : "you're doing great babe 💚"
 - [x] 9. Regret audit (7-day post-purchase prompt, regret patterns)
 - [x] 10. Recurring bills (add, due-date countdown, one-tap log)
 - [x] 11. Future-me letters (write, shows during impulse jail)
-- [ ] 12. Broke Math translator (₹X = Y days salary / Z coffees)
+- [x] 12. Broke Math translator (₹X = Y days salary / Z coffees)
 - [ ] 13. Danger alerts (80% budget, over budget, category dominance, daily 2x)
 - [ ] 14. Streaks (budget-within days, no-spend day celebrations)
 - [ ] 15. Receipts Graveyard (tombstones for buried impulse items)
@@ -289,7 +289,7 @@ After every feature, add an entry to DIARY.md:
 [x] Regret audit
 [x] Recurring bills
 [x] Future-me letters
-[ ] Broke Math
+[x] Broke Math
 [ ] Danger alerts
 [ ] Streaks
 [ ] Receipts Graveyard

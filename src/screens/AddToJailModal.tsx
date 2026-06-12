@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { useAppContext } from '../hooks/useAppContext';
+import BrokeMath from '../components/BrokeMath';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { COPY } from '../constants/copy';
 
@@ -61,6 +62,7 @@ export default function AddToJailModal({ visible, onClose }: { visible: boolean;
               keyboardType="number-pad"
             />
           </View>
+          <BrokeMath amount={num} />
           <TextInput
             style={styles.input}
             value={note}

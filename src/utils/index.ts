@@ -55,6 +55,23 @@ function trim(x: number): string {
   return (Math.round(x * 10) / 10).toString();
 }
 
+// Translate an amount into relatable "broke math" units — coffees, days of salary, etc. (Feature 12).
+export function brokeMath(amount: number, monthlyIncome: number): string[] {
+  if (amount <= 0) return [];
+  const lines: string[] = [];
+  const coffees = Math.round(amount / 250);
+  if (coffees >= 1) lines.push(`☕ ${coffees} coffee${coffees > 1 ? 's' : ''}`);
+  if (monthlyIncome > 0) {
+    const days = amount / (monthlyIncome / 30);
+    lines.push(`💼 ${trim(days)} din ki kamai`);
+  }
+  const netflix = amount / 649;
+  if (netflix >= 1) lines.push(`📺 ${trim(netflix)} mahine Netflix`);
+  const autos = Math.round(amount / 50);
+  if (autos >= 1) lines.push(`🛺 ${autos} auto ride${autos > 1 ? 's' : ''}`);
+  return lines;
+}
+
 // Friendly date label from an ISO date: "Today", "Yesterday", or "12 Jun".
 export function fmtDateLabel(iso: string): string {
   if (iso === getToday()) return 'Today';
