@@ -3,6 +3,26 @@
 
 ---
 
+## Feature 6: Insights screen — 13 Jun 2026
+**What:** The ✿ Insights tab now shows: 4 summary cards (total spent, daily avg, biggest splurge, categories used), a 7-day bar chart, a 6-month trend chart, a category breakdown with % bars, and personalised "pookie's advice" tips.
+**Why:** Seeing where money goes is the whole point. Built a reusable `BarChart` with **react-native-svg** (per CLAUDE.md's stack) — measures its own width via onLayout, then draws scaled `<Rect>` bars. Category breakdown uses simple View bars (like the budget bar). Reused `monthExpenses`/`sumExpenses` from calculations. Shows a friendly empty state until there's data.
+**Packages added:** `react-native-svg` (for the chart bars — already named in the tech stack)
+**Files changed:**
+- `src/components/BarChart.tsx` — reusable SVG bar chart (new)
+- `src/screens/InsightsScreen.tsx` — the full insights screen
+**How to test:**
+1. Make sure you've logged a few expenses (across different categories/days helps)
+2. Go to the **✿ Insights** tab
+3. Top: 4 cards with your totals
+4. **Last 7 days** bar chart — taller bars = bigger spend days
+5. **6 month trend** — this month vs previous months
+6. **Where it went** — each category with a coloured % bar, biggest first
+7. **Pookie's advice** — tips based on your top category + budget
+8. (With zero expenses you'll see a 📊 empty state instead)
+**Next up:** Feature 7 — mood tracking insights (mood↔spending correlation). Moods are already captured when logging; this will visualise them.
+
+---
+
 ## Feature 5: Categories — custom category creation — 13 Jun 2026
 **What:** The 30+ grouped categories already powered the Add modal; this adds **custom categories**. A "+ apni category" pill in the Add sheet opens a little maker: pick an emoji from a grid, type a name → it's created, saved, and auto-selected. A "Custom" group filter appears once you have any.
 **Why:** Everyone spends on something the defaults miss (Art, Plants, etc.). Used a curated emoji grid instead of a free-text emoji field (easier + prettier, no emoji-picker library). New categories get an auto-assigned pastel colour and persist in storage. Added `addCustomCat` (returns the new category so the Add modal can select it) and `deleteCustomCat` (wired for a future Settings option).
