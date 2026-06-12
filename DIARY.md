@@ -3,6 +3,19 @@
 
 ---
 
+## Feature 15: Receipts Graveyard — 13 Jun 2026
+**What:** Polished the buried-items graveyard in the Jail tab into a proper 2-column tombstone grid — each 🪦 tombstone (gravestone-shaped card) shows the item name struck through, "RIP bestie", the money saved, and the date buried. Count in the header; bring-back + long-press-delete kept.
+**Why:** The graveyard is the emotional payoff of resisting — making it look like an actual graveyard of dead impulse buys is satisfying and shareable. Reused the existing buried data (added the buried date from `decidedAt`).
+**Files changed:**
+- `src/screens/ImpulseJailScreen.tsx` — tombstone grid + `isoOfMs` date helper
+**How to test:**
+1. **🔒 Jail** → add an item → **bury 🪦** it → repeat a few times
+2. Scroll to **RECEIPTS GRAVEYARD** → see a grid of tombstones with struck-through names, "saved ₹X", and "buried <date>"
+3. **bring back 🔁** returns one to jail; **long-press** a tombstone removes it
+**Next up:** Feature 16 — Monthly Wrapped (shareable recap card).
+
+---
+
 ## Feature 14: Streaks — 13 Jun 2026
 **What:** A streak card on Home showing 🔥 consecutive days you stayed within your daily budget and 🍽️ no-spend days this month. On a day with zero spending, a "no spend day! you ate 🍽️" celebration line appears.
 **Why:** Positive reinforcement > guilt. Streaks make good habits feel like a game. `getStreaks` walks back from today counting days where daily spend ≤ (budget ÷ days in month); no-spend days are counted across the month. The within-budget streak only shows if a budget is set.

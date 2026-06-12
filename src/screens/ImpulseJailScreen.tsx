@@ -7,10 +7,18 @@ import AddToJailModal from './AddToJailModal';
 import { useAppContext } from '../hooks/useAppContext';
 import { ImpulseItem } from '../types';
 import { colors, spacing, radius, typography } from '../constants/theme';
-import { fmtINR } from '../utils';
+import { fmtINR, fmtDateLabel } from '../utils';
 import { buriedMsg } from '../constants/copy';
 
 const JAIL_MS = 24 * 60 * 60 * 1000; // 24-hour cool-off
+
+// Local yyyy-mm-dd from a ms timestamp (for the "buried <date>" label).
+function isoOfMs(ms: number): string {
+  const d = new Date(ms);
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${day}`;
+}
 
 export default function ImpulseJailScreen() {
   const { impulse, letters, buryImpulse, releaseImpulse, rejailImpulse, deleteImpulse } = useAppContext();
@@ -121,20 +129,24 @@ export default function ImpulseJailScreen() {
         {/* graveyard */}
         {buried.length > 0 ? (
           <>
-            <Text style={styles.sectionLabel}>RECEIPTS GRAVEYARD 🪦</Text>
-            {buried.map((item) => (
-              <View key={item.id} style={styles.tomb}>
-                <Text style={styles.tombEmoji}>🪦</Text>
-                <Pressable style={styles.flex1} onLongPress={() => deleteImpulse(item.id)}>
-                  <Text style={styles.tombName}>{item.name}</Text>
-                  <Text style={styles.tombSaved}>RIP bestie — saved {fmtINR(item.amount)}</Text>
+            <Text style={styles.sectionLabel}>RECEIPTS GRAVEYARD 🪦 ({buried.length})</Text>
+            <View style={styles.graveyard}>
+              {buried.map((item) => (
+                <Pressable key={item.id} style={styles.tomb} onLongPress={() => deleteImpulse(item.id)}>
+                  <Text style={styles.tombEmoji}>🪦</Text>
+                  <Text style={styles.tombName} numberOfLines={1}>
+                    {item.name}
+                  </Text>
+                  <Text style={styles.tombRip}>RIP bestie</Text>
+                  <Text style={styles.tombSaved}>saved {fmtINR(item.amount)}</Text>
+                  {item.decidedAt ? <Text style={styles.tombDate}>buried {fmtDateLabel(isoOfMs(item.decidedAt))}</Text> : null}
+                  <Pressable style={styles.bringBackBtn} onPress={() => rejailImpulse(item.id)}>
+                    <Text style={styles.bringBackText}>bring back 🔁</Text>
+                  </Pressable>
                 </Pressable>
-                <Pressable style={styles.bringBackBtn} onPress={() => rejailImpulse(item.id)}>
-                  <Text style={styles.bringBackText}>bring back 🔁</Text>
-                </Pressable>
-              </View>
-            ))}
-            <Text style={styles.hint}>(long-press kisi tombstone ko hatane ke liye)</Text>
+              ))}
+            </View>
+            <Text style={styles.hint}>(long-press tombstone = remove)</Text>
           </>
         ) : null}
 
@@ -194,11 +206,14 @@ const styles = StyleSheet.create({
   releaseEarly: { backgroundColor: colors.peach },
   releaseText: { fontSize: typography.small.fontSize, fontWeight: '700', color: colors.cardBg },
 
-  tomb: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.cardBg, borderRadius: radius.inputs, padding: spacing.md, marginBottom: spacing.sm },
-  tombEmoji: { fontSize: 24 },
-  tombName: { fontSize: typography.body.fontSize, fontWeight: '600', color: colors.text },
-  tombSaved: { fontSize: typography.small.fontSize, color: colors.sage, marginTop: 1, fontWeight: '700' },
-  bringBackBtn: { backgroundColor: colors.lilac, paddingVertical: spacing.xs, paddingHorizontal: spacing.md, borderRadius: radius.buttons },
+  graveyard: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  tomb: { width: '48%', flexGrow: 1, alignItems: 'center', backgroundColor: colors.cardBg, borderTopLeftRadius: 40, borderTopRightRadius: 40, borderBottomLeftRadius: radius.small, borderBottomRightRadius: radius.small, paddingVertical: spacing.lg, paddingHorizontal: spacing.md, borderWidth: 1, borderColor: colors.border },
+  tombEmoji: { fontSize: 30 },
+  tombName: { fontSize: typography.small.fontSize, fontWeight: '700', color: colors.text, marginTop: spacing.xs, textDecorationLine: 'line-through', maxWidth: '100%' },
+  tombRip: { fontSize: typography.tiny.fontSize, color: colors.textMuted, fontStyle: 'italic', marginTop: 1 },
+  tombSaved: { fontSize: typography.body.fontSize, color: colors.sage, fontWeight: '800', marginTop: spacing.xs },
+  tombDate: { fontSize: typography.tiny.fontSize, color: colors.textMuted, marginTop: 1 },
+  bringBackBtn: { backgroundColor: colors.lilac, paddingVertical: spacing.xs, paddingHorizontal: spacing.md, borderRadius: radius.buttons, marginTop: spacing.sm },
   bringBackText: { fontSize: typography.tiny.fontSize, color: colors.cardBg, fontWeight: '700' },
 
   cavedRow: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: colors.cardBg, borderRadius: radius.inputs, padding: spacing.md, marginBottom: spacing.sm },
