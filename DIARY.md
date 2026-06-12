@@ -3,6 +3,16 @@
 
 ---
 
+## Feature 6.1: Log any past date — 13 Jun 2026
+**What:** The Add/Edit sheet now has a "📅 koi din" button next to Today/Yesterday that opens a native calendar to pick any past date.
+**Why:** Shireen could only log Today/Yesterday, so backfilling older spends was impossible. Added `@react-native-community/datetimepicker` (bundled in Expo Go, so it works without a dev build). Future dates are blocked (`maximumDate`). The chosen date shows on the chip.
+**Note:** Adding native packages (this + react-native-svg) needs a FULL dev-server restart (`npx expo start -c`), not just a JS reload — otherwise screens using them can render blank.
+**Files changed:**
+- `src/screens/AddExpenseModal.tsx` — date picker button + native picker
+**How to test:** Add expense → tap "📅 koi din" → pick a date from last week → log it → it appears with that date, and Insights charts spread across more days.
+
+---
+
 ## Feature 6: Insights screen — 13 Jun 2026
 **What:** The ✿ Insights tab now shows: 4 summary cards (total spent, daily avg, biggest splurge, categories used), a 7-day bar chart, a 6-month trend chart, a category breakdown with % bars, and personalised "pookie's advice" tips.
 **Why:** Seeing where money goes is the whole point. Built a reusable `BarChart` with **react-native-svg** (per CLAUDE.md's stack) — measures its own width via onLayout, then draws scaled `<Rect>` bars. Category breakdown uses simple View bars (like the budget bar). Reused `monthExpenses`/`sumExpenses` from calculations. Shows a friendly empty state until there's data.

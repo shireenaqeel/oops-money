@@ -13,6 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAppContext } from '../hooks/useAppContext';
 import AddCategoryModal from './AddCategoryModal';
 import { Expense } from '../types';
@@ -21,6 +22,13 @@ import { CATS, CAT_GROUPS, findCat } from '../constants/categories';
 import { MOODS } from '../constants/moods';
 import { COPY } from '../constants/copy';
 import { fmtDateLabel, getToday, getYesterday } from '../utils';
+
+// Local yyyy-mm-dd for a picked Date (matches how expenses store dates).
+function isoOf(d: Date): string {
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${day}`;
+}
 
 export default function AddExpenseModal({
   visible,
@@ -36,6 +44,7 @@ export default function AddExpenseModal({
   const groups = ['All', ...CAT_GROUPS, ...(customCats.length > 0 ? ['Custom'] : [])];
   const isEditing = !!editing;
   const [showCatModal, setShowCatModal] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
 
   const [amount, setAmount] = useState('');
   const [group, setGroup] = useState('All');
@@ -176,7 +185,7 @@ export default function AddExpenseModal({
             placeholderTextColor={colors.textMuted}
           />
 
-          {/* date toggle */}
+          {/* date: quick chips + a picker for any past date */}
           <View style={styles.dateRow}>
             <Pressable onPress={() => setDate(getToday())} style={[styles.datePill, isToday && styles.datePillActive]}>
               <Text style={[styles.dateText, isToday && styles.dateTextActive]}>Today</Text>
@@ -184,12 +193,21 @@ export default function AddExpenseModal({
             <Pressable onPress={() => setDate(getYesterday())} style={[styles.datePill, isYesterday && styles.datePillActive]}>
               <Text style={[styles.dateText, isYesterday && styles.dateTextActive]}>Yesterday</Text>
             </Pressable>
-            {isOtherDate ? (
-              <View style={[styles.datePill, styles.datePillActive]}>
-                <Text style={styles.dateTextActive}>{fmtDateLabel(date)}</Text>
-              </View>
-            ) : null}
+            <Pressable onPress={() => setShowPicker(true)} style={[styles.datePill, isOtherDate && styles.datePillActive]}>
+              <Text style={[styles.dateText, isOtherDate && styles.dateTextActive]}>{isOtherDate ? `📅 ${fmtDateLabel(date)}` : '📅 koi din'}</Text>
+            </Pressable>
           </View>
+          {showPicker ? (
+            <DateTimePicker
+              value={new Date(date + 'T00:00:00')}
+              mode="date"
+              maximumDate={new Date()}
+              onChange={(event, selected) => {
+                setShowPicker(false);
+                if (event.type === 'set' && selected) setDate(isoOf(selected));
+              }}
+            />
+          ) : null}
 
           {/* splurge toggle */}
           <View style={styles.splurgeRow}>
