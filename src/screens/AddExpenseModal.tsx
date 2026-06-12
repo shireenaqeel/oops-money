@@ -23,6 +23,13 @@ import { MOODS } from '../constants/moods';
 import { COPY } from '../constants/copy';
 import { fmtDateLabel, getToday, getYesterday } from '../utils';
 
+// The 7-day "was it worth it?" verdict options (also editable here).
+const VERDICTS = [
+  { id: 'worth' as const, emoji: '😍', label: 'worth it' },
+  { id: 'meh' as const, emoji: '😐', label: 'meh' },
+  { id: 'regret' as const, emoji: '😭', label: 'regret' },
+];
+
 // Local yyyy-mm-dd for a picked Date (matches how expenses store dates).
 function isoOf(d: Date): string {
   const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -53,6 +60,7 @@ export default function AddExpenseModal({
   const [note, setNote] = useState('');
   const [date, setDate] = useState(getToday());
   const [isSplurge, setIsSplurge] = useState(false);
+  const [regret, setRegret] = useState<'' | 'worth' | 'meh' | 'regret'>('');
   const [saved, setSaved] = useState(false);
 
   // When the sheet opens, pre-fill from the expense being edited, or reset to defaults for a new one.
@@ -67,6 +75,7 @@ export default function AddExpenseModal({
       setNote(editing.note ?? '');
       setDate(editing.date);
       setIsSplurge(!!editing.isSplurge);
+      setRegret(editing.regret ?? '');
     } else {
       setAmount('');
       setCatId(CATS[0].id);
@@ -74,6 +83,7 @@ export default function AddExpenseModal({
       setNote('');
       setDate(getToday());
       setIsSplurge(false);
+      setRegret('');
     }
   }, [visible, editing]);
 
@@ -106,6 +116,7 @@ export default function AddExpenseModal({
       color: cat.color,
       mood: mood || undefined,
       isSplurge,
+      regret: regret || undefined,
     };
     if (editing) await updateExpense(editing.id, payload);
     else await addExpense(payload);
@@ -216,6 +227,20 @@ export default function AddExpenseModal({
               <Text style={styles.splurgeSub}>guilt-free zone — no shame babe</Text>
             </View>
             <Switch value={isSplurge} onValueChange={setIsSplurge} trackColor={{ false: colors.border, true: colors.rose }} thumbColor={colors.cardBg} />
+          </View>
+
+          {/* was it worth it? (regret verdict — editable) */}
+          <Text style={styles.label}>was it worth it? (optional)</Text>
+          <View style={styles.moodRow}>
+            {VERDICTS.map((v) => {
+              const selected = v.id === regret;
+              return (
+                <Pressable key={v.id} onPress={() => setRegret(selected ? '' : v.id)} style={[styles.moodPill, selected && styles.moodPillActive]}>
+                  <Text style={styles.moodEmoji}>{v.emoji}</Text>
+                  <Text style={[styles.moodLabel, selected && styles.moodLabelActive]}>{v.label}</Text>
+                </Pressable>
+              );
+            })}
           </View>
 
           {/* log / save button */}

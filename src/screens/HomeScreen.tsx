@@ -13,6 +13,7 @@ import { findCat } from '../constants/categories';
 import { COPY } from '../constants/copy';
 
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const REGRET_EMOJI: Record<string, string> = { worth: '😍', meh: '😐', regret: '😭' };
 
 export default function HomeScreen() {
   const { expenses, budget, customCats, deleteExpense } = useAppContext();
@@ -134,6 +135,7 @@ export default function HomeScreen() {
                     {fmtDateLabel(e.date)}
                     {e.mood ? ` · ${e.mood}` : ''}
                     {e.isSplurge ? ' · splurge 🛍️' : ''}
+                    {e.regret ? ` · ${REGRET_EMOJI[e.regret]}` : ''}
                   </Text>
                 </View>
                 <Text style={styles.histAmount}>{fmtINR(e.amount)}</Text>

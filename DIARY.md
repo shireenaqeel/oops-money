@@ -3,6 +3,16 @@
 
 ---
 
+## Feature 9.1: Edit regret verdict — 13 Jun 2026
+**What:** You can now change a purchase's verdict any time — tapping an expense (edit) shows a "was it worth it?" selector (😍/😐/😭, tap again to clear). The verdict shows as a small emoji on the Home row, and Insights' REGRET CHECK updates automatically.
+**Why:** Shireen wanted to re-rate, not just rate once. Folded it into the existing edit modal (no separate flow). `regret` flows through the normal add/update payload, so all the regret insights recompute for free.
+**Files changed:**
+- `src/screens/AddExpenseModal.tsx` — verdict selector (add/edit)
+- `src/screens/HomeScreen.tsx` — regret emoji on expense rows
+**How to test:** Home → tap any expense → pick/change a "was it worth it?" verdict → save → emoji shows on the row, Insights REGRET CHECK reflects it.
+
+---
+
 ## Feature 9: Regret audit — 13 Jun 2026
 **What:** Purchases that are 7+ days old and unrated trigger a "🤔 was it worth it?" banner on Home. Tapping it opens a one-by-one review where you tap 😍 worth it / 😐 meh / 😭 regret. Insights gets a "REGRET CHECK" card: counts, money spent on regrets, and your most-regretted category.
 **Why:** Reflection a week later (when the dopamine's gone) is where the real lesson lands — gently, no shame. Added a `regret` field to Expense + `rateExpense`. The review snapshots the eligible queue when it opens so ratings don't reshuffle mid-review. `daysSince` helper added.
