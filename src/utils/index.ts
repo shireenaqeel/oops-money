@@ -1,0 +1,64 @@
+// utils/index.ts — pure formatting / calculation / id helpers. No UI, no state, no storage.
+
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// Turn a Date into an ISO yyyy-mm-dd string using LOCAL time (not UTC).
+function toISO(d: Date): string {
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
+// Today's date as yyyy-mm-dd.
+export function getToday(): string {
+  return toISO(new Date());
+}
+
+// Format a number as Indian-grouped rupees, no decimals. e.g. 150000 -> "₹1,50,000".
+// Done manually (not toLocaleString) because React Native's Hermes engine has flaky locale support.
+export function fmtINR(n: number): string {
+  const value = Math.round(Number(n) || 0);
+  const sign = value < 0 ? '-' : '';
+  const digits = String(Math.abs(value));
+  let grouped: string;
+  if (digits.length <= 3) {
+    grouped = digits;
+  } else {
+    const last3 = digits.slice(-3);
+    const rest = digits.slice(0, -3);
+    // group the remaining digits in pairs (Indian system), then attach the last 3
+    grouped = rest.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + ',' + last3;
+  }
+  return '₹' + sign + grouped;
+}
+
+// Short Indian money form for compact spots: ₹2.3K, ₹1.5L, ₹1.2Cr.
+export function fmtINRShort(n: number): string {
+  const value = Math.round(Number(n) || 0);
+  const abs = Math.abs(value);
+  const sign = value < 0 ? '-' : '';
+  if (abs >= 10000000) return '₹' + sign + trim(abs / 10000000) + 'Cr';
+  if (abs >= 100000) return '₹' + sign + trim(abs / 100000) + 'L';
+  if (abs >= 1000) return '₹' + sign + trim(abs / 1000) + 'K';
+  return '₹' + sign + abs;
+}
+
+// Round to 1 decimal, but drop a trailing ".0" (e.g. 2 not 2.0, 1.5 stays 1.5).
+function trim(x: number): string {
+  return (Math.round(x * 10) / 10).toString();
+}
+
+// Friendly date label from an ISO date: "Today", "Yesterday", or "12 Jun".
+export function fmtDateLabel(iso: string): string {
+  if (iso === getToday()) return 'Today';
+  const y = new Date();
+  y.setDate(y.getDate() - 1);
+  if (iso === toISO(y)) return 'Yesterday';
+  const d = new Date(iso + 'T00:00:00');
+  return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`;
+}
+
+// Generate a short unique id for new records.
+export function genId(): string {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}

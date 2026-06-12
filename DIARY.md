@@ -3,6 +3,34 @@
 
 ---
 
+## Feature 1: Navigation + src/ structure — 13 Jun 2026
+**What:** Built the full `src/` folder structure, design system, and bottom-tab navigation. App now opens to a welcome screen, then 4 tabs (Home, Insights, Jail, Settings).
+**Why:** A clean foundation first means every later feature just slots in. Chose React Navigation bottom tabs (per CLAUDE.md). State lives in one `useAppContext` hook so screens stay simple. All colours/sizes/text live in `constants/` so styling stays consistent and the sassy voice is in one place. App.tsx kept logic-free (Rule #10).
+**Packages added (all SDK-54 safe via `expo install`):**
+- `@react-navigation/native` + `@react-navigation/bottom-tabs` — the tab navigation
+- `react-native-screens` + `react-native-safe-area-context` — required navigation helpers
+- `@react-native-async-storage/async-storage` — saves data on the phone (no cloud)
+**Files changed:**
+- `App.tsx` — navigation + providers only
+- `src/constants/theme.ts` — colours, spacing, radius, typography
+- `src/constants/categories.ts` — 29 categories, groups, merchant map
+- `src/constants/copy.ts` — all Hinglish microcopy
+- `src/types/index.ts` — Expense, Recurring, Category interfaces
+- `src/utils/index.ts` — fmtINR (Indian grouping), dates, ids
+- `src/storage/index.ts` — AsyncStorage helpers + keys
+- `src/hooks/useAppContext.tsx` — main state (loads from storage)
+- `src/components/shared.tsx` — Screen wrapper + Placeholder
+- `src/screens/*` — 6 placeholder screens
+**How to test:**
+1. `npx expo start -c` and scan the QR with Expo Go
+2. You should see the **Oops Money** welcome screen with a pink "chalo shuru karein" button
+3. Tap it → 4 tabs appear at the bottom (🏠 Home, ✿ Insights, 🔒 Jail, 🎀 Settings)
+4. Tap each tab → each shows its emoji + a "coming soon" message
+5. Close and reopen the app → it should skip the welcome and go straight to the tabs (onboarding is remembered)
+**Next up:** Feature 2 — the real Onboarding flow (income → budget → splurge fund → done).
+
+---
+
 ## Fix: Expo SDK 56 → 54 (phone compatibility) — 13 Jun 2026
 **What:** Downgraded the whole project from Expo SDK 56 down to SDK 54 so it runs in the Expo Go app on Shireen's phone. CONFIRMED working — white starter screen loads on phone. 🎉
 **Why:** `create-expo-app@latest` gave us SDK 56, but the phone's Expo Go (no update available on the Play Store) only supported SDK 54 — and Expo Go runs one SDK at a time. SDK 55 still showed "requires a newer version of Expo Go", so we stepped down once more to 54. Used `expo install --fix` each step so React (19.1.0), React Native (0.81.5), expo-status-bar and TypeScript all auto-aligned to SDK 54.

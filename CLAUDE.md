@@ -176,7 +176,7 @@ Budget safe zone         : "you're doing great babe 💚"
 
 ## ✅ V1 Features — build in this order
 
-- [ ] 1. Project scaffold + navigation
+- [x] 1. Project scaffold + navigation
 - [ ] 2. Onboarding screen (income → budget → splurge fund → done)
 - [ ] 3. Home screen (budget card, alerts, recent expenses)
 - [ ] 4. Add expense modal (amount, category, mood, note, splurge toggle)
