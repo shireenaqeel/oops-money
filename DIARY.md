@@ -3,6 +3,20 @@
 
 ---
 
+## Feature 7: Mood ↔ spending insights — 13 Jun 2026
+**What:** Insights now has a "MOOD vs MONEY" card — spending grouped by the mood you tagged, biggest first, with % bars and a sassy headline about your top spending mood (e.g. stress-shopping callout).
+**Why:** The mood was already captured at log time but never shown. This surfaces emotional spending patterns gently/funnily (no shame, just sass — the app's whole vibe). Only counts expenses that have a mood; shows a hint to start tagging if none yet. No new package — reused the breakdown-bar style.
+**Files changed:**
+- `src/screens/InsightsScreen.tsx` — mood breakdown card + `buildMoodLine` sassy lines
+**How to test:**
+1. Log a few expenses with **different moods** (tap a mood when adding — try 😩 stressed on a big one)
+2. Go to **✿ Insights** → scroll to **MOOD vs MONEY**
+3. See a headline line + a bar per mood showing how much you spent in each
+4. (No moods tagged yet → you'll see a hint to start tagging)
+**Next up:** Feature 8 — Impulse Jail (24h timer, release/bury, graveyard).
+
+---
+
 ## Feature 6.1: Log any past date — 13 Jun 2026
 **What:** The Add/Edit sheet now has a "📅 koi din" button next to Today/Yesterday that opens a native calendar to pick any past date.
 **Why:** Shireen could only log Today/Yesterday, so backfilling older spends was impossible. Added `@react-native-community/datetimepicker` (bundled in Expo Go, so it works without a dev build). Future dates are blocked (`maximumDate`). The chosen date shows on the chip.

@@ -8,6 +8,7 @@ import { colors, spacing, radius, typography } from '../constants/theme';
 import { fmtINR } from '../utils';
 import { monthExpenses, sumExpenses } from '../utils/calculations';
 import { findCat } from '../constants/categories';
+import { MOODS } from '../constants/moods';
 
 const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -49,6 +50,13 @@ export default function InsightsScreen() {
     d.setMonth(now.getMonth() - 5 + i);
     return { label: MONTHS_SHORT[d.getMonth()], value: sumExpenses(monthExpenses(expenses, d.getMonth(), d.getFullYear())) };
   });
+
+  // Spend per mood this month (only expenses that have a mood tagged), biggest first.
+  const moodExp = thisMonth.filter((e) => e.mood);
+  const moodTotal = sumExpenses(moodExp);
+  const byMood = MOODS.map((m) => ({ mood: m, amount: sumExpenses(moodExp.filter((e) => e.mood === m.id)) }))
+    .filter((x) => x.amount > 0)
+    .sort((a, b) => b.amount - a.amount);
 
   // Friendly tips based on the numbers.
   const tips = buildTips(total, byCat, budget, now);
@@ -125,6 +133,36 @@ export default function InsightsScreen() {
           )}
         </View>
 
+        {/* mood vs money */}
+        <View style={styles.card}>
+          <Text style={styles.sectionLabel}>MOOD vs MONEY ✦</Text>
+          {byMood.length === 0 ? (
+            <Text style={styles.muted}>kharcha log karte waqt mood tag karo — phir yahan pattern dikhega 😊</Text>
+          ) : (
+            <>
+              <Text style={styles.moodHeadline}>{buildMoodLine(byMood[0].mood.id)}</Text>
+              {byMood.map(({ mood, amount }) => {
+                const pct = moodTotal > 0 ? Math.round((amount / moodTotal) * 100) : 0;
+                return (
+                  <View key={mood.id} style={styles.breakRow}>
+                    <View style={styles.breakTop}>
+                      <Text style={styles.breakName}>
+                        {mood.emoji} {mood.label}
+                      </Text>
+                      <Text style={styles.breakAmt}>
+                        {fmtINR(amount)} <Text style={styles.breakPct}>{pct}%</Text>
+                      </Text>
+                    </View>
+                    <View style={styles.breakTrack}>
+                      <View style={[styles.breakFill, { width: `${pct}%`, backgroundColor: colors.periwinkle }]} />
+                    </View>
+                  </View>
+                );
+              })}
+            </>
+          )}
+        </View>
+
         {/* tips */}
         {tips.length > 0 ? (
           <View style={styles.tipsCard}>
@@ -139,6 +177,19 @@ export default function InsightsScreen() {
       </ScrollView>
     </Screen>
   );
+}
+
+// A sassy one-liner about the mood you spend most in.
+function buildMoodLine(topMoodId: string): string {
+  const lines: Record<string, string> = {
+    stressed: '😩 stress mein sabse zyada kharch — stress shopping much? deep breath babe 💕',
+    sad: '🥺 sad spending detected — shopping se mood theek nahi hota, chai try karo ☕',
+    bored: '🥱 boredom = wallet ka dushman... thoda Netflix kar lo instead 😬',
+    treat: '🥳 treat-yourself queen 👑 par thoda sambhaal ke spend karo',
+    happy: '😊 happy spends! at least mood toh achha tha 🌸',
+    meh: '😐 meh mood mein bhi paise ja rahe hain 👀',
+  };
+  return lines[topMoodId] ?? 'apne mood patterns pe nazar rakho babe ✨';
 }
 
 // Build a few personalised tips (mirrors the prototype's advice rules).
@@ -197,6 +248,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: { fontSize: typography.tiny.fontSize, color: colors.textMuted, letterSpacing: 2, marginBottom: spacing.md },
   muted: { fontSize: typography.small.fontSize, color: colors.textLight },
+  moodHeadline: { fontSize: typography.small.fontSize, color: colors.text, fontStyle: 'italic', lineHeight: 20, marginBottom: spacing.md },
 
   breakRow: { marginBottom: spacing.md },
   breakTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.xs },
