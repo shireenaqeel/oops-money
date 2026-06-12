@@ -3,15 +3,16 @@
 
 ---
 
-## Fix: Expo SDK 56 → 55 (phone compatibility) — 13 Jun 2026
-**What:** Downgraded the whole project from Expo SDK 56 to SDK 55 so it runs in the Expo Go app on the phone.
-**Why:** `create-expo-app@latest` gave us SDK 56, but the Expo Go app on the Play Store was still on SDK 55 — and Expo Go only runs one SDK at a time. Error on phone: "incompatible, download new version". No newer Expo Go was available, so we matched the project to what the phone supports. Used `expo install --fix` so React (19.2.0), React Native (0.83.6), expo-status-bar and TypeScript all auto-aligned to SDK 55.
+## Fix: Expo SDK 56 → 54 (phone compatibility) — 13 Jun 2026
+**What:** Downgraded the whole project from Expo SDK 56 down to SDK 54 so it runs in the Expo Go app on Shireen's phone. CONFIRMED working — white starter screen loads on phone. 🎉
+**Why:** `create-expo-app@latest` gave us SDK 56, but the phone's Expo Go (no update available on the Play Store) only supported SDK 54 — and Expo Go runs one SDK at a time. SDK 55 still showed "requires a newer version of Expo Go", so we stepped down once more to 54. Used `expo install --fix` each step so React (19.1.0), React Native (0.81.5), expo-status-bar and TypeScript all auto-aligned to SDK 54.
 **Files changed:** `package.json`, `package-lock.json`
-**How to test:**
-1. Run `npm start` again in the terminal
+**How to test (CONFIRMED PASSING):**
+1. `npx expo start -c` in the terminal
 2. Scan the QR code with Expo Go
-3. The white "Open up App.tsx..." screen should now load (no more incompatible error)
-**Next up:** Once the phone confirms it loads, continue Feature 1 — React Navigation + `src/` folder structure.
+3. White "Open up App.tsx..." screen loads — no incompatible error ✅
+**Lesson for future sessions:** This project must stay on **Expo SDK 54** to match the phone's Expo Go. Do NOT bump to 55/56 unless Shireen updates Expo Go first.
+**Next up:** Continue Feature 1 — React Navigation (bottom tabs) + `src/` folder structure.
 
 ---
 
