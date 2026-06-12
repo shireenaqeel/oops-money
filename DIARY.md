@@ -3,6 +3,21 @@
 
 ---
 
+## Feature 14: Streaks — 13 Jun 2026
+**What:** A streak card on Home showing 🔥 consecutive days you stayed within your daily budget and 🍽️ no-spend days this month. On a day with zero spending, a "no spend day! you ate 🍽️" celebration line appears.
+**Why:** Positive reinforcement > guilt. Streaks make good habits feel like a game. `getStreaks` walks back from today counting days where daily spend ≤ (budget ÷ days in month); no-spend days are counted across the month. The within-budget streak only shows if a budget is set.
+**Files changed:**
+- `src/utils/calculations.ts` — `getStreaks`
+- `src/screens/HomeScreen.tsx` — streak card + no-spend celebration
+**How to test:**
+1. **🏠 Home** → near the top, a purple card shows 🔥 din-budget-mein + 🍽️ no-spend-days
+2. If you haven't logged anything today → "no spend day! you ate 🍽️" shows
+3. Log a small amount today (under your daily budget) → streak holds; log a huge amount → streak resets next time
+4. Backdate a no-spend gap with the date picker to see the no-spend count change
+**Next up:** Feature 15 — Receipts Graveyard (tombstones for buried impulse items — partly exists in Jail; will make it its own polished view).
+
+---
+
 ## Feature 13: Danger alerts — 13 Jun 2026
 **What:** The 4 danger alerts (80%+ budget, over budget, one category dominating, today 2× the daily average) now show on **both** Home and Insights, plus a new **"splurge fund khatam!"** alert when splurge spending exceeds your splurge fund. Pulled the alert card into a reusable `<AlertList>`.
 **Why:** Alerts are the app's "tap on the shoulder" — they should appear wherever you look at money, not just Home. The splurge alert closes the loop on the splurge-fund feature. DRY'd the card markup so the look can't drift between screens.

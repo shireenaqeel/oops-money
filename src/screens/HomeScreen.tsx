@@ -9,7 +9,7 @@ import { useAppContext } from '../hooks/useAppContext';
 import { Expense } from '../types';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { fmtINR, fmtDateLabel, getToday, daysSince } from '../utils';
-import { monthExpenses, sumExpenses, getBudgetState, getAlerts } from '../utils/calculations';
+import { monthExpenses, sumExpenses, getBudgetState, getAlerts, getStreaks } from '../utils/calculations';
 import { findCat } from '../constants/categories';
 import { COPY } from '../constants/copy';
 
@@ -45,6 +45,7 @@ export default function HomeScreen() {
   const spent = sumExpenses(thisMonth);
   const bs = getBudgetState(spent, budget);
   const alerts = getAlerts(expenses, budget, splurgeFund, customCats, month, year, getToday());
+  const streaks = getStreaks(expenses, budget);
   const recent = thisMonth.slice(0, 8); // newest first (expenses are stored newest-first)
 
   // Confirm, then delete an expense.
@@ -83,6 +84,21 @@ export default function HomeScreen() {
             <Text style={styles.noBudget}>Settings mein budget set karo taaki track kar sako 🎯</Text>
           )}
         </View>
+
+        {/* ── streaks ── */}
+        <View style={styles.streakCard}>
+          {streaks.hasBudget ? (
+            <View style={styles.streakItem}>
+              <Text style={styles.streakNum}>🔥 {streaks.streak}</Text>
+              <Text style={styles.streakLbl}>din budget mein</Text>
+            </View>
+          ) : null}
+          <View style={styles.streakItem}>
+            <Text style={styles.streakNum}>🍽️ {streaks.noSpendDays}</Text>
+            <Text style={styles.streakLbl}>no-spend days</Text>
+          </View>
+        </View>
+        {streaks.noSpendToday ? <Text style={styles.noSpendLine}>{COPY.noSpendDay}</Text> : null}
 
         {/* ── regret audit nudge ── */}
         {regretCount > 0 ? (
@@ -184,6 +200,13 @@ const styles = StyleSheet.create({
   barFill: { height: '100%', borderRadius: radius.chips },
   barCaption: { fontSize: typography.small.fontSize, color: colors.textLight, marginTop: spacing.sm, textAlign: 'center' },
   noBudget: { fontSize: typography.small.fontSize, color: colors.textLight, marginTop: spacing.md, textAlign: 'center' },
+
+  // streaks
+  streakCard: { flexDirection: 'row', backgroundColor: colors.periwinkle, borderRadius: radius.cards, padding: spacing.md, marginTop: spacing.md },
+  streakItem: { flex: 1, alignItems: 'center' },
+  streakNum: { fontSize: typography.title.fontSize, fontWeight: '800', color: colors.text },
+  streakLbl: { fontSize: typography.tiny.fontSize, color: colors.text, opacity: 0.7, marginTop: 2 },
+  noSpendLine: { fontSize: typography.small.fontSize, color: colors.sage, fontWeight: '700', textAlign: 'center', marginTop: spacing.sm },
 
   // regret banner
   regretBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.coral, borderRadius: radius.inputs, padding: spacing.md, marginTop: spacing.md },

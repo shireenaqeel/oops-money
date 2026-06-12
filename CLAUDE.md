@@ -189,7 +189,7 @@ Budget safe zone         : "you're doing great babe 💚"
 - [x] 11. Future-me letters (write, shows during impulse jail)
 - [x] 12. Broke Math translator (₹X = Y days salary / Z coffees)
 - [x] 13. Danger alerts (80% budget, over budget, category dominance, daily 2x)
-- [ ] 14. Streaks (budget-within days, no-spend day celebrations)
+- [x] 14. Streaks (budget-within days, no-spend day celebrations)
 - [ ] 15. Receipts Graveyard (tombstones for buried impulse items)
 - [ ] 16. Monthly Wrapped card (shareable recap)
 - [ ] 17. CSV import (HDFC/ICICI/SBI/Paytm, merchant auto-detect)
@@ -291,7 +291,7 @@ After every feature, add an entry to DIARY.md:
 [x] Future-me letters
 [x] Broke Math
 [x] Danger alerts
-[ ] Streaks
+[x] Streaks
 [ ] Receipts Graveyard
 [ ] Monthly Wrapped
 [ ] CSV import

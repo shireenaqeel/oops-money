@@ -42,6 +42,53 @@ export function getBudgetState(spent: number, budgetStr: string): BudgetState {
   return { hasBudget, spent, budget, remaining: budget - spent, pct, over, barColor };
 }
 
+// Local yyyy-mm-dd for a Date.
+function isoLocal(d: Date): string {
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
+// Streak stats: consecutive days within the daily budget + no-spend days this month. Feature 14.
+export interface Streaks {
+  streak: number; // consecutive days ending today where you stayed within the daily budget
+  noSpendDays: number; // days this month with zero spending
+  noSpendToday: boolean;
+  hasBudget: boolean;
+}
+
+export function getStreaks(expenses: Expense[], budgetStr: string): Streaks {
+  const budget = Number(budgetStr) || 0;
+  const now = new Date();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const dailyBudget = budget > 0 ? budget / daysInMonth : 0;
+
+  // total spend per date
+  const spendByDate = new Map<string, number>();
+  expenses.forEach((e) => spendByDate.set(e.date, (spendByDate.get(e.date) || 0) + Number(e.amount)));
+
+  // consecutive days (counting back from today) where daily spend stayed within the daily budget
+  let streak = 0;
+  if (budget > 0) {
+    for (let i = 0; i <= 366; i++) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      const spent = spendByDate.get(isoLocal(d)) || 0;
+      if (spent <= dailyBudget) streak++;
+      else break;
+    }
+  }
+
+  // no-spend days so far this month
+  let noSpendDays = 0;
+  for (let day = 1; day <= now.getDate(); day++) {
+    const d = new Date(now.getFullYear(), now.getMonth(), day);
+    if ((spendByDate.get(isoLocal(d)) || 0) === 0) noSpendDays++;
+  }
+
+  return { streak, noSpendDays, noSpendToday: (spendByDate.get(isoLocal(now)) || 0) === 0, hasBudget: budget > 0 };
+}
+
 // A single danger alert card.
 export interface Alert {
   emoji: string;
