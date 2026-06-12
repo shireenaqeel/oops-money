@@ -2,7 +2,7 @@
 // Loads everything from storage once on launch, then every screen reads/writes through this hook.
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { Category, Expense, Recurring } from '../types';
-import { KEYS, loadJSON, loadString, saveJSON, saveString } from '../storage';
+import { KEYS, clearAll, loadJSON, loadString, saveJSON, saveString } from '../storage';
 import { genId } from '../utils';
 
 // Everything the app shares. Actions persist to storage AND update state so the UI refreshes.
@@ -16,9 +16,11 @@ interface AppState {
   income: string;
   splurgeFund: string;
   completeOnboarding: () => Promise<void>;
+  saveOnboarding: (data: { income: string; budget: string; splurgeFund: string }) => Promise<void>;
   addExpense: (e: Omit<Expense, 'id'>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   setBudgetValue: (v: string) => Promise<void>;
+  resetAll: () => Promise<void>;
   reload: () => Promise<void>;
 }
 
@@ -69,6 +71,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setOnboarded(true);
   }, []);
 
+  // Save all onboarding answers at once (income, budget, splurge fund) and mark onboarding complete.
+  const saveOnboarding = useCallback(
+    async (data: { income: string; budget: string; splurgeFund: string }) => {
+      setIncome(data.income);
+      setBudget(data.budget);
+      setSplurgeFund(data.splurgeFund);
+      await Promise.all([
+        saveString(KEYS.income, data.income),
+        saveString(KEYS.budget, data.budget),
+        saveString(KEYS.splurgeFund, data.splurgeFund),
+        saveString(KEYS.onboarded, 'true'),
+      ]);
+      setOnboarded(true);
+    },
+    []
+  );
+
   // Add a new expense to the top of the list and persist.
   const addExpense = useCallback(
     async (e: Omit<Expense, 'id'>) => {
@@ -95,6 +114,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await saveString(KEYS.budget, v);
   }, []);
 
+  // Wipe everything and return to the onboarding screen (testing/reset helper).
+  const resetAll = useCallback(async () => {
+    await clearAll();
+    await reload(); // storage now empty → onboarded becomes false again
+  }, [reload]);
+
   const value: AppState = {
     loading,
     onboarded,
@@ -105,9 +130,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     income,
     splurgeFund,
     completeOnboarding,
+    saveOnboarding,
     addExpense,
     deleteExpense,
     setBudgetValue,
+    resetAll,
     reload,
   };
 

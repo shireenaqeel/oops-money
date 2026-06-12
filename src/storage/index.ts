@@ -42,3 +42,8 @@ export async function loadString(key: string, fallback = ''): Promise<string> {
 export async function saveString(key: string, value: string): Promise<void> {
   await AsyncStorage.setItem(key, value);
 }
+
+// Wipe ALL app data (only our keys). Used by the Settings reset option.
+export async function clearAll(): Promise<void> {
+  await AsyncStorage.multiRemove(Object.values(KEYS));
+}

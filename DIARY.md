@@ -3,6 +3,26 @@
 
 ---
 
+## Feature 2: Onboarding flow — 13 Jun 2026
+**What:** Real first-launch setup — a 3-step flow (income → budget → splurge fund) that saves your numbers, then opens the main tabs. Added a Settings screen that shows your saved setup + a reset button.
+**Why:** A guided, one-question-per-screen flow is gentle for beginners (matches the app's no-overwhelm vibe). Amounts are digits-only with a live ₹ preview so there's instant feedback. Splurge fund is optional (can skip). Added `saveOnboarding` (saves all 3 at once) and `resetAll` to the state hook. The reset button lives on Settings so the flow can be re-tested without reinstalling.
+**Files changed:**
+- `src/screens/OnboardingScreen.tsx` — the 3-step flow
+- `src/screens/SettingsScreen.tsx` — shows setup + reset button
+- `src/hooks/useAppContext.tsx` — `saveOnboarding` + `resetAll`
+- `src/storage/index.ts` — `clearAll` helper
+**How to test:**
+1. Reload the app (in Expo Go)
+2. Go to the **🎀 Settings** tab → tap **"reset app data (testing)"** → confirm → app jumps back to onboarding
+3. **Step 1 (💰):** type your income → "aage badho" (button stays grey until you type a number)
+4. **Step 2 (🎯):** type a budget → notice the ₹ preview formats Indian-style (e.g. ₹15,000)
+5. **Step 3 (🛍️):** type a splurge amount OR leave blank to skip → tap "ho gaya, chalo!"
+6. Tabs open → go to **Settings** → your income/budget/splurge should be shown there ✅
+7. The "‹ wapas" back button should let you go to previous steps without losing what you typed
+**Next up:** Feature 3 — Home screen (budget card, danger alerts, recent expenses).
+
+---
+
 ## Feature 1: Navigation + src/ structure — 13 Jun 2026
 **What:** Built the full `src/` folder structure, design system, and bottom-tab navigation. App now opens to a welcome screen, then 4 tabs (Home, Insights, Jail, Settings).
 **Why:** A clean foundation first means every later feature just slots in. Chose React Navigation bottom tabs (per CLAUDE.md). State lives in one `useAppContext` hook so screens stay simple. All colours/sizes/text live in `constants/` so styling stays consistent and the sassy voice is in one place. App.tsx kept logic-free (Rule #10).

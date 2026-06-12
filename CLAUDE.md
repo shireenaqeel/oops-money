@@ -177,7 +177,7 @@ Budget safe zone         : "you're doing great babe 💚"
 ## ✅ V1 Features — build in this order
 
 - [x] 1. Project scaffold + navigation
-- [ ] 2. Onboarding screen (income → budget → splurge fund → done)
+- [x] 2. Onboarding screen (income → budget → splurge fund → done)
 - [ ] 3. Home screen (budget card, alerts, recent expenses)
 - [ ] 4. Add expense modal (amount, category, mood, note, splurge toggle)
 - [ ] 5. Categories (30+ with groups, custom category creation)
@@ -279,7 +279,7 @@ After every feature, add an entry to DIARY.md:
 ```
 [x] Project scaffold + Expo setup
 [x] CLAUDE.md + DIARY.md created
-[ ] Onboarding screen
+[x] Onboarding screen
 [ ] Home screen
 [ ] Add expense modal
 [ ] Categories system
