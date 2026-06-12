@@ -3,6 +3,20 @@
 
 ---
 
+## Feature 16: Monthly Wrapped — 13 Jun 2026
+**What:** A "✨ Monthly Wrapped" button on Insights opens a Spotify-Wrapped-style recap card: total spent, top category, biggest splurge, no-spend days, money resisted in jail, top mood, regrets — plus a **share** button that shares a text recap via the phone's share sheet.
+**Why:** A shareable recap makes the app fun and word-of-mouth-y. Used React Native's built-in `Share` (text recap) — no extra package. Image-capture sharing (view-shot) can come later if wanted.
+**Files changed:**
+- `src/screens/MonthlyWrappedModal.tsx` — the recap card + share (new)
+- `src/screens/InsightsScreen.tsx` — entry button
+**How to test:**
+1. **✿ Insights** → tap **"✨ see your Monthly Wrapped"**
+2. A recap card slides up with your month's stats
+3. Tap **"share it ✦"** → the phone share sheet opens with a text recap (send to WhatsApp/notes/etc.)
+**Next up:** Feature 17 (final!) — CSV import (bank statement → auto-detect categories).
+
+---
+
 ## Feature 15: Receipts Graveyard — 13 Jun 2026
 **What:** Polished the buried-items graveyard in the Jail tab into a proper 2-column tombstone grid — each 🪦 tombstone (gravestone-shaped card) shows the item name struck through, "RIP bestie", the money saved, and the date buried. Count in the header; bring-back + long-press-delete kept.
 **Why:** The graveyard is the emotional payoff of resisting — making it look like an actual graveyard of dead impulse buys is satisfying and shareable. Reused the existing buried data (added the buried date from `decidedAt`).

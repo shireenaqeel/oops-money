@@ -1,9 +1,10 @@
 // InsightsScreen.tsx — summary cards, 7-day bar, 6-month trend, category breakdown, and tips (Feature 6).
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { Screen } from '../components/shared';
 import BarChart, { BarDatum } from '../components/BarChart';
 import AlertList from '../components/AlertList';
+import MonthlyWrappedModal from './MonthlyWrappedModal';
 import { useAppContext } from '../hooks/useAppContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { fmtINR, getToday } from '../utils';
@@ -23,6 +24,7 @@ function toISO(d: Date): string {
 
 export default function InsightsScreen() {
   const { expenses, budget, splurgeFund, customCats } = useAppContext();
+  const [showWrapped, setShowWrapped] = useState(false);
 
   const now = new Date();
   const month = now.getMonth();
@@ -107,6 +109,12 @@ export default function InsightsScreen() {
     <Screen>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.heading}>Insights ✿</Text>
+
+        {/* monthly wrapped */}
+        <Pressable style={styles.wrappedBtn} onPress={() => setShowWrapped(true)}>
+          <Text style={styles.wrappedText}>✨ see your Monthly Wrapped</Text>
+          <Text style={styles.wrappedArrow}>›</Text>
+        </Pressable>
 
         {/* danger alerts (same as Home) */}
         <AlertList alerts={getAlerts(expenses, budget, splurgeFund, customCats, month, year, getToday())} />
@@ -223,6 +231,7 @@ export default function InsightsScreen() {
           </View>
         ) : null}
       </ScrollView>
+      <MonthlyWrappedModal visible={showWrapped} onClose={() => setShowWrapped(false)} />
     </Screen>
   );
 }
@@ -265,6 +274,9 @@ function buildTips(total: number, byCat: { cat: { name: string }; amount: number
 const styles = StyleSheet.create({
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
   heading: { fontSize: typography.heading.fontSize, fontWeight: '800', color: colors.text, marginBottom: spacing.md },
+  wrappedBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.lavender, borderRadius: radius.cards, paddingVertical: spacing.md, paddingHorizontal: spacing.lg, marginBottom: spacing.md },
+  wrappedText: { flex: 1, fontSize: typography.body.fontSize, fontWeight: '700', color: colors.cardBg },
+  wrappedArrow: { fontSize: 22, color: colors.cardBg },
 
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   gridCard: {
