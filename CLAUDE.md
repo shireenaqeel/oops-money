@@ -178,7 +178,7 @@ Budget safe zone         : "you're doing great babe 💚"
 
 - [x] 1. Project scaffold + navigation
 - [x] 2. Onboarding screen (income → budget → splurge fund → done)
-- [ ] 3. Home screen (budget card, alerts, recent expenses)
+- [x] 3. Home screen (budget card, alerts, recent expenses)
 - [ ] 4. Add expense modal (amount, category, mood, note, splurge toggle)
 - [ ] 5. Categories (30+ with groups, custom category creation)
 - [ ] 6. Insights screen (7-day bar, 6-month trend, category % breakdown)
@@ -280,7 +280,7 @@ After every feature, add an entry to DIARY.md:
 [x] Project scaffold + Expo setup
 [x] CLAUDE.md + DIARY.md created
 [x] Onboarding screen
-[ ] Home screen
+[x] Home screen
 [ ] Add expense modal
 [ ] Categories system
 [ ] Insights screen

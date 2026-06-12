@@ -3,6 +3,22 @@
 
 ---
 
+## Feature 3: Home screen — 13 Jun 2026
+**What:** Built the main Home screen — a budget card (spent this month, money left/over, coloured progress bar), danger alerts, and a recent-expenses list with delete.
+**Why:** This is the screen the user sees most, so it shows the budget at a glance. Bar colour follows the design system: green (0–74%), peach (75–99%), pink (100%+). Pulled the budget/alert maths into `utils/calculations.ts` so Insights (Feature 6) can reuse it. Alerts mirror the prototype (near-budget, over-budget, one category dominating, heavy day). Delete asks for confirmation so nothing vanishes by accident.
+**Files changed:**
+- `src/screens/HomeScreen.tsx` — budget card + alerts + recent list
+- `src/utils/calculations.ts` — monthExpenses, budget state, alerts (new, reusable)
+**Note:** There's no "add expense" yet (that's Feature 4), so the recent list shows the empty state and the budget card shows ₹0 spent against your budget. The screen fully comes alive once Feature 4 lets you log spends.
+**How to test:**
+1. Reload the app, go to the **🏠 Home** tab
+2. You should see "my money diary", "spent in June ₹0", a pill showing your **budget left**, a green progress bar, and "you're doing great babe 💚"
+3. Below: a 🌷 empty state ("nothing here yet babe ✨")
+4. (If you skipped budget in onboarding, you'll see a "set budget in Settings" hint instead)
+**Next up:** Feature 4 — Add Expense modal (amount, category, mood, note, splurge toggle). After this, Home comes alive.
+
+---
+
 ## Feature 2: Onboarding flow — 13 Jun 2026
 **What:** Real first-launch setup — a 3-step flow (income → budget → splurge fund) that saves your numbers, then opens the main tabs. Added a Settings screen that shows your saved setup + a reset button.
 **Why:** A guided, one-question-per-screen flow is gentle for beginners (matches the app's no-overwhelm vibe). Amounts are digits-only with a live ₹ preview so there's instant feedback. Splurge fund is optional (can skip). Added `saveOnboarding` (saves all 3 at once) and `resetAll` to the state hook. The reset button lives on Settings so the flow can be re-tested without reinstalling.
