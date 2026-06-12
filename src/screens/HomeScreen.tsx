@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet, ScrollView, Alert as RNAlert } from 'react-native';
 import { Screen } from '../components/shared';
 import AddExpenseModal from './AddExpenseModal';
+import RegretAuditModal from './RegretAuditModal';
 import { useAppContext } from '../hooks/useAppContext';
 import { Expense } from '../types';
 import { colors, spacing, radius, typography } from '../constants/theme';
-import { fmtINR, fmtDateLabel, getToday } from '../utils';
+import { fmtINR, fmtDateLabel, getToday, daysSince } from '../utils';
 import { monthExpenses, sumExpenses, getBudgetState, getAlerts } from '../utils/calculations';
 import { findCat } from '../constants/categories';
 import { COPY } from '../constants/copy';
@@ -17,6 +18,10 @@ export default function HomeScreen() {
   const { expenses, budget, customCats, deleteExpense } = useAppContext();
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
+  const [showRegret, setShowRegret] = useState(false);
+
+  // Purchases that are 7+ days old and not yet rated — ready for a "was it worth it?" check.
+  const regretCount = expenses.filter((e) => daysSince(e.date) >= 7 && !e.regret).length;
 
   // Open the modal to log a new expense.
   function openAdd() {
@@ -76,6 +81,18 @@ export default function HomeScreen() {
             <Text style={styles.noBudget}>Settings mein budget set karo taaki track kar sako 🎯</Text>
           )}
         </View>
+
+        {/* ── regret audit nudge ── */}
+        {regretCount > 0 ? (
+          <Pressable style={styles.regretBanner} onPress={() => setShowRegret(true)}>
+            <Text style={styles.regretEmoji}>🤔</Text>
+            <View style={styles.flex1}>
+              <Text style={styles.regretTitle}>was it worth it?</Text>
+              <Text style={styles.regretSub}>{regretCount} purchase{regretCount > 1 ? 's' : ''} ready for a regret check</Text>
+            </View>
+            <Text style={styles.regretArrow}>›</Text>
+          </Pressable>
+        ) : null}
 
         {/* ── danger alerts ── */}
         {alerts.map((a, i) => (
@@ -142,6 +159,7 @@ export default function HomeScreen() {
           setEditing(null);
         }}
       />
+      <RegretAuditModal visible={showRegret} onClose={() => setShowRegret(false)} />
     </Screen>
   );
 }
@@ -171,6 +189,13 @@ const styles = StyleSheet.create({
   barFill: { height: '100%', borderRadius: radius.chips },
   barCaption: { fontSize: typography.small.fontSize, color: colors.textLight, marginTop: spacing.sm, textAlign: 'center' },
   noBudget: { fontSize: typography.small.fontSize, color: colors.textLight, marginTop: spacing.md, textAlign: 'center' },
+
+  // regret banner
+  regretBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.coral, borderRadius: radius.inputs, padding: spacing.md, marginTop: spacing.md },
+  regretEmoji: { fontSize: 22, marginRight: spacing.md },
+  regretTitle: { fontSize: typography.body.fontSize, fontWeight: '700', color: colors.text },
+  regretSub: { fontSize: typography.small.fontSize, color: colors.text, opacity: 0.75, marginTop: 1 },
+  regretArrow: { fontSize: 22, color: colors.text, opacity: 0.5 },
 
   // alerts
   alertCard: {

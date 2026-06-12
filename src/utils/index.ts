@@ -65,6 +65,14 @@ export function fmtDateLabel(iso: string): string {
   return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`;
 }
 
+// How many whole days ago an ISO date was (0 = today, 7 = a week ago).
+export function daysSince(iso: string): number {
+  const then = new Date(iso + 'T00:00:00');
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  return Math.floor((now.getTime() - then.getTime()) / 86400000);
+}
+
 // Generate a short unique id for new records.
 export function genId(): string {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);

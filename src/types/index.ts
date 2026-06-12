@@ -21,6 +21,7 @@ export interface Expense {
   imported?: boolean; // true if it came from a CSV import (feature 17)
   mood?: string; // mood tag at time of spend (feature 7)
   isSplurge?: boolean; // counted against the splurge fund (feature 4)
+  regret?: 'worth' | 'meh' | 'regret'; // 7-day post-purchase verdict (feature 9)
 }
 
 // An item put in "impulse jail" — something you're tempted to buy but are waiting on.

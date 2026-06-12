@@ -58,6 +58,28 @@ export default function InsightsScreen() {
     .filter((x) => x.amount > 0)
     .sort((a, b) => b.amount - a.amount);
 
+  // Regret patterns this month (only rated expenses count).
+  const ratedMonth = thisMonth.filter((e) => e.regret);
+  const rWorth = ratedMonth.filter((e) => e.regret === 'worth').length;
+  const rMeh = ratedMonth.filter((e) => e.regret === 'meh').length;
+  const rRegret = ratedMonth.filter((e) => e.regret === 'regret').length;
+  const regretItems = ratedMonth.filter((e) => e.regret === 'regret');
+  const regretSum = sumExpenses(regretItems);
+  let topRegretName = '';
+  if (regretItems.length) {
+    const m = new Map<string, number>();
+    regretItems.forEach((e) => m.set(e.catId, (m.get(e.catId) || 0) + e.amount));
+    let id = '';
+    let val = 0;
+    m.forEach((v, k) => {
+      if (v > val) {
+        val = v;
+        id = k;
+      }
+    });
+    topRegretName = findCat(id, customCats).name;
+  }
+
   // Friendly tips based on the numbers.
   const tips = buildTips(total, byCat, budget, now);
 
@@ -163,6 +185,28 @@ export default function InsightsScreen() {
           )}
         </View>
 
+        {/* regret check */}
+        <View style={styles.card}>
+          <Text style={styles.sectionLabel}>REGRET CHECK ✦</Text>
+          {ratedMonth.length === 0 ? (
+            <Text style={styles.muted}>7 din purane kharchon ka regret check Home pe karo — phir pattern yahan dikhega 💭</Text>
+          ) : (
+            <>
+              <View style={styles.regretRow}>
+                <Text style={styles.regretStat}>😍 {rWorth}</Text>
+                <Text style={styles.regretStat}>😐 {rMeh}</Text>
+                <Text style={styles.regretStat}>😭 {rRegret}</Text>
+              </View>
+              {regretSum > 0 ? (
+                <Text style={styles.regretLine}>{fmtINR(regretSum)} regret wale kharchon pe gaye 😭</Text>
+              ) : (
+                <Text style={styles.regretLine}>abhi tak koi regret nahi — slay queen 💅</Text>
+              )}
+              {topRegretName ? <Text style={styles.regretLine}>sabse zyada regret: {topRegretName}</Text> : null}
+            </>
+          )}
+        </View>
+
         {/* tips */}
         {tips.length > 0 ? (
           <View style={styles.tipsCard}>
@@ -249,6 +293,9 @@ const styles = StyleSheet.create({
   sectionLabel: { fontSize: typography.tiny.fontSize, color: colors.textMuted, letterSpacing: 2, marginBottom: spacing.md },
   muted: { fontSize: typography.small.fontSize, color: colors.textLight },
   moodHeadline: { fontSize: typography.small.fontSize, color: colors.text, fontStyle: 'italic', lineHeight: 20, marginBottom: spacing.md },
+  regretRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: spacing.sm },
+  regretStat: { fontSize: typography.title.fontSize, fontWeight: '700', color: colors.text },
+  regretLine: { fontSize: typography.small.fontSize, color: colors.text, marginTop: spacing.xs },
 
   breakRow: { marginBottom: spacing.md },
   breakTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.xs },

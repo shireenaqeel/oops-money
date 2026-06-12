@@ -21,6 +21,7 @@ interface AppState {
   saveOnboarding: (data: { income: string; budget: string; splurgeFund: string }) => Promise<void>;
   addExpense: (e: Omit<Expense, 'id'>) => Promise<void>;
   updateExpense: (id: string, changes: Omit<Expense, 'id'>) => Promise<void>;
+  rateExpense: (id: string, regret: 'worth' | 'meh' | 'regret') => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   addImpulse: (name: string, amount: number, note: string) => Promise<void>;
   buryImpulse: (id: string) => Promise<void>;
@@ -115,6 +116,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const updateExpense = useCallback(
     async (id: string, changes: Omit<Expense, 'id'>) => {
       const next = expenses.map((e) => (e.id === id ? { ...changes, id } : e));
+      setExpenses(next);
+      await saveJSON(KEYS.expenses, next);
+    },
+    [expenses]
+  );
+
+  // Record the 7-day "was it worth it?" verdict on an expense.
+  const rateExpense = useCallback(
+    async (id: string, regret: 'worth' | 'meh' | 'regret') => {
+      const next = expenses.map((e) => (e.id === id ? { ...e, regret } : e));
       setExpenses(next);
       await saveJSON(KEYS.expenses, next);
     },
@@ -242,6 +253,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     saveOnboarding,
     addExpense,
     updateExpense,
+    rateExpense,
     deleteExpense,
     addImpulse,
     buryImpulse,

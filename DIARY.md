@@ -3,6 +3,26 @@
 
 ---
 
+## Feature 9: Regret audit — 13 Jun 2026
+**What:** Purchases that are 7+ days old and unrated trigger a "🤔 was it worth it?" banner on Home. Tapping it opens a one-by-one review where you tap 😍 worth it / 😐 meh / 😭 regret. Insights gets a "REGRET CHECK" card: counts, money spent on regrets, and your most-regretted category.
+**Why:** Reflection a week later (when the dopamine's gone) is where the real lesson lands — gently, no shame. Added a `regret` field to Expense + `rateExpense`. The review snapshots the eligible queue when it opens so ratings don't reshuffle mid-review. `daysSince` helper added.
+**Files changed:**
+- `src/types/index.ts` — `regret` on Expense
+- `src/utils/index.ts` — `daysSince`
+- `src/hooks/useAppContext.tsx` — `rateExpense`
+- `src/screens/RegretAuditModal.tsx` — the review flow (new)
+- `src/screens/HomeScreen.tsx` — regret banner + modal
+- `src/screens/InsightsScreen.tsx` — REGRET CHECK card
+**How to test:** (you need a 7+ day-old expense — use the date picker!)
+1. Add an expense → tap **"📅 koi din"** → pick a date **8+ days ago** → log it
+2. Go to **🏠 Home** → a 🤔 **"was it worth it?"** banner appears → tap it
+3. Rate the purchase (😍/😐/😭) → it advances; rate all → "all done 💅"
+4. Go to **✿ Insights** → **REGRET CHECK** card shows your counts + most-regretted category
+5. The Home banner disappears once everything 7+ days old is rated
+**Next up:** Feature 10 — Recurring bills (add, due-date countdown, one-tap log).
+
+---
+
 ## Feature 8.1: Impulse Jail — release logs spend + bring-back — 13 Jun 2026
 **What:** Two improvements Shireen asked for: (1) **releasing** (buying) a jailed item now logs a real expense (category "Other", note "<name> (impulse)", marked splurge) so it counts against the budget; (2) buried items have a **"bring back 🔁"** button that re-jails them and restarts the 24h clock. Also: release is no longer hard-locked — you can "buy anyway" early, but get a soft "itni jaldi? 👀" warning first.
 **Why:** "Paise toh kharch ho hi gaye" — caving should hit the budget honestly. Re-jailing lets you reconsider something you buried. Making early-release possible (with a nudge) is realistic and testable. Released expenses land in "Other" — you can recategorise on Home via edit.
