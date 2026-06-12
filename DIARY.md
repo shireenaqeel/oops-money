@@ -3,6 +3,26 @@
 
 ---
 
+## Feature 17: CSV import — 13 Jun 2026 🎉 (final V1 feature)
+**What:** Settings → "📂 Import bank statement" lets you pick a bank CSV (HDFC/ICICI/SBI/Paytm), auto-detects categories from the description (via the merchant map), shows a preview, and bulk-imports all debits as expenses.
+**Why:** Backfilling a whole month by hand is painful; importing a statement is instant. Ported the prototype's robust parser (finds the header row, handles dd/mm/yyyy + yyyy-mm-dd, skips non-debits). Added `bulkAddExpenses`. Imported items are tagged `imported`.
+**Packages added:** `expo-document-picker` (pick the file) + `expo-file-system` (read it) — both bundled in Expo Go. Read via `expo-file-system/legacy` (`readAsStringAsync`).
+**Files changed:**
+- `src/utils/csv.ts` — `parseBankCSV` (new)
+- `src/screens/CSVImportModal.tsx` — pick → preview → import (new)
+- `src/hooks/useAppContext.tsx` — `bulkAddExpenses`
+- `src/screens/SettingsScreen.tsx` — import button
+**Needs a FULL restart** (`npx expo start -c`) — new native modules.
+**How to test:**
+1. Restart with `npx expo start -c`
+2. **🎀 Settings** → **"📂 Import bank statement"**
+3. Tap "choose CSV file" → pick a bank statement CSV from your phone
+4. See "found X transactions" with auto-detected category emojis → "import all ✦"
+5. Check Home/Insights — the transactions are in, categorised
+**Next up:** All 17 V1 features done! Remaining: EAS Build APK (packaging, not a code feature).
+
+---
+
 ## Feature 16: Monthly Wrapped — 13 Jun 2026
 **What:** A "✨ Monthly Wrapped" button on Insights opens a Spotify-Wrapped-style recap card: total spent, top category, biggest splurge, no-spend days, money resisted in jail, top mood, regrets — plus a **share** button that shares a text recap via the phone's share sheet.
 **Why:** A shareable recap makes the app fun and word-of-mouth-y. Used React Native's built-in `Share` (text recap) — no extra package. Image-capture sharing (view-shot) can come later if wanted.

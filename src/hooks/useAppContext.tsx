@@ -23,6 +23,7 @@ interface AppState {
   addExpense: (e: Omit<Expense, 'id'>) => Promise<void>;
   updateExpense: (id: string, changes: Omit<Expense, 'id'>) => Promise<void>;
   rateExpense: (id: string, regret: 'worth' | 'meh' | 'regret') => Promise<void>;
+  bulkAddExpenses: (items: Omit<Expense, 'id'>[]) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   addImpulse: (name: string, amount: number, note: string) => Promise<void>;
   buryImpulse: (id: string) => Promise<void>;
@@ -135,6 +136,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const rateExpense = useCallback(
     async (id: string, regret: 'worth' | 'meh' | 'regret') => {
       const next = expenses.map((e) => (e.id === id ? { ...e, regret } : e));
+      setExpenses(next);
+      await saveJSON(KEYS.expenses, next);
+    },
+    [expenses]
+  );
+
+  // Add many expenses at once (used by CSV import). Newest on top.
+  const bulkAddExpenses = useCallback(
+    async (items: Omit<Expense, 'id'>[]) => {
+      const withIds = items.map((it) => ({ ...it, id: genId() }));
+      const next = [...withIds, ...expenses];
       setExpenses(next);
       await saveJSON(KEYS.expenses, next);
     },
@@ -320,6 +332,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addExpense,
     updateExpense,
     rateExpense,
+    bulkAddExpenses,
     deleteExpense,
     addImpulse,
     buryImpulse,

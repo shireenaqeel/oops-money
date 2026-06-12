@@ -192,7 +192,7 @@ Budget safe zone         : "you're doing great babe 💚"
 - [x] 14. Streaks (budget-within days, no-spend day celebrations)
 - [x] 15. Receipts Graveyard (tombstones for buried impulse items)
 - [x] 16. Monthly Wrapped card (shareable recap)
-- [ ] 17. CSV import (HDFC/ICICI/SBI/Paytm, merchant auto-detect)
+- [x] 17. CSV import (HDFC/ICICI/SBI/Paytm, merchant auto-detect)
 
 ---
 
@@ -294,7 +294,7 @@ After every feature, add an entry to DIARY.md:
 [x] Streaks
 [x] Receipts Graveyard
 [x] Monthly Wrapped
-[ ] CSV import
+[x] CSV import
 [ ] EAS Build APK
 ```
 

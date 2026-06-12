@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Alert, ScrollView, TextInput } from 'react-native';
 import { Screen } from '../components/shared';
+import CSVImportModal from './CSVImportModal';
 import { useAppContext } from '../hooks/useAppContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { fmtINR } from '../utils';
@@ -10,6 +11,7 @@ import { fmtINR } from '../utils';
 export default function SettingsScreen() {
   const { income, budget, splurgeFund, letters, addLetter, deleteLetter, resetAll } = useAppContext();
   const [draft, setDraft] = useState('');
+  const [showImport, setShowImport] = useState(false);
 
   // Save the typed letter to your future self.
   function saveLetter() {
@@ -51,6 +53,16 @@ export default function SettingsScreen() {
           <Row emoji="🛍️" label="Splurge fund" value={splurgeFund} />
         </View>
 
+        {/* csv import */}
+        <Pressable style={styles.importBtn} onPress={() => setShowImport(true)}>
+          <Text style={styles.importEmoji}>📂</Text>
+          <View style={styles.flex1}>
+            <Text style={styles.importTitle}>Import bank statement</Text>
+            <Text style={styles.importSub}>HDFC / ICICI / SBI / Paytm CSV — auto-detect categories</Text>
+          </View>
+          <Text style={styles.importArrow}>›</Text>
+        </Pressable>
+
         {/* future-me letters */}
         <View style={styles.card}>
           <Text style={styles.cardLabel}>FUTURE-ME LETTERS 💌</Text>
@@ -82,13 +94,20 @@ export default function SettingsScreen() {
         </Pressable>
         <Text style={styles.note}>(yeh button onboarding dobara test karne ke liye hai)</Text>
       </ScrollView>
+      <CSVImportModal visible={showImport} onClose={() => setShowImport(false)} />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   content: { padding: spacing.lg },
+  flex1: { flex: 1 },
   heading: { fontSize: typography.heading.fontSize, fontWeight: '800', color: colors.text, marginBottom: spacing.lg },
+  importBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.powderBlue, borderRadius: radius.cards, padding: spacing.md, marginBottom: spacing.md },
+  importEmoji: { fontSize: 22, marginRight: spacing.md },
+  importTitle: { fontSize: typography.body.fontSize, fontWeight: '700', color: colors.text },
+  importSub: { fontSize: typography.small.fontSize, color: colors.text, opacity: 0.7, marginTop: 1 },
+  importArrow: { fontSize: 22, color: colors.text, opacity: 0.5 },
   card: {
     backgroundColor: colors.cardBg,
     borderRadius: radius.cards,
