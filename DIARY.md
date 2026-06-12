@@ -3,6 +3,24 @@
 
 ---
 
+## Feature 11: Future-me letters — 13 Jun 2026
+**What:** In Settings you can write notes to your future self ("dear future me, please mat khareedna..."). One of your letters then shows as a 💌 card at the top of the Impulse Jail screen, reminding you why you're saving right when you're tempted.
+**Why:** A message from past-you (calm, goal-focused) is a strong nudge against impulse buys. New `Letter` type + storage key + `addLetter`/`deleteLetter`. The jail screen picks one letter per visit (random seed on mount) so it varies.
+**Files changed:**
+- `src/types/index.ts` — `Letter`
+- `src/storage/index.ts` — `om_letters` key
+- `src/hooks/useAppContext.tsx` — `letters` + `addLetter`/`deleteLetter`
+- `src/screens/SettingsScreen.tsx` — write/list/delete letters
+- `src/screens/ImpulseJailScreen.tsx` — 💌 letter card
+**How to test:**
+1. **🎀 Settings** → "FUTURE-ME LETTERS" → write a note → "save letter ✦" (write 2–3)
+2. Go to **🔒 Jail** tab → a 💌 "future you se ek baat" card shows your note at the top
+3. Leave + re-open the Jail tab → it may show a different letter
+4. Delete a letter from Settings with ✕
+**Next up:** Feature 12 — Broke Math (₹X = Y days of salary / Z coffees).
+
+---
+
 ## Feature 10: Recurring bills — 13 Jun 2026
 **What:** A new **🔁 Bills** tab (5th tab). Add a recurring bill (name, amount, due day, category), see a due-date countdown ("3 days left" / "due today!"), a monthly fixed-cost total, and a one-tap **"log now"** that drops it into today's expenses.
 **Why:** Rent/subscriptions/gym repeat every month — re-typing them is annoying. Bills are templates; "log now" creates a normal expense (note "<name> (recurring)") so it flows into budget/insights. Sorted by soonest due. Reused the existing `Recurring` type + storage key.

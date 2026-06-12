@@ -1,7 +1,7 @@
 // useAppContext.tsx — MAIN STATE MANAGEMENT. The single source of truth for app data.
 // Loads everything from storage once on launch, then every screen reads/writes through this hook.
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { Category, Expense, ImpulseItem, Recurring } from '../types';
+import { Category, Expense, ImpulseItem, Letter, Recurring } from '../types';
 import { KEYS, clearAll, loadJSON, loadString, saveJSON, saveString } from '../storage';
 import { PASTEL_COLORS, findCat } from '../constants/categories';
 import { genId, getToday } from '../utils';
@@ -13,6 +13,7 @@ interface AppState {
   expenses: Expense[];
   recurring: Recurring[];
   impulse: ImpulseItem[];
+  letters: Letter[];
   customCats: Category[];
   budget: string;
   income: string;
@@ -31,6 +32,8 @@ interface AppState {
   addRecurring: (name: string, amount: number, catId: string, day: number) => Promise<void>;
   deleteRecurring: (id: string) => Promise<void>;
   logRecurring: (id: string) => Promise<void>;
+  addLetter: (text: string) => Promise<void>;
+  deleteLetter: (id: string) => Promise<void>;
   setBudgetValue: (v: string) => Promise<void>;
   addCustomCat: (name: string, emoji: string) => Promise<Category>;
   deleteCustomCat: (id: string) => Promise<void>;
@@ -47,6 +50,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [recurring, setRecurring] = useState<Recurring[]>([]);
   const [impulse, setImpulse] = useState<ImpulseItem[]>([]);
+  const [letters, setLetters] = useState<Letter[]>([]);
   const [customCats, setCustomCats] = useState<Category[]>([]);
   const [budget, setBudget] = useState('');
   const [income, setIncome] = useState('');
@@ -54,10 +58,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Pull all persisted data from storage into state.
   const reload = useCallback(async () => {
-    const [exp, rec, imp, cc, bud, inc, spl, onb] = await Promise.all([
+    const [exp, rec, imp, ltrs, cc, bud, inc, spl, onb] = await Promise.all([
       loadJSON<Expense[]>(KEYS.expenses, []),
       loadJSON<Recurring[]>(KEYS.recurring, []),
       loadJSON<ImpulseItem[]>(KEYS.impulse, []),
+      loadJSON<Letter[]>(KEYS.letters, []),
       loadJSON<Category[]>(KEYS.customCats, []),
       loadString(KEYS.budget),
       loadString(KEYS.income),
@@ -67,6 +72,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setExpenses(exp);
     setRecurring(rec);
     setImpulse(imp);
+    setLetters(ltrs);
     setCustomCats(cc);
     setBudget(bud);
     setIncome(inc);
@@ -242,6 +248,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [recurring, expenses]
   );
 
+  // Add a letter to your future self (newest first).
+  const addLetter = useCallback(
+    async (text: string) => {
+      const item: Letter = { id: genId(), text, createdAt: Date.now() };
+      const next = [item, ...letters];
+      setLetters(next);
+      await saveJSON(KEYS.letters, next);
+    },
+    [letters]
+  );
+
+  // Delete a letter.
+  const deleteLetter = useCallback(
+    async (id: string) => {
+      const next = letters.filter((l) => l.id !== id);
+      setLetters(next);
+      await saveJSON(KEYS.letters, next);
+    },
+    [letters]
+  );
+
   // Save the monthly budget (stored as a plain string, like the prototype).
   const setBudgetValue = useCallback(async (v: string) => {
     setBudget(v);
@@ -283,6 +310,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     expenses,
     recurring,
     impulse,
+    letters,
     customCats,
     budget,
     income,
@@ -301,6 +329,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addRecurring,
     deleteRecurring,
     logRecurring,
+    addLetter,
+    deleteLetter,
     setBudgetValue,
     addCustomCat,
     deleteCustomCat,

@@ -35,6 +35,13 @@ export interface ImpulseItem {
   decidedAt?: number; // ms timestamp of the release/bury decision
 }
 
+// A note you write to your future self (shown during impulse jail). Feature 11.
+export interface Letter {
+  id: string;
+  text: string;
+  createdAt: number; // ms timestamp
+}
+
 // A recurring monthly bill (rent, subscriptions, etc.).
 export interface Recurring {
   id: string;

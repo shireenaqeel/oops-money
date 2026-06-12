@@ -13,9 +13,11 @@ import { buriedMsg } from '../constants/copy';
 const JAIL_MS = 24 * 60 * 60 * 1000; // 24-hour cool-off
 
 export default function ImpulseJailScreen() {
-  const { impulse, buryImpulse, releaseImpulse, rejailImpulse, deleteImpulse } = useAppContext();
+  const { impulse, letters, buryImpulse, releaseImpulse, rejailImpulse, deleteImpulse } = useAppContext();
   const [showAdd, setShowAdd] = useState(false);
   const [nowTs, setNowTs] = useState(Date.now());
+  const [letterSeed] = useState(() => Math.floor(Math.random() * 100000)); // pick one letter per visit
+  const featuredLetter = letters.length > 0 ? letters[letterSeed % letters.length] : null;
 
   // Tick every second while something is still jailed, so the countdown stays live.
   useEffect(() => {
@@ -69,6 +71,14 @@ export default function ImpulseJailScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.heading}>Impulse Jail 🔒</Text>
         <Text style={styles.intro}>khareedne ka mann hai? pehle yahan band karo. 24 ghante baad bhi chahiye toh le lena 💅</Text>
+
+        {/* a letter from past you (Feature 11) */}
+        {featuredLetter ? (
+          <View style={styles.letterCard}>
+            <Text style={styles.letterLabel}>💌 future you se ek baat</Text>
+            <Text style={styles.letterBody}>{featuredLetter.text}</Text>
+          </View>
+        ) : null}
 
         {/* total saved banner */}
         {totalSaved > 0 ? (
@@ -157,6 +167,10 @@ const styles = StyleSheet.create({
   flex1: { flex: 1, minWidth: 0 },
   heading: { fontSize: typography.heading.fontSize, fontWeight: '800', color: colors.text },
   intro: { fontSize: typography.small.fontSize, color: colors.textLight, marginTop: spacing.xs, lineHeight: 19, marginBottom: spacing.md },
+
+  letterCard: { backgroundColor: colors.butter, borderRadius: radius.cards, padding: spacing.lg, marginBottom: spacing.md },
+  letterLabel: { fontSize: typography.tiny.fontSize, color: colors.textLight, letterSpacing: 1, marginBottom: spacing.xs },
+  letterBody: { fontSize: typography.body.fontSize, color: colors.text, fontStyle: 'italic', lineHeight: 21 },
 
   savedBanner: { backgroundColor: colors.sage, borderRadius: radius.cards, padding: spacing.lg, alignItems: 'center', marginBottom: spacing.md },
   savedAmt: { fontSize: typography.display.fontSize, fontWeight: '800', color: colors.text },

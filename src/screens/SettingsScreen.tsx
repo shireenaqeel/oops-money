@@ -1,14 +1,23 @@
 // SettingsScreen.tsx — shows the saved onboarding values + a reset button (testing helper for now).
 // Full settings UI (edit budget/income, notifications, etc.) gets built out in later features.
-import React from 'react';
-import { View, Text, Pressable, StyleSheet, Alert, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Pressable, StyleSheet, Alert, ScrollView, TextInput } from 'react-native';
 import { Screen } from '../components/shared';
 import { useAppContext } from '../hooks/useAppContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { fmtINR } from '../utils';
 
 export default function SettingsScreen() {
-  const { income, budget, splurgeFund, resetAll } = useAppContext();
+  const { income, budget, splurgeFund, letters, addLetter, deleteLetter, resetAll } = useAppContext();
+  const [draft, setDraft] = useState('');
+
+  // Save the typed letter to your future self.
+  function saveLetter() {
+    const text = draft.trim();
+    if (!text) return;
+    addLetter(text);
+    setDraft('');
+  }
 
   // Ask for confirmation, then wipe all data and return to onboarding.
   function confirmReset() {
@@ -42,6 +51,32 @@ export default function SettingsScreen() {
           <Row emoji="🛍️" label="Splurge fund" value={splurgeFund} />
         </View>
 
+        {/* future-me letters */}
+        <View style={styles.card}>
+          <Text style={styles.cardLabel}>FUTURE-ME LETTERS 💌</Text>
+          <Text style={styles.letterHint}>future tum ko ek note likho — jail ke time yeh dikhega taaki yaad rahe kyun bachat kar rahi ho</Text>
+          <TextInput
+            style={styles.letterInput}
+            value={draft}
+            onChangeText={setDraft}
+            placeholder="dear future me, please mat khareedna woh..."
+            placeholderTextColor={colors.textMuted}
+            multiline
+          />
+          <Pressable style={[styles.letterBtn, !draft.trim() && styles.letterBtnDisabled]} onPress={saveLetter} disabled={!draft.trim()}>
+            <Text style={styles.letterBtnText}>save letter ✦</Text>
+          </Pressable>
+
+          {letters.map((l) => (
+            <View key={l.id} style={styles.letterItem}>
+              <Text style={styles.letterText}>💌 {l.text}</Text>
+              <Pressable onPress={() => deleteLetter(l.id)} hitSlop={10}>
+                <Text style={styles.letterDel}>✕</Text>
+              </Pressable>
+            </View>
+          ))}
+        </View>
+
         <Pressable style={styles.resetBtn} onPress={confirmReset}>
           <Text style={styles.resetText}>reset app data (testing)</Text>
         </Pressable>
@@ -69,6 +104,15 @@ const styles = StyleSheet.create({
   rowEmoji: { fontSize: 20, marginRight: spacing.md },
   rowLabel: { flex: 1, fontSize: typography.body.fontSize, color: colors.text },
   rowValue: { fontSize: typography.body.fontSize, fontWeight: '700', color: colors.text },
+  letterHint: { fontSize: typography.small.fontSize, color: colors.textLight, lineHeight: 18, marginBottom: spacing.md },
+  letterInput: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.inputs, padding: spacing.md, fontSize: typography.body.fontSize, color: colors.text, minHeight: 70, textAlignVertical: 'top' },
+  letterBtn: { backgroundColor: colors.lilac, paddingVertical: spacing.sm, borderRadius: radius.buttons, alignItems: 'center', marginTop: spacing.sm },
+  letterBtnDisabled: { backgroundColor: colors.textMuted, opacity: 0.5 },
+  letterBtnText: { color: colors.cardBg, fontSize: typography.small.fontSize, fontWeight: '700' },
+  letterItem: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: colors.cream, borderRadius: radius.inputs, padding: spacing.md, marginTop: spacing.sm },
+  letterText: { flex: 1, fontSize: typography.small.fontSize, color: colors.text, fontStyle: 'italic', lineHeight: 19 },
+  letterDel: { fontSize: 14, color: colors.textMuted, marginLeft: spacing.sm },
+
   resetBtn: {
     marginTop: spacing.xl,
     paddingVertical: spacing.md,
