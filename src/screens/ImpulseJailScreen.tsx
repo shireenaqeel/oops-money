@@ -5,6 +5,7 @@ import { View, Text, Pressable, StyleSheet, ScrollView, Alert } from 'react-nati
 import { Screen } from '../components/shared';
 import AddToJailModal from './AddToJailModal';
 import { useAppContext } from '../hooks/useAppContext';
+import { ImpulseItem } from '../types';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { fmtINR } from '../utils';
 import { buriedMsg } from '../constants/copy';
@@ -12,7 +13,7 @@ import { buriedMsg } from '../constants/copy';
 const JAIL_MS = 24 * 60 * 60 * 1000; // 24-hour cool-off
 
 export default function ImpulseJailScreen() {
-  const { impulse, buryImpulse, releaseImpulse, deleteImpulse } = useAppContext();
+  const { impulse, buryImpulse, releaseImpulse, rejailImpulse, deleteImpulse } = useAppContext();
   const [showAdd, setShowAdd] = useState(false);
   const [nowTs, setNowTs] = useState(Date.now());
 
@@ -51,6 +52,18 @@ export default function ImpulseJailScreen() {
     Alert.alert('buried! 🪦', buriedMsg(fmtINR(amount)));
   }
 
+  // Release = buy it (logs an expense). Warn first if the 24h cool-off isn't over yet.
+  function onRelease(item: ImpulseItem) {
+    if (isUnlocked(item.createdAt)) {
+      releaseImpulse(item.id);
+      return;
+    }
+    Alert.alert('itni jaldi? 👀', `abhi ${remainingText(item.createdAt).replace(' 🔒', '')} — pakka abhi khareedna hai? (spending mein add ho jayega)`, [
+      { text: 'ruk jaungi 💪', style: 'cancel' },
+      { text: 'haan, buy 🛍️', style: 'destructive', onPress: () => releaseImpulse(item.id) },
+    ]);
+  }
+
   return (
     <Screen>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -86,12 +99,8 @@ export default function ImpulseJailScreen() {
                   <Pressable style={styles.buryBtn} onPress={() => onBury(item.id, item.amount)}>
                     <Text style={styles.buryText}>bury it 🪦</Text>
                   </Pressable>
-                  <Pressable
-                    style={[styles.releaseBtn, !unlocked && styles.releaseLocked]}
-                    onPress={() => (unlocked ? releaseImpulse(item.id) : null)}
-                    disabled={!unlocked}
-                  >
-                    <Text style={[styles.releaseText, !unlocked && styles.releaseTextLocked]}>{unlocked ? 'release (buy) ✦' : 'release locked 🔒'}</Text>
+                  <Pressable style={[styles.releaseBtn, !unlocked && styles.releaseEarly]} onPress={() => onRelease(item)}>
+                    <Text style={styles.releaseText}>{unlocked ? 'release (buy) ✦' : 'buy anyway 🛍️'}</Text>
                   </Pressable>
                 </View>
               </View>
@@ -104,14 +113,18 @@ export default function ImpulseJailScreen() {
           <>
             <Text style={styles.sectionLabel}>RECEIPTS GRAVEYARD 🪦</Text>
             {buried.map((item) => (
-              <Pressable key={item.id} style={styles.tomb} onLongPress={() => deleteImpulse(item.id)}>
+              <View key={item.id} style={styles.tomb}>
                 <Text style={styles.tombEmoji}>🪦</Text>
-                <View style={styles.flex1}>
+                <Pressable style={styles.flex1} onLongPress={() => deleteImpulse(item.id)}>
                   <Text style={styles.tombName}>{item.name}</Text>
                   <Text style={styles.tombSaved}>RIP bestie — saved {fmtINR(item.amount)}</Text>
-                </View>
-              </Pressable>
+                </Pressable>
+                <Pressable style={styles.bringBackBtn} onPress={() => rejailImpulse(item.id)}>
+                  <Text style={styles.bringBackText}>bring back 🔁</Text>
+                </Pressable>
+              </View>
             ))}
+            <Text style={styles.hint}>(long-press kisi tombstone ko hatane ke liye)</Text>
           </>
         ) : null}
 
@@ -119,6 +132,7 @@ export default function ImpulseJailScreen() {
         {released.length > 0 ? (
           <>
             <Text style={styles.sectionLabel}>YOU CAVED 🛍️</Text>
+            <Text style={styles.muted}>ye spending mein add ho gaye — Home pe dikhenge</Text>
             {released.map((item) => (
               <Pressable key={item.id} style={styles.cavedRow} onLongPress={() => deleteImpulse(item.id)}>
                 <Text style={styles.cavedName}>{item.name}</Text>
@@ -163,14 +177,15 @@ const styles = StyleSheet.create({
   buryBtn: { flex: 1, backgroundColor: colors.cardBg, paddingVertical: spacing.sm, borderRadius: radius.buttons, alignItems: 'center' },
   buryText: { fontSize: typography.small.fontSize, fontWeight: '700', color: colors.text },
   releaseBtn: { flex: 1, backgroundColor: colors.rose, paddingVertical: spacing.sm, borderRadius: radius.buttons, alignItems: 'center' },
-  releaseLocked: { backgroundColor: colors.cardBg, opacity: 0.6 },
+  releaseEarly: { backgroundColor: colors.peach },
   releaseText: { fontSize: typography.small.fontSize, fontWeight: '700', color: colors.cardBg },
-  releaseTextLocked: { color: colors.textMuted },
 
   tomb: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.cardBg, borderRadius: radius.inputs, padding: spacing.md, marginBottom: spacing.sm },
   tombEmoji: { fontSize: 24 },
   tombName: { fontSize: typography.body.fontSize, fontWeight: '600', color: colors.text },
   tombSaved: { fontSize: typography.small.fontSize, color: colors.sage, marginTop: 1, fontWeight: '700' },
+  bringBackBtn: { backgroundColor: colors.lilac, paddingVertical: spacing.xs, paddingHorizontal: spacing.md, borderRadius: radius.buttons },
+  bringBackText: { fontSize: typography.tiny.fontSize, color: colors.cardBg, fontWeight: '700' },
 
   cavedRow: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: colors.cardBg, borderRadius: radius.inputs, padding: spacing.md, marginBottom: spacing.sm },
   cavedName: { fontSize: typography.small.fontSize, color: colors.textLight },

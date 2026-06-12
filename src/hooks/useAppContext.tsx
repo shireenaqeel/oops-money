@@ -3,8 +3,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { Category, Expense, ImpulseItem, Recurring } from '../types';
 import { KEYS, clearAll, loadJSON, loadString, saveJSON, saveString } from '../storage';
-import { PASTEL_COLORS } from '../constants/categories';
-import { genId } from '../utils';
+import { PASTEL_COLORS, findCat } from '../constants/categories';
+import { genId, getToday } from '../utils';
 
 // Everything the app shares. Actions persist to storage AND update state so the UI refreshes.
 interface AppState {
@@ -25,6 +25,7 @@ interface AppState {
   addImpulse: (name: string, amount: number, note: string) => Promise<void>;
   buryImpulse: (id: string) => Promise<void>;
   releaseImpulse: (id: string) => Promise<void>;
+  rejailImpulse: (id: string) => Promise<void>;
   deleteImpulse: (id: string) => Promise<void>;
   setBudgetValue: (v: string) => Promise<void>;
   addCustomCat: (name: string, emoji: string) => Promise<Category>;
@@ -154,8 +155,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Resist the urge — money saved. Goes to the graveyard.
   const buryImpulse = useCallback((id: string) => setImpulseStatus(id, 'buried'), [setImpulseStatus]);
 
-  // Give in — you bought it.
-  const releaseImpulse = useCallback((id: string) => setImpulseStatus(id, 'released'), [setImpulseStatus]);
+  // Give in — you bought it. Marks released AND logs a real expense so it counts against the budget.
+  const releaseImpulse = useCallback(
+    async (id: string) => {
+      const item = impulse.find((i) => i.id === id);
+      const nextImpulse = impulse.map((i) => (i.id === id ? { ...i, status: 'released' as const, decidedAt: Date.now() } : i));
+      setImpulse(nextImpulse);
+      await saveJSON(KEYS.impulse, nextImpulse);
+      if (item) {
+        const cat = findCat('other', customCats);
+        const exp: Expense = { id: genId(), amount: item.amount, catId: 'other', note: `${item.name} (impulse)`, date: getToday(), color: cat.color, isSplurge: true };
+        const nextExp = [exp, ...expenses];
+        setExpenses(nextExp);
+        await saveJSON(KEYS.expenses, nextExp);
+      }
+    },
+    [impulse, expenses, customCats]
+  );
+
+  // Dig a buried item back up and restart its 24h clock.
+  const rejailImpulse = useCallback(
+    async (id: string) => {
+      const next = impulse.map((i) => (i.id === id ? { ...i, status: 'jailed' as const, createdAt: Date.now(), decidedAt: undefined } : i));
+      setImpulse(next);
+      await saveJSON(KEYS.impulse, next);
+    },
+    [impulse]
+  );
 
   // Remove an impulse item entirely.
   const deleteImpulse = useCallback(
@@ -220,6 +246,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addImpulse,
     buryImpulse,
     releaseImpulse,
+    rejailImpulse,
     deleteImpulse,
     setBudgetValue,
     addCustomCat,

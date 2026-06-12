@@ -3,6 +3,19 @@
 
 ---
 
+## Feature 8.1: Impulse Jail — release logs spend + bring-back — 13 Jun 2026
+**What:** Two improvements Shireen asked for: (1) **releasing** (buying) a jailed item now logs a real expense (category "Other", note "<name> (impulse)", marked splurge) so it counts against the budget; (2) buried items have a **"bring back 🔁"** button that re-jails them and restarts the 24h clock. Also: release is no longer hard-locked — you can "buy anyway" early, but get a soft "itni jaldi? 👀" warning first.
+**Why:** "Paise toh kharch ho hi gaye" — caving should hit the budget honestly. Re-jailing lets you reconsider something you buried. Making early-release possible (with a nudge) is realistic and testable. Released expenses land in "Other" — you can recategorise on Home via edit.
+**Files changed:**
+- `src/hooks/useAppContext.tsx` — `releaseImpulse` now logs an expense; new `rejailImpulse`
+- `src/screens/ImpulseJailScreen.tsx` — soft early-release warning, bring-back button, "added to spending" note
+**How to test:**
+1. Jail tab → add an item → **buy anyway 🛍️** → confirm the "itni jaldi?" warning → it moves to YOU CAVED **and** appears on Home/Insights as a spend (budget goes up)
+2. Bury another item → in the graveyard tap **bring back 🔁** → it returns to jail with a fresh 24h countdown
+**Next up:** Feature 9 — Regret audit.
+
+---
+
 ## Feature 8: Impulse Jail — 13 Jun 2026
 **What:** The 🔒 Jail tab lets you "sentence" a tempting purchase (name, amount, why) to a 24-hour cool-off. A live countdown ticks down. You can **bury** (resist → money saved, goes to the graveyard) anytime, but **release** (buy) only unlocks after 24h. Shows total money saved, a receipts graveyard 🪦, and a "you caved" list.
 **Why:** The signature behavioural feature — delaying impulse buys kills most of them. Locking "release" for 24h enforces the cool-off; allowing "bury" anytime rewards early resistance. New `ImpulseItem` type + storage key + 4 state actions. Countdown uses a 1-second tick that only runs while something is jailed (battery-friendly). Long-press removes graveyard/caved items.
