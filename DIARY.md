@@ -3,6 +3,27 @@
 
 ---
 
+## V2 — Late-Night Shopping Shield 🌙 — 13 Jun 2026 (first V2 feature)
+**What:** When you open "naya kharcha" between 11pm–4am, a sassy interception appears FIRST — "so jao na, babe", a random late-night line, and (if you've written any) one of your own future-me letters. Two choices: "theek hai, so jaati hoon 😴" (closes the sheet) or "nahi, abhi log karna hai" (drops you into the normal add form). Editing an existing spend at night is NOT shielded. There's a Settings toggle to turn it off (default ON).
+**Why:** Late-night scrolling is peak impulse-buy time; a tiny friction + your own past words is enough to break the autopilot, without ever blocking you. Fully local — no backend, no notifications, just a time check (`isLateNight`). Built it INSIDE the add-expense sheet so every entry path (Home FAB) is covered automatically; gated behind a `bypassed` flag so once you choose to log, it doesn't nag again that session.
+**Files changed:**
+- `src/components/NightShield.tsx` — the interception screen (new)
+- `src/utils/index.ts` — `isLateNight()` helper (11pm–4am window)
+- `src/storage/index.ts` — new `nightShield` key
+- `src/hooks/useAppContext.tsx` — `nightShield` state + `setNightShield` (default ON)
+- `src/screens/AddExpenseModal.tsx` — shows shield before the form when shielded
+- `src/screens/SettingsScreen.tsx` — 🌙 Late-night shield toggle
+**How to test on phone:**
+1. Reload the app (shake → Reload, or `r` in terminal)
+2. **Quick test any time of day:** go to **🎀 Settings**, you'll see the new **🌙 Late-night shield** toggle near the top — confirm it's ON.
+3. **Real test (after 11pm):** tap **+** on Home to add a spend → you should see the moon "so jao na, babe" screen instead of the form. If you wrote a future-me letter (Settings → 💌), it shows here too.
+4. Tap **"nahi, abhi log karna hai"** → normal add form opens. Tap **"so jaati hoon"** → sheet closes.
+5. Turn the toggle OFF in Settings → at night the add form opens directly (no shield).
+6. **Can't stay up till 11pm?** Tell me and I'll temporarily widen the window so you can test in daytime.
+**Next up:** pick the next V2 feature — Period/cycle tracking, Voice logging, or Screenshot OCR.
+
+---
+
 ## Feature 17: CSV import — 13 Jun 2026 🎉 (final V1 feature)
 **What:** Settings → "📂 Import bank statement" lets you pick a bank CSV (HDFC/ICICI/SBI/Paytm), auto-detects categories from the description (via the merchant map), shows a preview, and bulk-imports all debits as expenses.
 **Why:** Backfilling a whole month by hand is painful; importing a statement is instant. Ported the prototype's robust parser (finds the header row, handles dd/mm/yyyy + yyyy-mm-dd, skips non-debits). Added `bulkAddExpenses`. Imported items are tagged `imported`.

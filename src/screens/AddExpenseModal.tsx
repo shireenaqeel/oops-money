@@ -17,12 +17,13 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAppContext } from '../hooks/useAppContext';
 import AddCategoryModal from './AddCategoryModal';
 import BrokeMath from '../components/BrokeMath';
+import NightShield from '../components/NightShield';
 import { Expense } from '../types';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { CATS, CAT_GROUPS, findCat } from '../constants/categories';
 import { MOODS } from '../constants/moods';
 import { COPY } from '../constants/copy';
-import { fmtDateLabel, getToday, getYesterday } from '../utils';
+import { fmtDateLabel, getToday, getYesterday, isLateNight } from '../utils';
 
 // The 7-day "was it worth it?" verdict options (also editable here).
 const VERDICTS = [
@@ -47,7 +48,7 @@ export default function AddExpenseModal({
   onClose: () => void;
   editing?: Expense | null;
 }) {
-  const { addExpense, updateExpense, customCats } = useAppContext();
+  const { addExpense, updateExpense, customCats, nightShield } = useAppContext();
   const allCats = [...CATS, ...customCats];
   const groups = ['All', ...CAT_GROUPS, ...(customCats.length > 0 ? ['Custom'] : [])];
   const isEditing = !!editing;
@@ -63,11 +64,16 @@ export default function AddExpenseModal({
   const [isSplurge, setIsSplurge] = useState(false);
   const [regret, setRegret] = useState<'' | 'worth' | 'meh' | 'regret'>('');
   const [saved, setSaved] = useState(false);
+  // Late-night shield: when a NEW spend is opened at night with the shield on, show the
+  // interception first. `bypassed` flips true once she chooses to log anyway.
+  const [bypassed, setBypassed] = useState(false);
+  const shielded = !isEditing && nightShield && isLateNight() && !bypassed;
 
   // When the sheet opens, pre-fill from the expense being edited, or reset to defaults for a new one.
   useEffect(() => {
     if (!visible) return;
     setSaved(false);
+    setBypassed(false);
     setGroup('All');
     if (editing) {
       setAmount(String(editing.amount));
@@ -129,6 +135,9 @@ export default function AddExpenseModal({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={close}>
       <Pressable style={styles.overlay} onPress={close} />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheetWrap}>
+        {shielded ? (
+          <NightShield onProceed={() => setBypassed(true)} onSnooze={close} />
+        ) : (
         <ScrollView style={styles.sheet} contentContainerStyle={styles.sheetContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.grabber} />
           <Text style={styles.title}>{isEditing ? 'kharcha edit karo ✦' : 'naya kharcha ✦'}</Text>
@@ -144,7 +153,7 @@ export default function AddExpenseModal({
               placeholder="0"
               placeholderTextColor={colors.textMuted}
               keyboardType="number-pad"
-              autoFocus={!isEditing}
+              autoFocus={!isEditing && !shielded}
             />
           </View>
           <BrokeMath amount={num} />
@@ -250,6 +259,7 @@ export default function AddExpenseModal({
             <Text style={styles.logText}>{saved ? COPY.logged : isEditing ? 'save changes ✦' : 'log this spend ✦'}</Text>
           </Pressable>
         </ScrollView>
+        )}
       </KeyboardAvoidingView>
 
       {/* create-your-own-category sheet; auto-selects the new category */}

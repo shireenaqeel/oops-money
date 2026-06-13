@@ -1,7 +1,7 @@
 // SettingsScreen.tsx — shows the saved onboarding values + a reset button (testing helper for now).
 // Full settings UI (edit budget/income, notifications, etc.) gets built out in later features.
 import React, { useState } from 'react';
-import { View, Text, Pressable, StyleSheet, Alert, ScrollView, TextInput } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Alert, ScrollView, TextInput, Switch } from 'react-native';
 import { Screen } from '../components/shared';
 import CSVImportModal from './CSVImportModal';
 import { useAppContext } from '../hooks/useAppContext';
@@ -9,7 +9,7 @@ import { colors, spacing, radius, typography } from '../constants/theme';
 import { fmtINR } from '../utils';
 
 export default function SettingsScreen() {
-  const { income, budget, splurgeFund, letters, addLetter, deleteLetter, resetAll } = useAppContext();
+  const { income, budget, splurgeFund, letters, addLetter, deleteLetter, resetAll, nightShield, setNightShield } = useAppContext();
   const [draft, setDraft] = useState('');
   const [showImport, setShowImport] = useState(false);
 
@@ -51,6 +51,16 @@ export default function SettingsScreen() {
           <Row emoji="💰" label="Monthly income" value={income} />
           <Row emoji="🎯" label="Monthly budget" value={budget} />
           <Row emoji="🛍️" label="Splurge fund" value={splurgeFund} />
+        </View>
+
+        {/* late-night shopping shield toggle */}
+        <View style={styles.shieldRow}>
+          <Text style={styles.shieldEmoji}>🌙</Text>
+          <View style={styles.flex1}>
+            <Text style={styles.shieldTitle}>Late-night shield</Text>
+            <Text style={styles.shieldSub}>11pm–4am pe kharcha add karne se pehle ek "so jao babe" reminder</Text>
+          </View>
+          <Switch value={nightShield} onValueChange={setNightShield} trackColor={{ false: colors.border, true: colors.periwinkle }} thumbColor={colors.cardBg} />
         </View>
 
         {/* csv import */}
@@ -103,6 +113,10 @@ const styles = StyleSheet.create({
   content: { padding: spacing.lg },
   flex1: { flex: 1 },
   heading: { fontSize: typography.heading.fontSize, fontWeight: '800', color: colors.text, marginBottom: spacing.lg },
+  shieldRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.lilac, borderRadius: radius.cards, padding: spacing.md, marginBottom: spacing.md },
+  shieldEmoji: { fontSize: 22, marginRight: spacing.md },
+  shieldTitle: { fontSize: typography.body.fontSize, fontWeight: '700', color: colors.text },
+  shieldSub: { fontSize: typography.small.fontSize, color: colors.text, opacity: 0.7, marginTop: 1, marginRight: spacing.sm },
   importBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.powderBlue, borderRadius: radius.cards, padding: spacing.md, marginBottom: spacing.md },
   importEmoji: { fontSize: 22, marginRight: spacing.md },
   importTitle: { fontSize: typography.body.fontSize, fontWeight: '700', color: colors.text },

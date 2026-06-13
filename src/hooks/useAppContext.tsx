@@ -18,6 +18,7 @@ interface AppState {
   budget: string;
   income: string;
   splurgeFund: string;
+  nightShield: boolean; // late-night shopping shield on/off (V2), default on
   completeOnboarding: () => Promise<void>;
   saveOnboarding: (data: { income: string; budget: string; splurgeFund: string }) => Promise<void>;
   addExpense: (e: Omit<Expense, 'id'>) => Promise<void>;
@@ -36,6 +37,7 @@ interface AppState {
   addLetter: (text: string) => Promise<void>;
   deleteLetter: (id: string) => Promise<void>;
   setBudgetValue: (v: string) => Promise<void>;
+  setNightShield: (on: boolean) => Promise<void>;
   addCustomCat: (name: string, emoji: string) => Promise<Category>;
   deleteCustomCat: (id: string) => Promise<void>;
   resetAll: () => Promise<void>;
@@ -56,10 +58,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [budget, setBudget] = useState('');
   const [income, setIncome] = useState('');
   const [splurgeFund, setSplurgeFund] = useState('');
+  const [nightShield, setNightShieldState] = useState(true);
 
   // Pull all persisted data from storage into state.
   const reload = useCallback(async () => {
-    const [exp, rec, imp, ltrs, cc, bud, inc, spl, onb] = await Promise.all([
+    const [exp, rec, imp, ltrs, cc, bud, inc, spl, onb, shield] = await Promise.all([
       loadJSON<Expense[]>(KEYS.expenses, []),
       loadJSON<Recurring[]>(KEYS.recurring, []),
       loadJSON<ImpulseItem[]>(KEYS.impulse, []),
@@ -69,6 +72,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       loadString(KEYS.income),
       loadString(KEYS.splurgeFund),
       loadString(KEYS.onboarded),
+      loadString(KEYS.nightShield),
     ]);
     setExpenses(exp);
     setRecurring(rec);
@@ -79,6 +83,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setIncome(inc);
     setSplurgeFund(spl);
     setOnboarded(onb === 'true');
+    setNightShieldState(shield !== 'false'); // default ON unless explicitly turned off
   }, []);
 
   // On first mount, load everything, then drop the loading flag.
@@ -287,6 +292,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await saveString(KEYS.budget, v);
   }, []);
 
+  // Turn the late-night shopping shield on/off and remember the choice.
+  const setNightShield = useCallback(async (on: boolean) => {
+    setNightShieldState(on);
+    await saveString(KEYS.nightShield, on ? 'true' : 'false');
+  }, []);
+
   // Create a new custom category (emoji + name), auto-assign a colour, save, and return it.
   const addCustomCat = useCallback(
     async (name: string, emoji: string): Promise<Category> => {
@@ -327,6 +338,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     budget,
     income,
     splurgeFund,
+    nightShield,
     completeOnboarding,
     saveOnboarding,
     addExpense,
@@ -345,6 +357,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addLetter,
     deleteLetter,
     setBudgetValue,
+    setNightShield,
     addCustomCat,
     deleteCustomCat,
     resetAll,

@@ -90,6 +90,13 @@ export function daysSince(iso: string): number {
   return Math.floor((now.getTime() - then.getTime()) / 86400000);
 }
 
+// True if the current local time is inside the late-night danger window (11pm–4am).
+// Used by the late-night shopping shield (V2) to intercept impulse spends.
+export function isLateNight(d: Date = new Date()): boolean {
+  const h = d.getHours();
+  return h >= 23 || h < 4;
+}
+
 // Generate a short unique id for new records.
 export function genId(): string {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);

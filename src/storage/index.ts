@@ -13,6 +13,7 @@ export const KEYS = {
   income: 'om_income',
   splurgeFund: 'om_splurge_fund',
   onboarded: 'om_onboarded',
+  nightShield: 'om_night_shield', // late-night shopping shield on/off (V2)
 } as const;
 
 // Read + JSON-parse a value, returning the fallback if it's missing or corrupted.
