@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "_setup",
-    "slug": "_setup",
+    "name": "Oops Money",
+    "slug": "oops-money",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -10,6 +10,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.shireen.oopsmoney",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -22,7 +23,18 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "@react-native-community/datetimepicker"
-    ]
+      "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Oops Money tumhari payment screenshots padhne ke liye gallery access maangta hai 🌸"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "0c2e7e52-005c-4546-8bfe-42664c503387"
+      }
+    }
   }
 }
