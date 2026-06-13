@@ -23,7 +23,7 @@ import { colors, spacing, radius, typography } from '../constants/theme';
 import { CATS, CAT_GROUPS, findCat } from '../constants/categories';
 import { MOODS } from '../constants/moods';
 import { COPY } from '../constants/copy';
-import { fmtDateLabel, getToday, getYesterday, isLateNight } from '../utils';
+import { fmtDateLabel, fmtINR, getToday, getYesterday, isLateNight, parseSpokenExpense } from '../utils';
 
 // The 7-day "was it worth it?" verdict options (also editable here).
 const VERDICTS = [
@@ -64,6 +64,9 @@ export default function AddExpenseModal({
   const [isSplurge, setIsSplurge] = useState(false);
   const [regret, setRegret] = useState<'' | 'worth' | 'meh' | 'regret'>('');
   const [saved, setSaved] = useState(false);
+  // Voice logging (V2): she speaks via the keyboard mic into this field; we parse it into the form.
+  const [voiceText, setVoiceText] = useState('');
+  const [voiceMsg, setVoiceMsg] = useState('');
   // Late-night shield: when a NEW spend is opened at night with the shield on, show the
   // interception first. `bypassed` flips true once she chooses to log anyway.
   const [bypassed, setBypassed] = useState(false);
@@ -92,6 +95,8 @@ export default function AddExpenseModal({
       setIsSplurge(false);
       setRegret('');
     }
+    setVoiceText('');
+    setVoiceMsg('');
   }, [visible, editing]);
 
   const num = parseInt(amount, 10) || 0;
@@ -109,6 +114,23 @@ export default function AddExpenseModal({
   // Close the sheet (parent clears editing state).
   function close() {
     onClose();
+  }
+
+  // Parse the spoken/typed phrase ("500 Zomato") and pre-fill the form, with a friendly confirmation.
+  function applyVoice() {
+    const text = voiceText.trim();
+    if (!text) return;
+    const parsed = parseSpokenExpense(text, customCats);
+    if (parsed.amount > 0) setAmount(String(parsed.amount));
+    if (parsed.catId) {
+      setGroup('All');
+      setCatId(parsed.catId);
+    }
+    setNote(text);
+    const cat = parsed.catId ? findCat(parsed.catId, customCats) : null;
+    if (parsed.amount > 0 && cat) setVoiceMsg(`samajh gaya: ${fmtINR(parsed.amount)} • ${cat.name} ✓`);
+    else if (parsed.amount > 0) setVoiceMsg(`${fmtINR(parsed.amount)} mil gaya — category select kar lo babe`);
+    else setVoiceMsg('amount samajh nahi aaya 😅 neeche type kar do');
   }
 
   // Save: update if editing, otherwise add. Show a quick success state then close.
@@ -141,6 +163,28 @@ export default function AddExpenseModal({
         <ScrollView style={styles.sheet} contentContainerStyle={styles.sheetContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.grabber} />
           <Text style={styles.title}>{isEditing ? 'kharcha edit karo ✦' : 'naya kharcha ✦'}</Text>
+
+          {/* voice add — speak via the keyboard mic, we fill the form (V2) */}
+          {!isEditing ? (
+            <View style={styles.voiceCard}>
+              <Text style={styles.voiceLabel}>🎤 bol ke bharo — keyboard ka mic dabao</Text>
+              <View style={styles.voiceRow}>
+                <TextInput
+                  style={styles.voiceInput}
+                  value={voiceText}
+                  onChangeText={setVoiceText}
+                  placeholder="jaise: 500 Zomato, do hazaar Myntra"
+                  placeholderTextColor={colors.textMuted}
+                  onSubmitEditing={applyVoice}
+                  returnKeyType="done"
+                />
+                <Pressable style={[styles.voiceBtn, !voiceText.trim() && styles.voiceBtnDisabled]} onPress={applyVoice} disabled={!voiceText.trim()}>
+                  <Text style={styles.voiceBtnText}>samjho ✨</Text>
+                </Pressable>
+              </View>
+              {voiceMsg ? <Text style={styles.voiceMsg}>{voiceMsg}</Text> : null}
+            </View>
+          ) : null}
 
           {/* amount */}
           <Text style={styles.label}>{COPY.amountPlaceholder}</Text>
@@ -284,6 +328,15 @@ const styles = StyleSheet.create({
   title: { fontSize: typography.title.fontSize, fontWeight: '700', color: colors.text, marginBottom: spacing.md },
   label: { fontSize: typography.small.fontSize, color: colors.textLight, marginTop: spacing.md, marginBottom: spacing.sm },
   flex1: { flex: 1 },
+
+  voiceCard: { backgroundColor: colors.powderBlue, borderRadius: radius.inputs, padding: spacing.md, marginBottom: spacing.sm },
+  voiceLabel: { fontSize: typography.small.fontSize, color: colors.text, fontWeight: '600', marginBottom: spacing.sm },
+  voiceRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  voiceInput: { flex: 1, backgroundColor: colors.cardBg, borderRadius: radius.chips, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, fontSize: typography.body.fontSize, color: colors.text },
+  voiceBtn: { backgroundColor: colors.skyBlue, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: radius.chips },
+  voiceBtnDisabled: { opacity: 0.5 },
+  voiceBtnText: { color: colors.text, fontWeight: '700', fontSize: typography.small.fontSize },
+  voiceMsg: { fontSize: typography.small.fontSize, color: colors.text, marginTop: spacing.sm, fontWeight: '600' },
 
   amountRow: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: colors.border, paddingBottom: spacing.xs },
   rupee: { fontSize: 32, color: colors.rose, fontWeight: '700', marginRight: spacing.sm },

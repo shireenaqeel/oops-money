@@ -3,6 +3,24 @@
 
 ---
 
+## V2 — Voice Logging 🎤 — 13 Jun 2026
+**What:** A "🎤 bol ke bharo" box at the top of the add-expense sheet. You tap your phone keyboard's mic and say something like "500 Zomato" or "do hazaar Myntra"; tap **samjho ✨** and the form auto-fills — amount + best-guess category + the phrase as a note. You review and log as normal.
+**Why this approach (IMPORTANT):** Real speech-recognition npm packages (`@react-native-voice/voice`, `expo-speech-recognition`) need a native dev build and **do NOT work in Expo Go** — they'd break our "test instantly on phone" workflow and force an EAS build for every test. So instead we lean on the keyboard's built-in mic (every Android keyboard has it) for the actual speech→text, and added a smart **text parser** that pulls the amount and category out. Result: same "speak your spend" feel, **zero new packages**, works in Expo Go today.
+**The parser (`src/utils/index.ts`):** understands digits ("500", "1,500", "2k"), Hinglish/English number words + multipliers ("do hazaar" = 2000, "paanch sau" = 500, "do hazaar paanch sau" = 2500, "ek lakh" = 100000), and detects category from merchant names (Swiggy→Khaana, Myntra→Fashion, Uber→Transport) or category labels. Verified with a test run.
+**Files changed:**
+- `src/utils/index.ts` — `parseSpokenExpense` / `parseSpokenAmount` / `parseSpokenCategory` (new)
+- `src/screens/AddExpenseModal.tsx` — the 🎤 voice box + auto-fill
+**How to test on phone:**
+1. Reload the app
+2. Tap **+** on Home → at the top you'll see **"🎤 bol ke bharo"**
+3. Tap inside the box → tap the **mic icon on your keyboard** → say *"do hazaar Myntra"* (or just type it)
+4. Tap **samjho ✨** → amount becomes ₹2,000, category jumps to Fashion, and a "samajh gaya ✓" line shows
+5. Try *"500 Zomato"*, *"teen sau Uber"*, *"paanch sau cafe"* — review the filled form, then **log this spend ✦**
+6. Note: at night the late-night shield still shows first (tap "abhi log karna hai" to reach this).
+**Next up:** Period/cycle tracking or Screenshot OCR (last two V2 features).
+
+---
+
 ## V2 — Late-Night Shopping Shield 🌙 — 13 Jun 2026 (first V2 feature)
 **What:** When you open "naya kharcha" between 11pm–4am, a sassy interception appears FIRST — "so jao na, babe", a random late-night line, and (if you've written any) one of your own future-me letters. Two choices: "theek hai, so jaati hoon 😴" (closes the sheet) or "nahi, abhi log karna hai" (drops you into the normal add form). Editing an existing spend at night is NOT shielded. There's a Settings toggle to turn it off (default ON).
 **Why:** Late-night scrolling is peak impulse-buy time; a tiny friction + your own past words is enough to break the autopilot, without ever blocking you. Fully local — no backend, no notifications, just a time check (`isLateNight`). Built it INSIDE the add-expense sheet so every entry path (Home FAB) is covered automatically; gated behind a `bypassed` flag so once you choose to log, it doesn't nag again that session.

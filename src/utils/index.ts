@@ -1,4 +1,6 @@
 // utils/index.ts — pure formatting / calculation / id helpers. No UI, no state, no storage.
+import { Category } from '../types';
+import { CATS, MERCHANT_MAP } from '../constants/categories';
 
 const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -100,4 +102,65 @@ export function isLateNight(d: Date = new Date()): boolean {
 // Generate a short unique id for new records.
 export function genId(): string {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+// ───────── Voice logging (V2) ─────────
+// The keyboard's mic turns speech into text; THESE helpers turn that text into a spend.
+// e.g. "do hazaar Myntra" → { amount: 2000, catId: 'fashion' }.
+
+// Small Hinglish/English number-word map (1–10) for spoken amounts like "paanch sau".
+const NUM_WORDS: Record<string, number> = {
+  ek: 1, do: 2, teen: 3, char: 4, chaar: 4, paanch: 5, panch: 5, chhe: 6, che: 6, saat: 7, aath: 8, nau: 9, das: 10,
+  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+};
+
+// Parse a rupee amount out of spoken text. Handles digits ("500", "1,500", "2k"),
+// multiplier words (sau/hundred, hazaar/thousand, lakh) and combos ("do hazaar paanch sau" = 2500).
+export function parseSpokenAmount(text: string): number {
+  const tokens = text.toLowerCase().replace(/,/g, '').split(/\s+/);
+  let total = 0; // sum of completed "chunks" (e.g. the 2000 in "2 hazaar 500")
+  let current = 0; // the number being built before its multiplier lands
+  let found = false;
+  for (const w of tokens) {
+    const kMatch = w.match(/^(\d+(?:\.\d+)?)k$/); // "2k", "1.5k"
+    if (kMatch) {
+      total += parseFloat(kMatch[1]) * 1000;
+      current = 0;
+      found = true;
+      continue;
+    }
+    const digit = /^\d+(?:\.\d+)?$/.test(w) ? parseFloat(w) : NUM_WORDS[w] ?? null;
+    if (digit != null) {
+      current = current === 0 ? digit : current + digit;
+      found = true;
+      continue;
+    }
+    let mult = 0;
+    if (/^(lakh|lac)$/.test(w)) mult = 100000;
+    else if (/^(hazaar|hazar|thousand)$/.test(w)) mult = 1000;
+    else if (/^(sau|hundred)$/.test(w)) mult = 100;
+    if (mult) {
+      total += (current === 0 ? 1 : current) * mult;
+      current = 0;
+      found = true;
+    }
+  }
+  return found ? Math.round(total + current) : 0;
+}
+
+// Guess a category id from spoken text: merchant names first (Swiggy→food), then category labels.
+export function parseSpokenCategory(text: string, customCats: Category[] = []): string | null {
+  const t = text.toLowerCase();
+  for (const m of MERCHANT_MAP) if (m.test.test(t)) return m.catId;
+  for (const c of [...CATS, ...customCats]) {
+    // strip the emoji + punctuation off the label, keep words longer than 2 chars
+    const words = c.name.replace(/[^\p{L}\s]/gu, ' ').toLowerCase().split(/\s+/).filter((w) => w.length > 2);
+    if (words.some((w) => t.includes(w))) return c.id;
+  }
+  return null;
+}
+
+// Turn one spoken phrase into the pieces of an expense (amount + best-guess category + raw note).
+export function parseSpokenExpense(text: string, customCats: Category[] = []): { amount: number; catId: string | null; note: string } {
+  return { amount: parseSpokenAmount(text), catId: parseSpokenCategory(text, customCats), note: text.trim() };
 }
