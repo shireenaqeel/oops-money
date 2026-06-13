@@ -145,6 +145,7 @@ export default function HomeScreen() {
                     {e.mood ? ` · ${e.mood}` : ''}
                     {e.isSplurge ? ' · splurge 🛍️' : ''}
                     {e.regret ? ` · ${REGRET_EMOJI[e.regret]}` : ''}
+                    {e.receiptUri ? ' · 📎' : ''}
                   </Text>
                 </View>
                 <Text style={styles.histAmount}>{fmtINR(e.amount)}</Text>

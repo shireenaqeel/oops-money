@@ -14,6 +14,8 @@ export const KEYS = {
   splurgeFund: 'om_splurge_fund',
   onboarded: 'om_onboarded',
   nightShield: 'om_night_shield', // late-night shopping shield on/off (V2)
+  periodStarts: 'om_period_starts', // logged period start dates (V2 cycle tracking)
+  cycleLength: 'om_cycle_length', // average cycle length in days (V2)
 } as const;
 
 // Read + JSON-parse a value, returning the fallback if it's missing or corrupted.

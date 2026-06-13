@@ -19,6 +19,8 @@ interface AppState {
   income: string;
   splurgeFund: string;
   nightShield: boolean; // late-night shopping shield on/off (V2), default on
+  periodStarts: string[]; // logged period start dates, ISO (V2 cycle tracking)
+  cycleLength: number; // average cycle length in days (V2), default 28
   completeOnboarding: () => Promise<void>;
   saveOnboarding: (data: { income: string; budget: string; splurgeFund: string }) => Promise<void>;
   addExpense: (e: Omit<Expense, 'id'>) => Promise<void>;
@@ -38,6 +40,9 @@ interface AppState {
   deleteLetter: (id: string) => Promise<void>;
   setBudgetValue: (v: string) => Promise<void>;
   setNightShield: (on: boolean) => Promise<void>;
+  logPeriodStart: (dateIso: string) => Promise<void>;
+  removePeriodStart: (dateIso: string) => Promise<void>;
+  setCycleLength: (days: number) => Promise<void>;
   addCustomCat: (name: string, emoji: string) => Promise<Category>;
   deleteCustomCat: (id: string) => Promise<void>;
   resetAll: () => Promise<void>;
@@ -59,10 +64,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [income, setIncome] = useState('');
   const [splurgeFund, setSplurgeFund] = useState('');
   const [nightShield, setNightShieldState] = useState(true);
+  const [periodStarts, setPeriodStarts] = useState<string[]>([]);
+  const [cycleLength, setCycleLengthState] = useState(28);
 
   // Pull all persisted data from storage into state.
   const reload = useCallback(async () => {
-    const [exp, rec, imp, ltrs, cc, bud, inc, spl, onb, shield] = await Promise.all([
+    const [exp, rec, imp, ltrs, cc, bud, inc, spl, onb, shield, pStarts, cLen] = await Promise.all([
       loadJSON<Expense[]>(KEYS.expenses, []),
       loadJSON<Recurring[]>(KEYS.recurring, []),
       loadJSON<ImpulseItem[]>(KEYS.impulse, []),
@@ -73,6 +80,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       loadString(KEYS.splurgeFund),
       loadString(KEYS.onboarded),
       loadString(KEYS.nightShield),
+      loadJSON<string[]>(KEYS.periodStarts, []),
+      loadString(KEYS.cycleLength),
     ]);
     setExpenses(exp);
     setRecurring(rec);
@@ -84,6 +93,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setSplurgeFund(spl);
     setOnboarded(onb === 'true');
     setNightShieldState(shield !== 'false'); // default ON unless explicitly turned off
+    setPeriodStarts(pStarts);
+    setCycleLengthState(parseInt(cLen, 10) || 28); // default 28-day cycle
   }, []);
 
   // On first mount, load everything, then drop the loading flag.
@@ -298,6 +309,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await saveString(KEYS.nightShield, on ? 'true' : 'false');
   }, []);
 
+  // Log a period start date (kept unique, newest-first ordering handled at read time).
+  const logPeriodStart = useCallback(
+    async (dateIso: string) => {
+      const next = [...new Set([dateIso, ...periodStarts])];
+      setPeriodStarts(next);
+      await saveJSON(KEYS.periodStarts, next);
+    },
+    [periodStarts]
+  );
+
+  // Remove a logged period start date.
+  const removePeriodStart = useCallback(
+    async (dateIso: string) => {
+      const next = periodStarts.filter((d) => d !== dateIso);
+      setPeriodStarts(next);
+      await saveJSON(KEYS.periodStarts, next);
+    },
+    [periodStarts]
+  );
+
+  // Save the average cycle length (days) used for predictions.
+  const setCycleLength = useCallback(async (days: number) => {
+    const safe = Math.max(20, Math.min(45, Math.round(days) || 28)); // keep it sane
+    setCycleLengthState(safe);
+    await saveString(KEYS.cycleLength, String(safe));
+  }, []);
+
   // Create a new custom category (emoji + name), auto-assign a colour, save, and return it.
   const addCustomCat = useCallback(
     async (name: string, emoji: string): Promise<Category> => {
@@ -339,6 +377,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     income,
     splurgeFund,
     nightShield,
+    periodStarts,
+    cycleLength,
     completeOnboarding,
     saveOnboarding,
     addExpense,
@@ -358,6 +398,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     deleteLetter,
     setBudgetValue,
     setNightShield,
+    logPeriodStart,
+    removePeriodStart,
+    setCycleLength,
     addCustomCat,
     deleteCustomCat,
     resetAll,

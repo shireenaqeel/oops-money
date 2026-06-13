@@ -3,6 +3,44 @@
 
 ---
 
+## V2 — Screenshot Add 📸 — 13 Jun 2026
+**What:** In the add-expense sheet you can now tap **"📸 payment screenshot lagao"**, pick a GPay/PhonePe/bank screenshot from your gallery, and it gets attached to the expense as proof. A thumbnail shows in the sheet; the Home list shows a 📎 marker on expenses that have one; tapping an expense (edit) shows the screenshot again.
+**Why this approach (IMPORTANT — read this):** True auto-OCR (reading the amount off the image automatically) needs either a cloud OCR API (we have a strict NO-backend/NO-cloud rule) or a native on-device OCR module like ML Kit (needs a dev build — **breaks Expo Go**, same problem as real voice STT). There is no pure-JS OCR that runs in Expo Go's Hermes engine. So this version does the honest, Expo-Go-friendly thing: **attach the screenshot as the receipt**, and you fill the amount in 2 seconds using the 🎤 voice box right above it (which is already there). You get proof + fast entry today, with zero workflow breakage. **Future upgrade path:** once we go full EAS dev-build, we can drop in `@react-native-ml-kit/text-recognition` to auto-read the amount — the `receiptUri` plumbing is already in place for it.
+**Package added:** `expo-image-picker` (~17.0.11) — standard Expo module, **works in Expo Go**, same family as the `expo-document-picker` we already use for CSV. Picks the image; we copy it into the app's document directory (via `expo-file-system`) so it persists.
+**Files changed:**
+- `src/types/index.ts` — `Expense.receiptUri?`
+- `src/screens/AddExpenseModal.tsx` — 📸 pick + persist + thumbnail, saved on the expense
+- `src/screens/HomeScreen.tsx` — 📎 marker on expenses with a screenshot
+- `app.json` — `expo-image-picker` plugin + gallery permission text (for future EAS build; Expo Go ignores it)
+**How to test on phone:**
+1. Reload the app
+2. Tap **+** → scroll to **"📸 payment screenshot lagao"** → allow gallery access → pick any screenshot
+3. Thumbnail appears; use the **🎤 box** above to type/say "499 Swiggy" → **log this spend ✦**
+4. On Home, that expense shows a **📎**; tap it → the screenshot shows again in the edit sheet
+**Next up:** All V2 features done 🎉 — remaining V1 checklist item is the EAS Build APK (icons + eas.json already set up, uncommitted).
+
+---
+
+## V2 — Period / Cycle Tracking 🌸 — 13 Jun 2026
+**What:** In **Settings 🎀** there's a new **🌸 Cycle Tracking** card: tap "period shuru hua aaj" (or pick a past date) to log period start dates, set your cycle length (20–45 days stepper), and see a supportive current-phase banner + predicted next period. In **Insights ✿** a new **"CYCLE vs MONEY"** card compares your average daily spend in the PMS week vs the rest of the cycle, with a gentle, non-judgmental line.
+**Why:** Cravings + impulse buys often spike in the PMS week; surfacing that pattern (without shame) helps her plan. 100% local & private — no package, no backend, just date maths. Logging lives in Settings (like future-me letters), the insight in Insights (like mood-vs-money), so it slots into the existing patterns without a new tab.
+**The maths (`src/utils/cycle.ts`):** `getCycleInfo` → current phase (period / pms / normal) + next-period prediction from cycle length. `getCycleSpendInsight` → projects PMS windows (5 days before each period start) across all your data, then compares PMS daily-avg vs other daily-avg. Verified with a test run (correctly catches PMS-heavy spending, handles no-data).
+**Files changed:**
+- `src/utils/cycle.ts` — cycle phase + PMS-spend maths (new)
+- `src/components/CycleTracker.tsx` — Settings logging UI (new)
+- `src/storage/index.ts` — `periodStarts` + `cycleLength` keys
+- `src/hooks/useAppContext.tsx` — `periodStarts`, `cycleLength` + log/remove/setLength actions
+- `src/screens/SettingsScreen.tsx` — mounts CycleTracker
+- `src/screens/InsightsScreen.tsx` — CYCLE vs MONEY card
+**How to test on phone:**
+1. Reload the app
+2. **🎀 Settings** → **🌸 Cycle Tracking** → tap **"period shuru hua aaj"** (and add 1–2 past dates via 📅 for a better pattern)
+3. See the phase banner + **🔮 agla period** prediction; nudge cycle length with − / +
+4. **✿ Insights** → scroll to **CYCLE vs MONEY** → it compares PMS-week vs other-days daily spend
+**Next up:** Screenshot add 📸 (last V2 feature).
+
+---
+
 ## V2 — Voice Logging 🎤 — 13 Jun 2026
 **What:** A "🎤 bol ke bharo" box at the top of the add-expense sheet. You tap your phone keyboard's mic and say something like "500 Zomato" or "do hazaar Myntra"; tap **samjho ✨** and the form auto-fills — amount + best-guess category + the phrase as a note. You review and log as normal.
 **Why this approach (IMPORTANT):** Real speech-recognition npm packages (`@react-native-voice/voice`, `expo-speech-recognition`) need a native dev build and **do NOT work in Expo Go** — they'd break our "test instantly on phone" workflow and force an EAS build for every test. So instead we lean on the keyboard's built-in mic (every Android keyboard has it) for the actual speech→text, and added a smart **text parser** that pulls the amount and category out. Result: same "speak your spend" feel, **zero new packages**, works in Expo Go today.

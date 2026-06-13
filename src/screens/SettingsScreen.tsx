@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Alert, ScrollView, TextInput, Switch } from 'react-native';
 import { Screen } from '../components/shared';
 import CSVImportModal from './CSVImportModal';
+import CycleTracker from '../components/CycleTracker';
 import { useAppContext } from '../hooks/useAppContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { fmtINR } from '../utils';
@@ -72,6 +73,9 @@ export default function SettingsScreen() {
           </View>
           <Text style={styles.importArrow}>›</Text>
         </Pressable>
+
+        {/* period / cycle tracking */}
+        <CycleTracker />
 
         {/* future-me letters */}
         <View style={styles.card}>

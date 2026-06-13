@@ -12,8 +12,12 @@ import {
   Switch,
   KeyboardAvoidingView,
   Platform,
+  Image,
+  Alert,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useAppContext } from '../hooks/useAppContext';
 import AddCategoryModal from './AddCategoryModal';
 import BrokeMath from '../components/BrokeMath';
@@ -67,6 +71,8 @@ export default function AddExpenseModal({
   // Voice logging (V2): she speaks via the keyboard mic into this field; we parse it into the form.
   const [voiceText, setVoiceText] = useState('');
   const [voiceMsg, setVoiceMsg] = useState('');
+  // Screenshot add (V2): an optional payment screenshot attached to this expense.
+  const [receiptUri, setReceiptUri] = useState<string | undefined>(undefined);
   // Late-night shield: when a NEW spend is opened at night with the shield on, show the
   // interception first. `bypassed` flips true once she chooses to log anyway.
   const [bypassed, setBypassed] = useState(false);
@@ -86,6 +92,7 @@ export default function AddExpenseModal({
       setDate(editing.date);
       setIsSplurge(!!editing.isSplurge);
       setRegret(editing.regret ?? '');
+      setReceiptUri(editing.receiptUri);
     } else {
       setAmount('');
       setCatId(CATS[0].id);
@@ -94,6 +101,7 @@ export default function AddExpenseModal({
       setDate(getToday());
       setIsSplurge(false);
       setRegret('');
+      setReceiptUri(undefined);
     }
     setVoiceText('');
     setVoiceMsg('');
@@ -133,6 +141,36 @@ export default function AddExpenseModal({
     else setVoiceMsg('amount samajh nahi aaya 😅 neeche type kar do');
   }
 
+  // Pick a payment screenshot from the gallery and keep a private on-device copy on this expense.
+  // (Real auto-OCR needs a native build; here the screenshot is the proof, you fill amount via the 🎤 box.)
+  async function pickScreenshot() {
+    try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert('Permission chahiye', 'Screenshot lagane ke liye gallery ka access do, babe 🌸');
+        return;
+      }
+      const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.6 });
+      if (res.canceled || !res.assets?.length) return;
+      const src = res.assets[0].uri;
+      let saved = src;
+      try {
+        // copy into the app's document dir so it survives after the OS clears the cache
+        const dir = FileSystem.documentDirectory + 'receipts/';
+        await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
+        const dest = `${dir}${Date.now()}.jpg`;
+        await FileSystem.copyAsync({ from: src, to: dest });
+        saved = dest;
+      } catch {
+        // copy failed — keep the original uri (fine for this session)
+      }
+      setReceiptUri(saved);
+      setVoiceMsg('screenshot lag gaya 📸 — ab amount type/bol ke bhar do');
+    } catch {
+      Alert.alert('oops', 'screenshot nahi khul paya, dobara try karo 💕');
+    }
+  }
+
   // Save: update if editing, otherwise add. Show a quick success state then close.
   async function onLog() {
     if (!canLog) return;
@@ -146,6 +184,7 @@ export default function AddExpenseModal({
       mood: mood || undefined,
       isSplurge,
       regret: regret || undefined,
+      receiptUri,
     };
     if (editing) await updateExpense(editing.id, payload);
     else await addExpense(payload);
@@ -250,6 +289,24 @@ export default function AddExpenseModal({
             placeholder="little note... (Sephora haul, gym fee, etc.)"
             placeholderTextColor={colors.textMuted}
           />
+
+          {/* payment screenshot (optional) — attach proof, fill amount via 🎤 box above */}
+          {receiptUri ? (
+            <View style={styles.receiptRow}>
+              <Image source={{ uri: receiptUri }} style={styles.receiptThumb} />
+              <View style={styles.flex1}>
+                <Text style={styles.receiptTitle}>screenshot laga hai 📸</Text>
+                <Text style={styles.receiptSub}>amount + category upar bhar do</Text>
+              </View>
+              <Pressable onPress={() => setReceiptUri(undefined)} hitSlop={10}>
+                <Text style={styles.receiptDel}>✕</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable style={styles.screenshotBtn} onPress={pickScreenshot}>
+              <Text style={styles.screenshotText}>📸 payment screenshot lagao (optional)</Text>
+            </Pressable>
+          )}
 
           {/* date: quick chips + a picker for any past date */}
           <View style={styles.dateRow}>
@@ -364,6 +421,14 @@ const styles = StyleSheet.create({
   moodLabelActive: { color: colors.text, fontWeight: '700' },
 
   noteInput: { borderBottomWidth: 1, borderBottomColor: colors.border, paddingVertical: spacing.sm, fontSize: typography.body.fontSize, color: colors.text, marginTop: spacing.md },
+
+  screenshotBtn: { marginTop: spacing.md, borderWidth: 1.5, borderColor: colors.powderBlue, borderStyle: 'dashed', borderRadius: radius.inputs, paddingVertical: spacing.md, alignItems: 'center' },
+  screenshotText: { fontSize: typography.small.fontSize, color: colors.textLight, fontWeight: '600' },
+  receiptRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.md, backgroundColor: colors.powderBlue, borderRadius: radius.inputs, padding: spacing.sm },
+  receiptThumb: { width: 52, height: 52, borderRadius: radius.small, backgroundColor: colors.cream },
+  receiptTitle: { fontSize: typography.small.fontSize, fontWeight: '700', color: colors.text },
+  receiptSub: { fontSize: typography.tiny.fontSize, color: colors.text, opacity: 0.7, marginTop: 1 },
+  receiptDel: { fontSize: 16, color: colors.text, opacity: 0.5, paddingHorizontal: spacing.sm },
 
   dateRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
   datePill: { flex: 1, alignItems: 'center', paddingVertical: spacing.sm, borderRadius: radius.chips, backgroundColor: colors.cream },

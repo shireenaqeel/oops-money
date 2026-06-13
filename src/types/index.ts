@@ -22,6 +22,7 @@ export interface Expense {
   mood?: string; // mood tag at time of spend (feature 7)
   isSplurge?: boolean; // counted against the splurge fund (feature 4)
   regret?: 'worth' | 'meh' | 'regret'; // 7-day post-purchase verdict (feature 9)
+  receiptUri?: string; // attached payment screenshot, saved on-device (V2 screenshot add)
 }
 
 // An item put in "impulse jail" — something you're tempted to buy but are waiting on.

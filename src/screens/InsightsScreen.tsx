@@ -9,6 +9,7 @@ import { useAppContext } from '../hooks/useAppContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { fmtINR, getToday } from '../utils';
 import { monthExpenses, sumExpenses, getAlerts } from '../utils/calculations';
+import { getCycleInfo, getCycleSpendInsight } from '../utils/cycle';
 import { findCat } from '../constants/categories';
 import { MOODS } from '../constants/moods';
 
@@ -23,8 +24,12 @@ function toISO(d: Date): string {
 }
 
 export default function InsightsScreen() {
-  const { expenses, budget, splurgeFund, customCats } = useAppContext();
+  const { expenses, budget, splurgeFund, customCats, periodStarts, cycleLength } = useAppContext();
   const [showWrapped, setShowWrapped] = useState(false);
+
+  // Cycle insights (V2): current phase + whether PMS-week spending runs higher.
+  const cycleInfo = getCycleInfo(periodStarts, cycleLength, getToday());
+  const cycleSpend = getCycleSpendInsight(expenses, periodStarts, cycleLength, getToday());
 
   const now = new Date();
   const month = now.getMonth();
@@ -219,6 +224,36 @@ export default function InsightsScreen() {
           )}
         </View>
 
+        {/* cycle vs money (V2) */}
+        <View style={styles.card}>
+          <Text style={styles.sectionLabel}>CYCLE vs MONEY ✦</Text>
+          {!cycleSpend.hasData ? (
+            <Text style={styles.muted}>Settings 🎀 mein period log karo — phir yahan dikhega ki PMS week mein kharcha badhta hai ya nahi 🌸</Text>
+          ) : (
+            <>
+              <Text style={styles.moodHeadline}>{buildCycleLine(cycleSpend.higherPct, cycleInfo.phase)}</Text>
+              <View style={styles.breakRow}>
+                <View style={styles.breakTop}>
+                  <Text style={styles.breakName}>🩸 PMS week (daily avg)</Text>
+                  <Text style={styles.breakAmt}>{fmtINR(cycleSpend.pmsDailyAvg)}</Text>
+                </View>
+                <View style={styles.breakTrack}>
+                  <View style={[styles.breakFill, { width: `${cyclePct(cycleSpend.pmsDailyAvg, cycleSpend.otherDailyAvg)}%`, backgroundColor: colors.coral }]} />
+                </View>
+              </View>
+              <View style={styles.breakRow}>
+                <View style={styles.breakTop}>
+                  <Text style={styles.breakName}>🌙 baaki din (daily avg)</Text>
+                  <Text style={styles.breakAmt}>{fmtINR(cycleSpend.otherDailyAvg)}</Text>
+                </View>
+                <View style={styles.breakTrack}>
+                  <View style={[styles.breakFill, { width: `${cyclePct(cycleSpend.otherDailyAvg, cycleSpend.pmsDailyAvg)}%`, backgroundColor: colors.sage }]} />
+                </View>
+              </View>
+            </>
+          )}
+        </View>
+
         {/* tips */}
         {tips.length > 0 ? (
           <View style={styles.tipsCard}>
@@ -234,6 +269,21 @@ export default function InsightsScreen() {
       <MonthlyWrappedModal visible={showWrapped} onClose={() => setShowWrapped(false)} />
     </Screen>
   );
+}
+
+// Bar width (0–100) for one daily-avg value relative to the larger of the two.
+function cyclePct(value: number, other: number): number {
+  const max = Math.max(value, other, 1);
+  return Math.round((value / max) * 100);
+}
+
+// A supportive one-liner about PMS-week spending. `higherPct` = how much higher PMS daily spend is.
+function buildCycleLine(higherPct: number | null, phase: string): string {
+  const phasePrefix = phase === 'pms' ? 'PMS week chal raha hai abhi — ' : phase === 'period' ? 'period time — ' : '';
+  if (higherPct == null) return `${phasePrefix}thoda aur data aane do, pattern banta jayega 🌸`;
+  if (higherPct >= 15) return `${phasePrefix}PMS week mein daily kharcha ~${higherPct}% zyada hota hai — cravings real hain babe 💕 thoda heads-up rakho`;
+  if (higherPct <= -15) return `${phasePrefix}PMS week mein actually kam kharcha — proud of you 💅`;
+  return `${phasePrefix}PMS aur baaki dino mein kharcha lagbhag barabar — balanced queen ✨`;
 }
 
 // A sassy one-liner about the mood you spend most in.
