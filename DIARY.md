@@ -3,6 +3,33 @@
 
 ---
 
+## V2+ — Sapna Jar 🫙 (savings goals) — 13 Jun 2026
+**What:** Settings 🎀 → **🫙 Sapna Jar** opens a modal where you set savings goals ("Goa trip ₹15,000"), then stash money toward each one (jodo 🪙 / nikalo). A progress bar fills as you save; at 100% it celebrates "🎉 sapna poora!". Fully local.
+**Why:** A positive counterweight to all the "stop spending" features — gives saving a visible, rewarding goal. Lives in a modal (like CSV import) so it doesn't need a new tab.
+**Files changed:**
+- `src/types/index.ts` — `Goal` interface
+- `src/storage/index.ts` — `goals` key
+- `src/hooks/useAppContext.tsx` — `goals` + addGoal/addToGoal/withdrawFromGoal/deleteGoal
+- `src/screens/GoalsModal.tsx` — the jar UI (new)
+- `src/screens/SettingsScreen.tsx` — Sapna Jar button + modal
+**How to test:** Settings → 🫙 Sapna Jar → add a goal (emoji + name + target) → type an amount → **jodo 🪙** → watch the bar fill; **nikalo** takes it back; ✕ deletes.
+
+---
+
+## V2+ — Category Budgets 🎯 — 13 Jun 2026
+**What:** Settings 🎀 → **CATEGORY BUDGETS** card: pick a category, set a monthly limit (e.g. Makeup ₹2,000). Shows this-month spent vs limit with a colour-coded bar (green/peach/rose). Crossing a limit fires a 🎯 danger alert on Home + Insights.
+**Why:** A single overall budget hides where the leak is; per-category limits catch the specific category (makeup, food delivery) that blows up. Reuses the existing alert system — just added one more param (`catBudgets`) to `getAlerts`, defaulted so nothing else broke.
+**Files changed:**
+- `src/types/index.ts` — `CatBudgets` type
+- `src/storage/index.ts` — `catBudgets` key
+- `src/hooks/useAppContext.tsx` — `catBudgets` + setCatBudget/removeCatBudget
+- `src/utils/calculations.ts` — `getAlerts` now adds per-category over-limit alerts
+- `src/components/CategoryBudgets.tsx` — Settings UI (new)
+- `src/screens/HomeScreen.tsx` + `InsightsScreen.tsx` — pass `catBudgets` to `getAlerts`
+**How to test:** Settings → CATEGORY BUDGETS → pick a category, type a small limit, **set ✦** → spend over it → a 🎯 "limit cross!" alert shows on Home.
+
+---
+
 ## V2 — Screenshot Add 📸 — 13 Jun 2026
 **What:** In the add-expense sheet you can now tap **"📸 payment screenshot lagao"**, pick a GPay/PhonePe/bank screenshot from your gallery, and it gets attached to the expense as proof. A thumbnail shows in the sheet; the Home list shows a 📎 marker on expenses that have one; tapping an expense (edit) shows the screenshot again.
 **Why this approach (IMPORTANT — read this):** True auto-OCR (reading the amount off the image automatically) needs either a cloud OCR API (we have a strict NO-backend/NO-cloud rule) or a native on-device OCR module like ML Kit (needs a dev build — **breaks Expo Go**, same problem as real voice STT). There is no pure-JS OCR that runs in Expo Go's Hermes engine. So this version does the honest, Expo-Go-friendly thing: **attach the screenshot as the receipt**, and you fill the amount in 2 seconds using the 🎤 voice box right above it (which is already there). You get proof + fast entry today, with zero workflow breakage. **Future upgrade path:** once we go full EAS dev-build, we can drop in `@react-native-ml-kit/text-recognition` to auto-read the amount — the `receiptUri` plumbing is already in place for it.

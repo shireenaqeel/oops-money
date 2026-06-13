@@ -5,6 +5,8 @@ import { View, Text, Pressable, StyleSheet, Alert, ScrollView, TextInput, Switch
 import { Screen } from '../components/shared';
 import CSVImportModal from './CSVImportModal';
 import CycleTracker from '../components/CycleTracker';
+import CategoryBudgets from '../components/CategoryBudgets';
+import GoalsModal from './GoalsModal';
 import { useAppContext } from '../hooks/useAppContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { fmtINR } from '../utils';
@@ -13,6 +15,7 @@ export default function SettingsScreen() {
   const { income, budget, splurgeFund, letters, addLetter, deleteLetter, resetAll, nightShield, setNightShield } = useAppContext();
   const [draft, setDraft] = useState('');
   const [showImport, setShowImport] = useState(false);
+  const [showGoals, setShowGoals] = useState(false);
 
   // Save the typed letter to your future self.
   function saveLetter() {
@@ -74,6 +77,19 @@ export default function SettingsScreen() {
           <Text style={styles.importArrow}>›</Text>
         </Pressable>
 
+        {/* sapna jar — savings goals */}
+        <Pressable style={styles.goalsBtn} onPress={() => setShowGoals(true)}>
+          <Text style={styles.goalsEmoji}>🫙</Text>
+          <View style={styles.flex1}>
+            <Text style={styles.goalsTitle}>Sapna Jar</Text>
+            <Text style={styles.goalsSub}>savings goals — paise side karo, jar bharta dekho ✨</Text>
+          </View>
+          <Text style={styles.goalsArrow}>›</Text>
+        </Pressable>
+
+        {/* category budgets */}
+        <CategoryBudgets />
+
         {/* period / cycle tracking */}
         <CycleTracker />
 
@@ -109,6 +125,7 @@ export default function SettingsScreen() {
         <Text style={styles.note}>(yeh button onboarding dobara test karne ke liye hai)</Text>
       </ScrollView>
       <CSVImportModal visible={showImport} onClose={() => setShowImport(false)} />
+      <GoalsModal visible={showGoals} onClose={() => setShowGoals(false)} />
     </Screen>
   );
 }
@@ -121,6 +138,11 @@ const styles = StyleSheet.create({
   shieldEmoji: { fontSize: 22, marginRight: spacing.md },
   shieldTitle: { fontSize: typography.body.fontSize, fontWeight: '700', color: colors.text },
   shieldSub: { fontSize: typography.small.fontSize, color: colors.text, opacity: 0.7, marginTop: 1, marginRight: spacing.sm },
+  goalsBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.sage, borderRadius: radius.cards, padding: spacing.md, marginBottom: spacing.md },
+  goalsEmoji: { fontSize: 22, marginRight: spacing.md },
+  goalsTitle: { fontSize: typography.body.fontSize, fontWeight: '700', color: colors.text },
+  goalsSub: { fontSize: typography.small.fontSize, color: colors.text, opacity: 0.7, marginTop: 1, marginRight: spacing.sm },
+  goalsArrow: { fontSize: 22, color: colors.text, opacity: 0.5 },
   importBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.powderBlue, borderRadius: radius.cards, padding: spacing.md, marginBottom: spacing.md },
   importEmoji: { fontSize: 22, marginRight: spacing.md },
   importTitle: { fontSize: typography.body.fontSize, fontWeight: '700', color: colors.text },

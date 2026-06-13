@@ -43,6 +43,19 @@ export interface Letter {
   createdAt: number; // ms timestamp
 }
 
+// A savings goal — the "sapna jar" (V2). `saved` grows as she puts money aside.
+export interface Goal {
+  id: string;
+  name: string;
+  emoji: string;
+  target: number; // rupees she's aiming for
+  saved: number; // rupees stashed so far
+  createdAt: number; // ms timestamp
+}
+
+// Per-category monthly spending limits, keyed by category id (V2).
+export type CatBudgets = Record<string, number>;
+
 // A recurring monthly bill (rent, subscriptions, etc.).
 export interface Recurring {
   id: string;

@@ -1,6 +1,6 @@
 // calculations.ts — pure functions for budget maths, month filtering, and danger alerts.
 // No UI, no state. Home + Insights both reuse these.
-import { Expense, Category } from '../types';
+import { Expense, Category, CatBudgets } from '../types';
 import { findCat } from '../constants/categories';
 import { fmtINR } from './index';
 import { colors } from '../constants/theme';
@@ -104,12 +104,23 @@ export function getAlerts(
   customCats: Category[],
   month: number,
   year: number,
-  today: string
+  today: string,
+  catBudgets: CatBudgets = {}
 ): Alert[] {
   const alerts: Alert[] = [];
   const monthExp = monthExpenses(expenses, month, year);
   const total = sumExpenses(monthExp);
   const budget = Number(budgetStr) || 0;
+
+  // Per-category limits (work even without a global monthly budget).
+  Object.entries(catBudgets).forEach(([catId, limit]) => {
+    if (!(limit > 0)) return;
+    const spent = sumExpenses(monthExp.filter((e) => e.catId === catId));
+    if (spent > limit) {
+      const cat = findCat(catId, customCats);
+      alerts.push({ emoji: '🎯', title: `${cat.name} limit cross!`, sub: `${fmtINR(spent)} kharch — limit ${fmtINR(limit)} se ${fmtINR(spent - limit)} zyada` });
+    }
+  });
 
   // Splurge fund overspent (works even without a monthly budget set).
   const splurgeFund = Number(splurgeFundStr) || 0;

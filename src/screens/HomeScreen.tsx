@@ -17,7 +17,7 @@ const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'Ju
 const REGRET_EMOJI: Record<string, string> = { worth: '😍', meh: '😐', regret: '😭' };
 
 export default function HomeScreen() {
-  const { expenses, budget, splurgeFund, customCats, deleteExpense } = useAppContext();
+  const { expenses, budget, splurgeFund, customCats, catBudgets, deleteExpense } = useAppContext();
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
   const [showRegret, setShowRegret] = useState(false);
@@ -44,7 +44,7 @@ export default function HomeScreen() {
   const thisMonth = monthExpenses(expenses, month, year);
   const spent = sumExpenses(thisMonth);
   const bs = getBudgetState(spent, budget);
-  const alerts = getAlerts(expenses, budget, splurgeFund, customCats, month, year, getToday());
+  const alerts = getAlerts(expenses, budget, splurgeFund, customCats, month, year, getToday(), catBudgets);
   const streaks = getStreaks(expenses, budget);
   const recent = thisMonth.slice(0, 8); // newest first (expenses are stored newest-first)
 

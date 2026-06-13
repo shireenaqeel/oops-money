@@ -1,7 +1,7 @@
 // useAppContext.tsx — MAIN STATE MANAGEMENT. The single source of truth for app data.
 // Loads everything from storage once on launch, then every screen reads/writes through this hook.
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { Category, Expense, ImpulseItem, Letter, Recurring } from '../types';
+import { Category, Expense, Goal, CatBudgets, ImpulseItem, Letter, Recurring } from '../types';
 import { KEYS, clearAll, loadJSON, loadString, saveJSON, saveString } from '../storage';
 import { PASTEL_COLORS, findCat } from '../constants/categories';
 import { genId, getToday } from '../utils';
@@ -21,6 +21,8 @@ interface AppState {
   nightShield: boolean; // late-night shopping shield on/off (V2), default on
   periodStarts: string[]; // logged period start dates, ISO (V2 cycle tracking)
   cycleLength: number; // average cycle length in days (V2), default 28
+  catBudgets: CatBudgets; // per-category monthly limits (V2)
+  goals: Goal[]; // savings goals / sapna jar (V2)
   completeOnboarding: () => Promise<void>;
   saveOnboarding: (data: { income: string; budget: string; splurgeFund: string }) => Promise<void>;
   addExpense: (e: Omit<Expense, 'id'>) => Promise<void>;
@@ -43,6 +45,12 @@ interface AppState {
   logPeriodStart: (dateIso: string) => Promise<void>;
   removePeriodStart: (dateIso: string) => Promise<void>;
   setCycleLength: (days: number) => Promise<void>;
+  setCatBudget: (catId: string, amount: number) => Promise<void>;
+  removeCatBudget: (catId: string) => Promise<void>;
+  addGoal: (name: string, emoji: string, target: number) => Promise<void>;
+  addToGoal: (id: string, amount: number) => Promise<void>;
+  withdrawFromGoal: (id: string, amount: number) => Promise<void>;
+  deleteGoal: (id: string) => Promise<void>;
   addCustomCat: (name: string, emoji: string) => Promise<Category>;
   deleteCustomCat: (id: string) => Promise<void>;
   resetAll: () => Promise<void>;
@@ -66,10 +74,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [nightShield, setNightShieldState] = useState(true);
   const [periodStarts, setPeriodStarts] = useState<string[]>([]);
   const [cycleLength, setCycleLengthState] = useState(28);
+  const [catBudgets, setCatBudgets] = useState<CatBudgets>({});
+  const [goals, setGoals] = useState<Goal[]>([]);
 
   // Pull all persisted data from storage into state.
   const reload = useCallback(async () => {
-    const [exp, rec, imp, ltrs, cc, bud, inc, spl, onb, shield, pStarts, cLen] = await Promise.all([
+    const [exp, rec, imp, ltrs, cc, bud, inc, spl, onb, shield, pStarts, cLen, cBudgets, gls] = await Promise.all([
       loadJSON<Expense[]>(KEYS.expenses, []),
       loadJSON<Recurring[]>(KEYS.recurring, []),
       loadJSON<ImpulseItem[]>(KEYS.impulse, []),
@@ -82,6 +92,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       loadString(KEYS.nightShield),
       loadJSON<string[]>(KEYS.periodStarts, []),
       loadString(KEYS.cycleLength),
+      loadJSON<CatBudgets>(KEYS.catBudgets, {}),
+      loadJSON<Goal[]>(KEYS.goals, []),
     ]);
     setExpenses(exp);
     setRecurring(rec);
@@ -95,6 +107,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setNightShieldState(shield !== 'false'); // default ON unless explicitly turned off
     setPeriodStarts(pStarts);
     setCycleLengthState(parseInt(cLen, 10) || 28); // default 28-day cycle
+    setCatBudgets(cBudgets);
+    setGoals(gls);
   }, []);
 
   // On first mount, load everything, then drop the loading flag.
@@ -336,6 +350,70 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await saveString(KEYS.cycleLength, String(safe));
   }, []);
 
+  // Set (or update) a category's monthly limit; 0/blank removes it.
+  const setCatBudget = useCallback(
+    async (catId: string, amount: number) => {
+      const next = { ...catBudgets };
+      if (amount > 0) next[catId] = Math.round(amount);
+      else delete next[catId];
+      setCatBudgets(next);
+      await saveJSON(KEYS.catBudgets, next);
+    },
+    [catBudgets]
+  );
+
+  // Remove a category's monthly limit.
+  const removeCatBudget = useCallback(
+    async (catId: string) => {
+      const next = { ...catBudgets };
+      delete next[catId];
+      setCatBudgets(next);
+      await saveJSON(KEYS.catBudgets, next);
+    },
+    [catBudgets]
+  );
+
+  // Create a new savings goal (sapna jar), starting at ₹0 saved.
+  const addGoal = useCallback(
+    async (name: string, emoji: string, target: number) => {
+      const goal: Goal = { id: genId(), name, emoji, target: Math.round(target), saved: 0, createdAt: Date.now() };
+      const next = [goal, ...goals];
+      setGoals(next);
+      await saveJSON(KEYS.goals, next);
+    },
+    [goals]
+  );
+
+  // Stash money into a goal (capped at the target so the jar never "overflows").
+  const addToGoal = useCallback(
+    async (id: string, amount: number) => {
+      const next = goals.map((g) => (g.id === id ? { ...g, saved: Math.min(g.target, g.saved + Math.round(amount)) } : g));
+      setGoals(next);
+      await saveJSON(KEYS.goals, next);
+    },
+    [goals]
+  );
+
+  // Take money back out of a goal (never below ₹0).
+  const withdrawFromGoal = useCallback(
+    async (id: string, amount: number) => {
+      const next = goals.map((g) => (g.id === id ? { ...g, saved: Math.max(0, g.saved - Math.round(amount)) } : g));
+      setGoals(next);
+      await saveJSON(KEYS.goals, next);
+    },
+    [goals]
+  );
+
+  // Delete a savings goal.
+  const deleteGoal = useCallback(
+    async (id: string) => {
+      const next = goals.filter((g) => g.id !== id);
+      setGoals(next);
+      await saveJSON(KEYS.goals, next);
+    },
+    [goals]
+  );
+
   // Create a new custom category (emoji + name), auto-assign a colour, save, and return it.
   const addCustomCat = useCallback(
     async (name: string, emoji: string): Promise<Category> => {
@@ -379,6 +457,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     nightShield,
     periodStarts,
     cycleLength,
+    catBudgets,
+    goals,
     completeOnboarding,
     saveOnboarding,
     addExpense,
@@ -401,6 +481,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     logPeriodStart,
     removePeriodStart,
     setCycleLength,
+    setCatBudget,
+    removeCatBudget,
+    addGoal,
+    addToGoal,
+    withdrawFromGoal,
+    deleteGoal,
     addCustomCat,
     deleteCustomCat,
     resetAll,

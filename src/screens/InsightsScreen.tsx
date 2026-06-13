@@ -24,7 +24,7 @@ function toISO(d: Date): string {
 }
 
 export default function InsightsScreen() {
-  const { expenses, budget, splurgeFund, customCats, periodStarts, cycleLength } = useAppContext();
+  const { expenses, budget, splurgeFund, customCats, catBudgets, periodStarts, cycleLength } = useAppContext();
   const [showWrapped, setShowWrapped] = useState(false);
 
   // Cycle insights (V2): current phase + whether PMS-week spending runs higher.
@@ -122,7 +122,7 @@ export default function InsightsScreen() {
         </Pressable>
 
         {/* danger alerts (same as Home) */}
-        <AlertList alerts={getAlerts(expenses, budget, splurgeFund, customCats, month, year, getToday())} />
+        <AlertList alerts={getAlerts(expenses, budget, splurgeFund, customCats, month, year, getToday(), catBudgets)} />
 
         {/* summary cards */}
         <View style={styles.grid}>
