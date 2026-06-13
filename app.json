@@ -2,6 +2,7 @@
   "expo": {
     "name": "Oops Money",
     "slug": "oops-money",
+    "scheme": "oopsmoney",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -30,7 +31,8 @@
           "photosPermission": "Oops Money tumhari payment screenshots padhne ke liye gallery access maangta hai 🌸"
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      "expo-web-browser"
     ],
     "extra": {
       "eas": {

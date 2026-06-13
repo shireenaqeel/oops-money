@@ -3,6 +3,19 @@
 
 ---
 
+## V2+ — Cloud Sync (Supabase + Google) — Phase 1: scaffolding — 14 Jun 2026
+**What:** Started the optional cloud-sync feature. This phase just lays the plumbing; nothing works until Shireen sets up her Supabase project.
+**Decision:** This intentionally relaxes the "no backend" rule (sync only). Local AsyncStorage stays authoritative; sign-in is **optional** (a "sync/back up" layer, not a login gate). Supabase chosen (anon key is client-safe with RLS). Google sign-in.
+**Sync model (simple):** one `app_state` row per user holding the WHOLE app state as a single JSONB blob (mirrors how everything is already stored as JSON locally). Sync = upsert the snapshot; on login pull it. Last-write-wins by `updated_at`.
+**Packages added:** `@supabase/supabase-js`, `react-native-url-polyfill`, `expo-web-browser`, `expo-auth-session` (all Expo Go compatible).
+**Files added/changed:**
+- `src/lib/supabaseConfig.ts` — placeholders for SUPABASE_URL + anon key (she pastes hers)
+- `src/lib/supabase.ts` — the client (AsyncStorage-persisted session) + `isSupabaseConfigured` guard
+- `app.json` — added `scheme: "oopsmoney"` (for the OAuth redirect) + `expo-web-browser` plugin
+**Next phases:** (2) auth context + "Sign in to sync" UI in Settings + Google OAuth flow, (3) sync logic (push/pull the JSON blob). Both need her Supabase project + keys first.
+
+---
+
 ## V2+ — Themes & Dark Mode 🎨 — 14 Jun 2026 (big refactor)
 **What:** Settings 🎀 → **THEME 🎨** card lets you switch between **7 colour palettes**: Pookie Pink (default), 🌙 Dark Mode, 🌅 Sunset Peach, 🌿 Minty Cool, 💜 Lavender Dream, 🍬 Cotton Candy, ☕ Mocha. The choice applies instantly across the whole app and is remembered. The status bar + tab bar flip too.
 **Why / how (IMPORTANT for future me):** Colours were a static `colors` import baked into each `StyleSheet.create` at load time, so they couldn't change at runtime. The refactor:
