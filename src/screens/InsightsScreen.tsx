@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { Screen } from '../components/shared';
 import BarChart, { BarDatum } from '../components/BarChart';
 import AlertList from '../components/AlertList';
+import SpendCalendar from '../components/SpendCalendar';
 import MonthlyWrappedModal from './MonthlyWrappedModal';
 import { useAppContext } from '../hooks/useAppContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
@@ -145,6 +146,12 @@ export default function InsightsScreen() {
         <View style={styles.card}>
           <Text style={styles.sectionLabel}>6 MONTH TREND ✦</Text>
           <BarChart data={monthData} color={colors.lavender} />
+        </View>
+
+        {/* spend calendar heatmap */}
+        <View style={styles.card}>
+          <Text style={styles.sectionLabel}>{MONTHS_SHORT[month].toUpperCase()} CALENDAR ✦</Text>
+          <SpendCalendar expenses={expenses} month={month} year={year} />
         </View>
 
         {/* category breakdown */}

@@ -29,7 +29,8 @@
         {
           "photosPermission": "Oops Money tumhari payment screenshots padhne ke liye gallery access maangta hai 🌸"
         }
-      ]
+      ],
+      "expo-notifications"
     ],
     "extra": {
       "eas": {

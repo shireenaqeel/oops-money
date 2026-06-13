@@ -5,6 +5,7 @@ import { Category, Expense, Goal, CatBudgets, ImpulseItem, Letter, Recurring } f
 import { KEYS, clearAll, loadJSON, loadString, saveJSON, saveString } from '../storage';
 import { PASTEL_COLORS, findCat } from '../constants/categories';
 import { genId, getToday } from '../utils';
+import { ensureNotifPermission, scheduleBillReminders, cancelBillReminders } from '../utils/notifications';
 
 // Everything the app shares. Actions persist to storage AND update state so the UI refreshes.
 interface AppState {
@@ -23,6 +24,7 @@ interface AppState {
   cycleLength: number; // average cycle length in days (V2), default 28
   catBudgets: CatBudgets; // per-category monthly limits (V2)
   goals: Goal[]; // savings goals / sapna jar (V2)
+  billReminders: boolean; // bill reminder notifications on/off (V2)
   completeOnboarding: () => Promise<void>;
   saveOnboarding: (data: { income: string; budget: string; splurgeFund: string }) => Promise<void>;
   addExpense: (e: Omit<Expense, 'id'>) => Promise<void>;
@@ -51,6 +53,7 @@ interface AppState {
   addToGoal: (id: string, amount: number) => Promise<void>;
   withdrawFromGoal: (id: string, amount: number) => Promise<void>;
   deleteGoal: (id: string) => Promise<void>;
+  setBillReminders: (on: boolean) => Promise<boolean>; // returns false if permission denied
   addCustomCat: (name: string, emoji: string) => Promise<Category>;
   deleteCustomCat: (id: string) => Promise<void>;
   resetAll: () => Promise<void>;
@@ -76,10 +79,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [cycleLength, setCycleLengthState] = useState(28);
   const [catBudgets, setCatBudgets] = useState<CatBudgets>({});
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [billReminders, setBillRemindersState] = useState(false);
 
   // Pull all persisted data from storage into state.
   const reload = useCallback(async () => {
-    const [exp, rec, imp, ltrs, cc, bud, inc, spl, onb, shield, pStarts, cLen, cBudgets, gls] = await Promise.all([
+    const [exp, rec, imp, ltrs, cc, bud, inc, spl, onb, shield, pStarts, cLen, cBudgets, gls, billRem] = await Promise.all([
       loadJSON<Expense[]>(KEYS.expenses, []),
       loadJSON<Recurring[]>(KEYS.recurring, []),
       loadJSON<ImpulseItem[]>(KEYS.impulse, []),
@@ -94,6 +98,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       loadString(KEYS.cycleLength),
       loadJSON<CatBudgets>(KEYS.catBudgets, {}),
       loadJSON<Goal[]>(KEYS.goals, []),
+      loadString(KEYS.billReminders),
     ]);
     setExpenses(exp);
     setRecurring(rec);
@@ -109,6 +114,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setCycleLengthState(parseInt(cLen, 10) || 28); // default 28-day cycle
     setCatBudgets(cBudgets);
     setGoals(gls);
+    setBillRemindersState(billRem === 'true');
   }, []);
 
   // On first mount, load everything, then drop the loading flag.
@@ -414,6 +420,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [goals]
   );
 
+  // Turn bill reminders on/off. Turning on requests notification permission first;
+  // returns false (and stays off) if permission is denied so the UI can explain.
+  const setBillReminders = useCallback(
+    async (on: boolean): Promise<boolean> => {
+      if (on) {
+        const ok = await ensureNotifPermission();
+        if (!ok) return false;
+        setBillRemindersState(true);
+        await saveString(KEYS.billReminders, 'true');
+        await scheduleBillReminders(recurring);
+        return true;
+      }
+      setBillRemindersState(false);
+      await saveString(KEYS.billReminders, 'false');
+      await cancelBillReminders();
+      return true;
+    },
+    [recurring]
+  );
+
+  // Keep scheduled reminders fresh: reschedule whenever bills change (or after first load),
+  // so each bill always points at its next upcoming occurrence.
+  useEffect(() => {
+    if (loading || !billReminders) return;
+    scheduleBillReminders(recurring).catch(() => {});
+  }, [loading, billReminders, recurring]);
+
   // Create a new custom category (emoji + name), auto-assign a colour, save, and return it.
   const addCustomCat = useCallback(
     async (name: string, emoji: string): Promise<Category> => {
@@ -459,6 +492,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     cycleLength,
     catBudgets,
     goals,
+    billReminders,
     completeOnboarding,
     saveOnboarding,
     addExpense,
@@ -487,6 +521,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addToGoal,
     withdrawFromGoal,
     deleteGoal,
+    setBillReminders,
     addCustomCat,
     deleteCustomCat,
     resetAll,

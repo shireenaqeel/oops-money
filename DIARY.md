@@ -3,6 +3,34 @@
 
 ---
 
+## V2+ — Bill Reminders 🔔 (notifications) — 13 Jun 2026
+**What:** Settings 🎀 → **🔔 Bill reminders** toggle. When on, each recurring bill (Bills tab 🔁) gets a local notification at 10 AM on its due day: "rent due hai aaj 🔔 — ₹15,000 ka bill, bhulna mat babe 💸". Reminders auto-reschedule to the next occurrence whenever bills change or the app opens.
+**Why this approach:** Uses **local scheduled notifications only** — no push server, no backend (our rule). Turning the toggle on requests notification permission; if denied, it flips back off and explains. The schedule is refreshed on every launch so each bill always points at its next upcoming due date (a robust pattern vs fragile monthly-repeat triggers).
+**Package added:** `expo-notifications` (~0.32.17) — was listed in CLAUDE.md's stack but not installed. **Local notifications work in Expo Go (Android)**; they're rock-solid in the standalone APK.
+**Files changed:**
+- `src/utils/notifications.ts` — permission + schedule/cancel local reminders (new)
+- `src/storage/index.ts` — `billReminders` key
+- `src/hooks/useAppContext.tsx` — `billReminders` + `setBillReminders` + auto-reschedule effect
+- `src/screens/SettingsScreen.tsx` — 🔔 toggle (handles permission denial)
+- `app.json` — `expo-notifications` plugin
+**How to test on phone:**
+1. Reload the app → **Settings 🎀** → turn on **🔔 Bill reminders** → allow notifications
+2. **Bills 🔁** → add a bill with **today's date** as the due day (if it's before 10 AM) to see it fire, or set tomorrow's day and check tomorrow morning
+3. Toggle off → all reminders cancel
+4. ⚠️ In Expo Go a permissions warning may appear; reminders still schedule. Fully reliable in the installed APK.
+
+---
+
+## V2+ — Spend Calendar Heatmap 🗓️ — 13 Jun 2026
+**What:** Insights ✿ → a **month calendar** where each day is colour-coded by how much you spent: cream = no-spend day, mint = light, peach = medium, rose = heavy. Today gets a lavender ring. A legend + "busiest: ₹X" sits below.
+**Why:** A bar chart shows totals; a calendar shows *rhythm* — which days/weekends you splurge, and how many no-spend days you're stacking. Pure view over existing expenses, no storage/state added.
+**Files changed:**
+- `src/components/SpendCalendar.tsx` — the heatmap grid (new)
+- `src/screens/InsightsScreen.tsx` — mounts the calendar card
+**How to test:** Insights ✿ → scroll to **"<MONTH> CALENDAR"** → days with more spend are darker/hotter; today is ringed.
+
+---
+
 ## V2+ — Sapna Jar 🫙 (savings goals) — 13 Jun 2026
 **What:** Settings 🎀 → **🫙 Sapna Jar** opens a modal where you set savings goals ("Goa trip ₹15,000"), then stash money toward each one (jodo 🪙 / nikalo). A progress bar fills as you save; at 100% it celebrates "🎉 sapna poora!". Fully local.
 **Why:** A positive counterweight to all the "stop spending" features — gives saving a visible, rewarding goal. Lives in a modal (like CSV import) so it doesn't need a new tab.

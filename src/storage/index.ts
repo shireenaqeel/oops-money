@@ -18,6 +18,7 @@ export const KEYS = {
   cycleLength: 'om_cycle_length', // average cycle length in days (V2)
   catBudgets: 'om_cat_budgets', // per-category monthly limits { catId: amount } (V2)
   goals: 'om_goals', // savings goals / sapna jar (V2)
+  billReminders: 'om_bill_reminders', // bill reminder notifications on/off (V2)
 } as const;
 
 // Read + JSON-parse a value, returning the fallback if it's missing or corrupted.

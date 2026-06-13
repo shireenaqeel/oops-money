@@ -12,10 +12,20 @@ import { colors, spacing, radius, typography } from '../constants/theme';
 import { fmtINR } from '../utils';
 
 export default function SettingsScreen() {
-  const { income, budget, splurgeFund, letters, addLetter, deleteLetter, resetAll, nightShield, setNightShield } = useAppContext();
+  const { income, budget, splurgeFund, letters, addLetter, deleteLetter, resetAll, nightShield, setNightShield, billReminders, setBillReminders, recurring } = useAppContext();
   const [draft, setDraft] = useState('');
   const [showImport, setShowImport] = useState(false);
   const [showGoals, setShowGoals] = useState(false);
+
+  // Toggle bill reminders; if permission is denied, flip back off and explain.
+  async function toggleBills(on: boolean) {
+    const ok = await setBillReminders(on);
+    if (on && !ok) {
+      Alert.alert('Notifications band hain', 'Phone settings mein Oops Money ke liye notifications allow karo, phir try karo 🔔');
+    } else if (on && ok && recurring.length === 0) {
+      Alert.alert('reminders on! 🔔', 'Abhi koi bill nahi hai — Bills tab 🔁 mein bill add karo, reminder apne aap set ho jayega.');
+    }
+  }
 
   // Save the typed letter to your future self.
   function saveLetter() {
@@ -65,6 +75,16 @@ export default function SettingsScreen() {
             <Text style={styles.shieldSub}>11pm–4am pe kharcha add karne se pehle ek "so jao babe" reminder</Text>
           </View>
           <Switch value={nightShield} onValueChange={setNightShield} trackColor={{ false: colors.border, true: colors.periwinkle }} thumbColor={colors.cardBg} />
+        </View>
+
+        {/* bill reminders toggle */}
+        <View style={styles.billRow}>
+          <Text style={styles.shieldEmoji}>🔔</Text>
+          <View style={styles.flex1}>
+            <Text style={styles.shieldTitle}>Bill reminders</Text>
+            <Text style={styles.shieldSub}>recurring bill ke due din subah ek reminder ('rent due hai aaj 🔔')</Text>
+          </View>
+          <Switch value={billReminders} onValueChange={toggleBills} trackColor={{ false: colors.border, true: colors.butter }} thumbColor={colors.cardBg} />
         </View>
 
         {/* csv import */}
@@ -138,6 +158,7 @@ const styles = StyleSheet.create({
   shieldEmoji: { fontSize: 22, marginRight: spacing.md },
   shieldTitle: { fontSize: typography.body.fontSize, fontWeight: '700', color: colors.text },
   shieldSub: { fontSize: typography.small.fontSize, color: colors.text, opacity: 0.7, marginTop: 1, marginRight: spacing.sm },
+  billRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.butter, borderRadius: radius.cards, padding: spacing.md, marginBottom: spacing.md },
   goalsBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.sage, borderRadius: radius.cards, padding: spacing.md, marginBottom: spacing.md },
   goalsEmoji: { fontSize: 22, marginRight: spacing.md },
   goalsTitle: { fontSize: typography.body.fontSize, fontWeight: '700', color: colors.text },
