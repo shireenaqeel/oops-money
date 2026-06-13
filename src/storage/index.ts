@@ -19,6 +19,8 @@ export const KEYS = {
   catBudgets: 'om_cat_budgets', // per-category monthly limits { catId: amount } (V2)
   goals: 'om_goals', // savings goals / sapna jar (V2)
   billReminders: 'om_bill_reminders', // bill reminder notifications on/off (V2)
+  bestieName: 'om_bestie_name', // accountability bestie's name (V2, local)
+  bestiePhone: 'om_bestie_phone', // bestie's WhatsApp/SMS number, optional (V2, local)
 } as const;
 
 // Read + JSON-parse a value, returning the fallback if it's missing or corrupted.

@@ -3,6 +3,23 @@
 
 ---
 
+## V2+ — Bestie Accountability Mode 🤝 (local) — 13 Jun 2026
+**What:** Settings 🎀 → **BESTIE MODE** card: save an accountability bestie (name + optional WhatsApp number). A **"💌 confess to <bestie>"** button — and a Home banner when you go over budget — open WhatsApp (or the OS share sheet) pre-filled with a sassy auto-message: *"oops bestie 💀 maine is mahine ₹X kharch kar diya (budget ₹Y — ₹Z over). roko mujhe pls 🙏"*. You hit send.
+**Why this approach (IMPORTANT):** CLAUDE.md lists Bestie mode as "needs backend — not in v1", and the *real-time* version (bestie sees your live data) genuinely does. But Shireen chose to stay **local / no-backend**. So this is the no-backend version: the app only **builds the message and hands it to your phone's WhatsApp/SMS/share** — no data is sent anywhere automatically, no server, no account linking. Uses core React Native `Linking` (WhatsApp deep link `whatsapp://send?phone=…&text=…`) with a `Share.share()` fallback. **Zero new packages.**
+**Files changed:**
+- `src/utils/bestie.ts` — confession message builder + WhatsApp/share opener (new)
+- `src/storage/index.ts` — `bestieName` + `bestiePhone` keys
+- `src/hooks/useAppContext.tsx` — `bestieName`/`bestiePhone` + `setBestie`
+- `src/components/BestieMode.tsx` — Settings UI (new)
+- `src/screens/HomeScreen.tsx` — over-budget "confess to bestie" banner
+**How to test on phone:**
+1. Reload → **Settings 🎀 → BESTIE MODE** → add a name (+ optional WhatsApp number with country code, e.g. 9198…) → **save bestie ✦**
+2. Tap **💌 confess to <name>** → WhatsApp opens (if number set) or the share sheet, pre-filled with the message → pick a chat → send
+3. When you go over budget, a **🤝 confess** banner appears on Home too
+**Next up:** more local features, polish, or a fresh APK build with all the new stuff.
+
+---
+
 ## V2+ — Bill Reminders 🔔 (notifications) — 13 Jun 2026
 **What:** Settings 🎀 → **🔔 Bill reminders** toggle. When on, each recurring bill (Bills tab 🔁) gets a local notification at 10 AM on its due day: "rent due hai aaj 🔔 — ₹15,000 ka bill, bhulna mat babe 💸". Reminders auto-reschedule to the next occurrence whenever bills change or the app opens.
 **Why this approach:** Uses **local scheduled notifications only** — no push server, no backend (our rule). Turning the toggle on requests notification permission; if denied, it flips back off and explains. The schedule is refreshed on every launch so each bill always points at its next upcoming due date (a robust pattern vs fragile monthly-repeat triggers).

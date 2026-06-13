@@ -10,6 +10,7 @@ import { Expense } from '../types';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { fmtINR, fmtDateLabel, getToday, daysSince } from '../utils';
 import { monthExpenses, sumExpenses, getBudgetState, getAlerts, getStreaks } from '../utils/calculations';
+import { buildConfession, confessToBestie } from '../utils/bestie';
 import { findCat } from '../constants/categories';
 import { COPY } from '../constants/copy';
 
@@ -17,7 +18,7 @@ const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'Ju
 const REGRET_EMOJI: Record<string, string> = { worth: '😍', meh: '😐', regret: '😭' };
 
 export default function HomeScreen() {
-  const { expenses, budget, splurgeFund, customCats, catBudgets, deleteExpense } = useAppContext();
+  const { expenses, budget, splurgeFund, customCats, catBudgets, bestieName, bestiePhone, deleteExpense } = useAppContext();
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
   const [showRegret, setShowRegret] = useState(false);
@@ -47,6 +48,11 @@ export default function HomeScreen() {
   const alerts = getAlerts(expenses, budget, splurgeFund, customCats, month, year, getToday(), catBudgets);
   const streaks = getStreaks(expenses, budget);
   const recent = thisMonth.slice(0, 8); // newest first (expenses are stored newest-first)
+
+  // Open WhatsApp/share with a sassy confession to the bestie (over-budget nudge).
+  function confessToFriend() {
+    confessToBestie(buildConfession(spent, Number(budget) || 0, bestieName), bestiePhone);
+  }
 
   // Confirm, then delete an expense.
   function askDelete(id: string) {
@@ -109,6 +115,18 @@ export default function HomeScreen() {
               <Text style={styles.regretSub}>{regretCount} purchase{regretCount > 1 ? 's' : ''} ready for a regret check</Text>
             </View>
             <Text style={styles.regretArrow}>›</Text>
+          </Pressable>
+        ) : null}
+
+        {/* ── bestie confession nudge (over budget) ── */}
+        {bs.over && bestieName ? (
+          <Pressable style={styles.bestieBanner} onPress={confessToFriend}>
+            <Text style={styles.bestieEmoji}>🤝</Text>
+            <View style={styles.flex1}>
+              <Text style={styles.bestieTitle}>{bestieName} ko confess karo?</Text>
+              <Text style={styles.bestieSub}>budget gaya 💀 — bestie ko ek tap me batao</Text>
+            </View>
+            <Text style={styles.bestieArrow}>💌</Text>
           </Pressable>
         ) : null}
 
@@ -215,6 +233,13 @@ const styles = StyleSheet.create({
   regretTitle: { fontSize: typography.body.fontSize, fontWeight: '700', color: colors.text },
   regretSub: { fontSize: typography.small.fontSize, color: colors.text, opacity: 0.75, marginTop: 1 },
   regretArrow: { fontSize: 22, color: colors.text, opacity: 0.5 },
+
+  // bestie banner
+  bestieBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.lilac, borderRadius: radius.inputs, padding: spacing.md, marginTop: spacing.md },
+  bestieEmoji: { fontSize: 22, marginRight: spacing.md },
+  bestieTitle: { fontSize: typography.body.fontSize, fontWeight: '700', color: colors.text },
+  bestieSub: { fontSize: typography.small.fontSize, color: colors.text, opacity: 0.75, marginTop: 1 },
+  bestieArrow: { fontSize: 20 },
 
   // alerts
   alertCard: {

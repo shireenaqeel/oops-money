@@ -25,6 +25,8 @@ interface AppState {
   catBudgets: CatBudgets; // per-category monthly limits (V2)
   goals: Goal[]; // savings goals / sapna jar (V2)
   billReminders: boolean; // bill reminder notifications on/off (V2)
+  bestieName: string; // accountability bestie's name (V2, local)
+  bestiePhone: string; // bestie's WhatsApp/SMS number, optional (V2, local)
   completeOnboarding: () => Promise<void>;
   saveOnboarding: (data: { income: string; budget: string; splurgeFund: string }) => Promise<void>;
   addExpense: (e: Omit<Expense, 'id'>) => Promise<void>;
@@ -54,6 +56,7 @@ interface AppState {
   withdrawFromGoal: (id: string, amount: number) => Promise<void>;
   deleteGoal: (id: string) => Promise<void>;
   setBillReminders: (on: boolean) => Promise<boolean>; // returns false if permission denied
+  setBestie: (name: string, phone: string) => Promise<void>;
   addCustomCat: (name: string, emoji: string) => Promise<Category>;
   deleteCustomCat: (id: string) => Promise<void>;
   resetAll: () => Promise<void>;
@@ -80,10 +83,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [catBudgets, setCatBudgets] = useState<CatBudgets>({});
   const [goals, setGoals] = useState<Goal[]>([]);
   const [billReminders, setBillRemindersState] = useState(false);
+  const [bestieName, setBestieName] = useState('');
+  const [bestiePhone, setBestiePhone] = useState('');
 
   // Pull all persisted data from storage into state.
   const reload = useCallback(async () => {
-    const [exp, rec, imp, ltrs, cc, bud, inc, spl, onb, shield, pStarts, cLen, cBudgets, gls, billRem] = await Promise.all([
+    const [exp, rec, imp, ltrs, cc, bud, inc, spl, onb, shield, pStarts, cLen, cBudgets, gls, billRem, bName, bPhone] = await Promise.all([
       loadJSON<Expense[]>(KEYS.expenses, []),
       loadJSON<Recurring[]>(KEYS.recurring, []),
       loadJSON<ImpulseItem[]>(KEYS.impulse, []),
@@ -99,6 +104,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       loadJSON<CatBudgets>(KEYS.catBudgets, {}),
       loadJSON<Goal[]>(KEYS.goals, []),
       loadString(KEYS.billReminders),
+      loadString(KEYS.bestieName),
+      loadString(KEYS.bestiePhone),
     ]);
     setExpenses(exp);
     setRecurring(rec);
@@ -115,6 +122,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setCatBudgets(cBudgets);
     setGoals(gls);
     setBillRemindersState(billRem === 'true');
+    setBestieName(bName);
+    setBestiePhone(bPhone);
   }, []);
 
   // On first mount, load everything, then drop the loading flag.
@@ -440,6 +449,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [recurring]
   );
 
+  // Save the accountability bestie's name + optional phone (both local).
+  const setBestie = useCallback(async (name: string, phone: string) => {
+    setBestieName(name);
+    setBestiePhone(phone);
+    await Promise.all([saveString(KEYS.bestieName, name), saveString(KEYS.bestiePhone, phone)]);
+  }, []);
+
   // Keep scheduled reminders fresh: reschedule whenever bills change (or after first load),
   // so each bill always points at its next upcoming occurrence.
   useEffect(() => {
@@ -493,6 +509,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     catBudgets,
     goals,
     billReminders,
+    bestieName,
+    bestiePhone,
     completeOnboarding,
     saveOnboarding,
     addExpense,
@@ -522,6 +540,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     withdrawFromGoal,
     deleteGoal,
     setBillReminders,
+    setBestie,
     addCustomCat,
     deleteCustomCat,
     resetAll,

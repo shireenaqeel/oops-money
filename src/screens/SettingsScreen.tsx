@@ -6,6 +6,7 @@ import { Screen } from '../components/shared';
 import CSVImportModal from './CSVImportModal';
 import CycleTracker from '../components/CycleTracker';
 import CategoryBudgets from '../components/CategoryBudgets';
+import BestieMode from '../components/BestieMode';
 import GoalsModal from './GoalsModal';
 import { useAppContext } from '../hooks/useAppContext';
 import { colors, spacing, radius, typography } from '../constants/theme';
@@ -109,6 +110,9 @@ export default function SettingsScreen() {
 
         {/* category budgets */}
         <CategoryBudgets />
+
+        {/* accountability bestie */}
+        <BestieMode />
 
         {/* period / cycle tracking */}
         <CycleTracker />
