@@ -3,7 +3,7 @@
 import { Expense, Category, CatBudgets } from '../types';
 import { findCat } from '../constants/categories';
 import { fmtINR } from './index';
-import { colors } from '../constants/theme';
+import { colors, ThemeColors } from '../constants/theme';
 
 // Keep only the expenses that fall in the given month + year.
 export function monthExpenses(expenses: Expense[], month: number, year: number): Expense[] {
@@ -30,15 +30,16 @@ export interface BudgetState {
 }
 
 // Work out budget progress and which colour the progress bar should be.
-export function getBudgetState(spent: number, budgetStr: string): BudgetState {
+// `theme` lets callers pass the active palette so the bar matches the current theme.
+export function getBudgetState(spent: number, budgetStr: string, theme: ThemeColors = colors): BudgetState {
   const budget = Number(budgetStr) || 0;
   const hasBudget = budget > 0;
   const over = hasBudget && spent > budget;
   const rawPct = hasBudget ? (spent / budget) * 100 : 0;
   const pct = Math.min(rawPct, 100);
-  let barColor: string = colors.budgetSafe; // 0–74%
-  if (over) barColor = colors.budgetOver; // 100%+
-  else if (rawPct >= 75) barColor = colors.budgetWarning; // 75–99%
+  let barColor: string = theme.budgetSafe; // 0–74%
+  if (over) barColor = theme.budgetOver; // 100%+
+  else if (rawPct >= 75) barColor = theme.budgetWarning; // 75–99%
   return { hasBudget, spent, budget, remaining: budget - spent, pct, over, barColor };
 }
 

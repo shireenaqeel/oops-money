@@ -23,7 +23,8 @@ import AddCategoryModal from './AddCategoryModal';
 import BrokeMath from '../components/BrokeMath';
 import NightShield from '../components/NightShield';
 import { Expense } from '../types';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { spacing, radius, typography, ThemeColors } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { CATS, CAT_GROUPS, findCat } from '../constants/categories';
 import { MOODS } from '../constants/moods';
 import { COPY } from '../constants/copy';
@@ -53,6 +54,8 @@ export default function AddExpenseModal({
   editing?: Expense | null;
 }) {
   const { addExpense, updateExpense, customCats, nightShield } = useAppContext();
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const allCats = [...CATS, ...customCats];
   const groups = ['All', ...CAT_GROUPS, ...(customCats.length > 0 ? ['Custom'] : [])];
   const isEditing = !!editing;
@@ -376,7 +379,7 @@ export default function AddExpenseModal({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: '#00000055' },
   sheetWrap: { flex: 1, justifyContent: 'flex-end' },
   sheet: { maxHeight: '90%', backgroundColor: colors.cardBg, borderTopLeftRadius: radius.modals, borderTopRightRadius: radius.modals },
@@ -404,12 +407,12 @@ const styles = StyleSheet.create({
   groupPill: { paddingVertical: spacing.xs, paddingHorizontal: spacing.md, borderRadius: radius.chips, backgroundColor: colors.cream },
   groupPillActive: { backgroundColor: colors.lavender },
   groupText: { fontSize: typography.small.fontSize, color: colors.textLight, fontWeight: '600' },
-  groupTextActive: { color: colors.cardBg },
+  groupTextActive: { color: colors.onAccent },
 
   catWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   catPill: { paddingVertical: spacing.sm, paddingHorizontal: spacing.md, borderRadius: radius.chips },
   catText: { fontSize: typography.small.fontSize, color: colors.text, fontWeight: '500' },
-  catTextSelected: { color: colors.cardBg, fontWeight: '700' },
+  catTextSelected: { color: colors.onAccent, fontWeight: '700' },
   addCatPill: { paddingVertical: spacing.sm, paddingHorizontal: spacing.md, borderRadius: radius.chips, borderWidth: 1.5, borderColor: colors.lavender, borderStyle: 'dashed' },
   addCatText: { fontSize: typography.small.fontSize, color: colors.textLight, fontWeight: '600' },
 
@@ -434,7 +437,7 @@ const styles = StyleSheet.create({
   datePill: { flex: 1, alignItems: 'center', paddingVertical: spacing.sm, borderRadius: radius.chips, backgroundColor: colors.cream },
   datePillActive: { backgroundColor: colors.skyBlue },
   dateText: { fontSize: typography.small.fontSize, color: colors.textLight, fontWeight: '600' },
-  dateTextActive: { fontSize: typography.small.fontSize, color: colors.cardBg, fontWeight: '600' },
+  dateTextActive: { fontSize: typography.small.fontSize, color: colors.onAccent, fontWeight: '600' },
 
   splurgeRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.lg, backgroundColor: colors.blush, borderRadius: radius.inputs, padding: spacing.md },
   splurgeTitle: { fontSize: typography.body.fontSize, fontWeight: '700', color: colors.text },
@@ -443,5 +446,5 @@ const styles = StyleSheet.create({
   logBtn: { backgroundColor: colors.rose, paddingVertical: spacing.md, borderRadius: radius.buttons, alignItems: 'center', marginTop: spacing.xl },
   logBtnSaved: { backgroundColor: colors.mint },
   logBtnDisabled: { backgroundColor: colors.textMuted, opacity: 0.5 },
-  logText: { color: colors.cardBg, fontSize: typography.body.fontSize, fontWeight: '700' },
+  logText: { color: colors.onAccent, fontSize: typography.body.fontSize, fontWeight: '700' },
 });

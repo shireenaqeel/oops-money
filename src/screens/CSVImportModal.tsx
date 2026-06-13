@@ -4,13 +4,16 @@ import { View, Text, Pressable, StyleSheet, Modal, ScrollView, ActivityIndicator
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useAppContext } from '../hooks/useAppContext';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { spacing, radius, typography, ThemeColors } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { fmtINR } from '../utils';
 import { findCat } from '../constants/categories';
 import { parseBankCSV, ParsedExpense } from '../utils/csv';
 
 export default function CSVImportModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { bulkAddExpenses, customCats } = useAppContext();
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const [parsed, setParsed] = useState<ParsedExpense[]>([]);
   const [step, setStep] = useState<'pick' | 'preview'>('pick');
   const [busy, setBusy] = useState(false);
@@ -115,7 +118,7 @@ export default function CSVImportModal({ visible, onClose }: { visible: boolean;
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: '#00000055' },
   wrap: { flex: 1, justifyContent: 'flex-end' },
   sheet: { backgroundColor: colors.cardBg, borderTopLeftRadius: radius.modals, borderTopRightRadius: radius.modals, padding: spacing.lg, paddingBottom: spacing.xl },
@@ -127,7 +130,7 @@ const styles = StyleSheet.create({
   infoLine: { fontSize: typography.small.fontSize, color: colors.text, lineHeight: 22 },
 
   btn: { backgroundColor: colors.rose, paddingVertical: spacing.md, borderRadius: radius.buttons, alignItems: 'center' },
-  btnText: { color: colors.cardBg, fontSize: typography.body.fontSize, fontWeight: '700' },
+  btnText: { color: colors.onAccent, fontSize: typography.body.fontSize, fontWeight: '700' },
   error: { fontSize: typography.small.fontSize, color: colors.dangerDeep, marginTop: spacing.md, textAlign: 'center' },
 
   previewList: { maxHeight: 240, marginBottom: spacing.md },

@@ -3,6 +3,23 @@
 
 ---
 
+## V2+ — Themes & Dark Mode 🎨 — 14 Jun 2026 (big refactor)
+**What:** Settings 🎀 → **THEME 🎨** card lets you switch between **7 colour palettes**: Pookie Pink (default), 🌙 Dark Mode, 🌅 Sunset Peach, 🌿 Minty Cool, 💜 Lavender Dream, 🍬 Cotton Candy, ☕ Mocha. The choice applies instantly across the whole app and is remembered. The status bar + tab bar flip too.
+**Why / how (IMPORTANT for future me):** Colours were a static `colors` import baked into each `StyleSheet.create` at load time, so they couldn't change at runtime. The refactor:
+- `src/constants/theme.ts` now defines a `ThemeColors` type, 7 `Palette`s, and a new **`onAccent`** token (the colour for text/labels sitting on saturated buttons — needed so dark mode stays readable). `spacing`/`radius`/`typography` stayed static.
+- `src/hooks/useTheme.tsx` (new) — `ThemeProvider` holds the active palette id (persisted), `useTheme()` returns the live colours, `useThemeMeta()` gives the picker + dark flag.
+- **Every screen/component (24 files)** changed its `const styles = StyleSheet.create({...})` into `const makeStyles = (colors: ThemeColors) => StyleSheet.create({...})`, and now calls `const colors = useTheme(); const styles = makeStyles(colors);` at the top. Button labels switched from `colors.cardBg` → `colors.onAccent`.
+- `getBudgetState` takes the theme so the budget bar matches; `CycleTracker` phase colours + `SpendCalendar` heatmap colours moved inside the component (were module-level).
+- `App.tsx` wraps everything in `<ThemeProvider>`; the status bar uses the palette's `dark` flag.
+**Packages:** none — pure refactor.
+**How to test on phone:**
+1. Reload → **Settings 🎀 → THEME 🎨** → tap each palette → whole app recolours instantly
+2. Pick **🌙 Dark Mode** → backgrounds go dark, text light, status bar icons flip — check Home, Insights, Add-expense sheet, Jail, Settings all look right
+3. Force-close + reopen → your chosen theme persists
+**Next up:** a fresh APK build (lots of new stuff since the last one), or more features.
+
+---
+
 ## V2+ — Bestie Accountability Mode 🤝 (local) — 13 Jun 2026
 **What:** Settings 🎀 → **BESTIE MODE** card: save an accountability bestie (name + optional WhatsApp number). A **"💌 confess to <bestie>"** button — and a Home banner when you go over budget — open WhatsApp (or the OS share sheet) pre-filled with a sassy auto-message: *"oops bestie 💀 maine is mahine ₹X kharch kar diya (budget ₹Y — ₹Z over). roko mujhe pls 🙏"*. You hit send.
 **Why this approach (IMPORTANT):** CLAUDE.md lists Bestie mode as "needs backend — not in v1", and the *real-time* version (bestie sees your live data) genuinely does. But Shireen chose to stay **local / no-backend**. So this is the no-backend version: the app only **builds the message and hands it to your phone's WhatsApp/SMS/share** — no data is sent anywhere automatically, no server, no account linking. Uses core React Native `Linking` (WhatsApp deep link `whatsapp://send?phone=…&text=…`) with a `Share.share()` fallback. **Zero new packages.**

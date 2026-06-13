@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { Screen } from '../components/shared';
 import { useAppContext } from '../hooks/useAppContext';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { spacing, radius, typography, ThemeColors } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { fmtINR } from '../utils';
 
 // Static content for each step. `optional` steps can be skipped (saved as 0).
@@ -37,6 +38,8 @@ const STEPS = [
 
 export default function OnboardingScreen() {
   const { saveOnboarding } = useAppContext();
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const [step, setStep] = useState(0);
   const [values, setValues] = useState({ income: '', budget: '', splurge: '' });
 
@@ -125,7 +128,7 @@ export default function OnboardingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   flex: { flex: 1, paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
   dots: { flexDirection: 'row', justifyContent: 'center', gap: spacing.sm, marginTop: spacing.lg },
   dot: { width: 8, height: 8, borderRadius: 999, backgroundColor: colors.border },
@@ -151,6 +154,6 @@ const styles = StyleSheet.create({
   preview: { fontSize: typography.body.fontSize, color: colors.textLight, marginTop: spacing.sm, minHeight: 22 },
   btn: { backgroundColor: colors.rose, paddingVertical: spacing.md, borderRadius: radius.buttons, alignItems: 'center' },
   btnDisabled: { backgroundColor: colors.textMuted, opacity: 0.5 },
-  btnText: { color: colors.cardBg, fontSize: typography.body.fontSize, fontWeight: '700' },
+  btnText: { color: colors.onAccent, fontSize: typography.body.fontSize, fontWeight: '700' },
   skipHint: { fontSize: typography.small.fontSize, color: colors.textMuted, textAlign: 'center', marginTop: spacing.sm },
 });

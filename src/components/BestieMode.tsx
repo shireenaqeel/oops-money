@@ -3,12 +3,15 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 import { useAppContext } from '../hooks/useAppContext';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { spacing, radius, typography, ThemeColors } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { monthExpenses, sumExpenses } from '../utils/calculations';
 import { buildConfession, confessToBestie } from '../utils/bestie';
 
 export default function BestieMode() {
   const { bestieName, bestiePhone, setBestie, expenses, budget } = useAppContext();
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const [name, setName] = useState(bestieName);
   const [phone, setPhone] = useState(bestiePhone);
   const saved = bestieName.trim().length > 0;
@@ -65,7 +68,7 @@ export default function BestieMode() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   card: {
     backgroundColor: colors.cardBg,
     borderRadius: radius.cards,
@@ -84,7 +87,7 @@ const styles = StyleSheet.create({
   input: { flex: 1, paddingVertical: spacing.sm, fontSize: typography.body.fontSize, color: colors.text },
   saveBtn: { backgroundColor: colors.lavender, paddingVertical: spacing.sm, borderRadius: radius.buttons, alignItems: 'center', marginTop: spacing.xs },
   saveBtnDisabled: { backgroundColor: colors.textMuted, opacity: 0.5 },
-  saveText: { color: colors.cardBg, fontSize: typography.small.fontSize, fontWeight: '700' },
+  saveText: { color: colors.onAccent, fontSize: typography.small.fontSize, fontWeight: '700' },
   confessBtn: { backgroundColor: colors.coral, paddingVertical: spacing.md, borderRadius: radius.buttons, alignItems: 'center', marginTop: spacing.sm },
   confessText: { color: colors.text, fontSize: typography.body.fontSize, fontWeight: '700' },
 });

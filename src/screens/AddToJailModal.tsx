@@ -3,11 +3,14 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { useAppContext } from '../hooks/useAppContext';
 import BrokeMath from '../components/BrokeMath';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { spacing, radius, typography, ThemeColors } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { COPY } from '../constants/copy';
 
 export default function AddToJailModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { addImpulse } = useAppContext();
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
@@ -80,7 +83,7 @@ export default function AddToJailModal({ visible, onClose }: { visible: boolean;
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: '#00000055' },
   wrap: { flex: 1, justifyContent: 'flex-end' },
   sheet: { backgroundColor: colors.cardBg, borderTopLeftRadius: radius.modals, borderTopRightRadius: radius.modals, padding: spacing.lg, paddingBottom: spacing.xl },
@@ -94,5 +97,5 @@ const styles = StyleSheet.create({
   btn: { backgroundColor: colors.lilac, paddingVertical: spacing.md, borderRadius: radius.buttons, alignItems: 'center', marginTop: spacing.md },
   btnSaved: { backgroundColor: colors.mint },
   btnDisabled: { backgroundColor: colors.textMuted, opacity: 0.5 },
-  btnText: { color: colors.cardBg, fontSize: typography.body.fontSize, fontWeight: '700' },
+  btnText: { color: colors.onAccent, fontSize: typography.body.fontSize, fontWeight: '700' },
 });

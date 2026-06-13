@@ -4,7 +4,8 @@ import { View, Text, Pressable, StyleSheet, ScrollView, Alert } from 'react-nati
 import { Screen } from '../components/shared';
 import AddRecurringModal from './AddRecurringModal';
 import { useAppContext } from '../hooks/useAppContext';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { spacing, radius, typography, ThemeColors } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { fmtINR } from '../utils';
 import { findCat } from '../constants/categories';
 
@@ -16,6 +17,8 @@ function daysInThisMonth(): number {
 
 export default function RecurringScreen() {
   const { recurring, customCats, logRecurring, deleteRecurring } = useAppContext();
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const [showAdd, setShowAdd] = useState(false);
 
   const today = new Date().getDate();
@@ -111,7 +114,7 @@ function ordinal(n: number): string {
   return s[(v - 20) % 10] || s[v] || s[0];
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
   flex1: { flex: 1, minWidth: 0 },
   heading: { fontSize: typography.heading.fontSize, fontWeight: '800', color: colors.text },
@@ -139,5 +142,5 @@ const styles = StyleSheet.create({
   emptyHint: { fontSize: typography.small.fontSize, color: colors.textMuted, marginTop: spacing.xs, textAlign: 'center' },
 
   fab: { position: 'absolute', right: spacing.lg, bottom: spacing.lg, width: 58, height: 58, borderRadius: 999, backgroundColor: colors.skyBlue, alignItems: 'center', justifyContent: 'center', shadowColor: colors.skyBlue, shadowOpacity: 0.5, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
-  fabPlus: { color: colors.cardBg, fontSize: 30, marginTop: -2 },
+  fabPlus: { color: colors.onAccent, fontSize: 30, marginTop: -2 },
 });

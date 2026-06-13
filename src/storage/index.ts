@@ -21,6 +21,7 @@ export const KEYS = {
   billReminders: 'om_bill_reminders', // bill reminder notifications on/off (V2)
   bestieName: 'om_bestie_name', // accountability bestie's name (V2, local)
   bestiePhone: 'om_bestie_phone', // bestie's WhatsApp/SMS number, optional (V2, local)
+  theme: 'om_theme', // selected colour theme id (V2)
 } as const;
 
 // Read + JSON-parse a value, returning the fallback if it's missing or corrupted.

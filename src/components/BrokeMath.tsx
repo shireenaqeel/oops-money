@@ -3,11 +3,13 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useAppContext } from '../hooks/useAppContext';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { spacing, radius, typography, ThemeColors } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { brokeMath } from '../utils';
 
 export default function BrokeMath({ amount }: { amount: number }) {
   const { income } = useAppContext();
+  const styles = makeStyles(useTheme());
   const lines = brokeMath(amount, Number(income) || 0);
   if (lines.length === 0) return null;
   return (
@@ -24,7 +26,7 @@ export default function BrokeMath({ amount }: { amount: number }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   wrap: { marginTop: spacing.sm },
   label: { fontSize: typography.tiny.fontSize, color: colors.textMuted, letterSpacing: 1, marginBottom: spacing.xs },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },

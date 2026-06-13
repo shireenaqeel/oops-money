@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAppContext } from '../hooks/useAppContext';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { spacing, radius, typography, ThemeColors } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { fmtDateLabel, getToday } from '../utils';
 import { getCycleInfo, Phase } from '../utils/cycle';
 
@@ -15,13 +16,6 @@ const PHASE_MSG: Record<Phase, string> = {
   normal: 'cycle ke beech mein ho — all good ✨',
   unknown: 'pehla period log karo, phir yahan tumhara cycle + prediction dikhega 🌸',
 };
-const PHASE_BG: Record<Phase, string> = {
-  period: colors.blush,
-  pms: colors.coral,
-  normal: colors.sage,
-  unknown: colors.periwinkle,
-};
-
 // Local yyyy-mm-dd for a picked Date.
 function isoOf(d: Date): string {
   const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -31,6 +25,10 @@ function isoOf(d: Date): string {
 
 export default function CycleTracker() {
   const { periodStarts, cycleLength, logPeriodStart, removePeriodStart, setCycleLength } = useAppContext();
+  const colors = useTheme();
+  const styles = makeStyles(colors);
+  // phase banner background, themed
+  const PHASE_BG: Record<Phase, string> = { period: colors.blush, pms: colors.coral, normal: colors.sage, unknown: colors.periwinkle };
   const [showPicker, setShowPicker] = useState(false);
   const info = getCycleInfo(periodStarts, cycleLength, getToday());
 
@@ -105,7 +103,7 @@ export default function CycleTracker() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   card: {
     backgroundColor: colors.cardBg,
     borderRadius: radius.cards,
@@ -129,7 +127,7 @@ const styles = StyleSheet.create({
 
   btnRow: { flexDirection: 'row', gap: spacing.sm },
   logBtn: { flex: 1, backgroundColor: colors.rose, paddingVertical: spacing.sm, borderRadius: radius.buttons, alignItems: 'center' },
-  logBtnText: { color: colors.cardBg, fontSize: typography.small.fontSize, fontWeight: '700' },
+  logBtnText: { color: colors.onAccent, fontSize: typography.small.fontSize, fontWeight: '700' },
   dayBtn: { backgroundColor: colors.cream, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, borderRadius: radius.buttons, alignItems: 'center', justifyContent: 'center' },
   dayBtnText: { color: colors.textLight, fontSize: typography.small.fontSize, fontWeight: '600' },
 
@@ -137,7 +135,7 @@ const styles = StyleSheet.create({
   lenLabel: { fontSize: typography.small.fontSize, color: colors.textLight },
   stepper: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   stepBtn: { width: 30, height: 30, borderRadius: 999, backgroundColor: colors.lavender, alignItems: 'center', justifyContent: 'center' },
-  stepText: { color: colors.cardBg, fontSize: 18, fontWeight: '800' },
+  stepText: { color: colors.onAccent, fontSize: 18, fontWeight: '800' },
   lenVal: { fontSize: typography.body.fontSize, fontWeight: '700', color: colors.text, minWidth: 56, textAlign: 'center' },
 
   list: { marginTop: spacing.md },

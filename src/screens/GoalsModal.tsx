@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, Modal, ScrollView } from 'react-native';
 import { useAppContext } from '../hooks/useAppContext';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { spacing, radius, typography, ThemeColors } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { fmtINR } from '../utils';
 
 // Keep only digits from a typed amount.
@@ -11,6 +12,8 @@ const digits = (t: string) => t.replace(/[^0-9]/g, '');
 
 export default function GoalsModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { goals, addGoal, addToGoal, withdrawFromGoal, deleteGoal } = useAppContext();
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const [emoji, setEmoji] = useState('🫙');
   const [name, setName] = useState('');
   const [target, setTarget] = useState('');
@@ -149,7 +152,7 @@ export default function GoalsModal({ visible, onClose }: { visible: boolean; onC
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: '#00000055' },
   sheetWrap: { flex: 1, justifyContent: 'flex-end' },
   sheet: { maxHeight: '90%', backgroundColor: colors.cardBg, borderTopLeftRadius: radius.modals, borderTopRightRadius: radius.modals },
@@ -168,7 +171,7 @@ const styles = StyleSheet.create({
   rupee: { fontSize: 16, color: colors.rose, fontWeight: '700', marginRight: spacing.xs },
   targetInput: { flex: 1, paddingVertical: spacing.sm, fontSize: typography.body.fontSize, color: colors.text },
   addGoalBtn: { backgroundColor: colors.rose, paddingHorizontal: spacing.md, justifyContent: 'center', borderRadius: radius.small },
-  addGoalText: { color: colors.cardBg, fontWeight: '700', fontSize: typography.small.fontSize },
+  addGoalText: { color: colors.onAccent, fontWeight: '700', fontSize: typography.small.fontSize },
 
   empty: { fontSize: typography.body.fontSize, color: colors.textLight, fontStyle: 'italic', textAlign: 'center', paddingVertical: spacing.lg },
 
@@ -196,5 +199,5 @@ const styles = StyleSheet.create({
   disabled: { opacity: 0.4 },
 
   closeBtn: { backgroundColor: colors.lavender, paddingVertical: spacing.md, borderRadius: radius.buttons, alignItems: 'center', marginTop: spacing.sm },
-  closeText: { color: colors.cardBg, fontSize: typography.body.fontSize, fontWeight: '700' },
+  closeText: { color: colors.onAccent, fontSize: typography.body.fontSize, fontWeight: '700' },
 });

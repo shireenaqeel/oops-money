@@ -2,15 +2,18 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, spacing, typography } from '../constants/theme';
+import { spacing, typography, ThemeColors } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 
 // Full-screen wrapper: cream background + safe-area padding. Wrap every screen in this.
 export function Screen({ children, style }: { children: React.ReactNode; style?: ViewStyle }) {
+  const styles = makeStyles(useTheme());
   return <SafeAreaView style={[styles.screen, style]}>{children}</SafeAreaView>;
 }
 
 // Temporary centered placeholder for screens not built yet (emoji + title + optional subtitle).
 export function Placeholder({ emoji, title, subtitle }: { emoji: string; title: string; subtitle?: string }) {
+  const styles = makeStyles(useTheme());
   return (
     <View style={styles.center}>
       <Text style={styles.emoji}>{emoji}</Text>
@@ -20,7 +23,7 @@ export function Placeholder({ emoji, title, subtitle }: { emoji: string; title: 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.cream },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.lg },
   emoji: { fontSize: 44, marginBottom: spacing.md },

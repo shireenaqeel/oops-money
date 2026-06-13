@@ -3,13 +3,16 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { useAppContext } from '../hooks/useAppContext';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { spacing, radius, typography, ThemeColors } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { fmtINR } from '../utils';
 import { monthExpenses, sumExpenses } from '../utils/calculations';
 import { CATS, findCat } from '../constants/categories';
 
 export default function CategoryBudgets() {
   const { expenses, customCats, catBudgets, setCatBudget, removeCatBudget } = useAppContext();
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const allCats = [...CATS, ...customCats];
   const [pickedCat, setPickedCat] = useState(CATS[0].id);
   const [amount, setAmount] = useState('');
@@ -93,7 +96,7 @@ export default function CategoryBudgets() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   card: {
     backgroundColor: colors.cardBg,
     borderRadius: radius.cards,
@@ -112,14 +115,14 @@ const styles = StyleSheet.create({
   stripContent: { gap: spacing.sm, paddingRight: spacing.md },
   catPill: { paddingVertical: spacing.sm, paddingHorizontal: spacing.md, borderRadius: radius.chips },
   catText: { fontSize: typography.small.fontSize, color: colors.text, fontWeight: '500' },
-  catTextSel: { color: colors.cardBg, fontWeight: '700' },
+  catTextSel: { color: colors.onAccent, fontWeight: '700' },
 
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.md },
   rupee: { fontSize: 20, color: colors.rose, fontWeight: '700' },
   input: { flex: 1, backgroundColor: colors.cream, borderRadius: radius.chips, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, fontSize: typography.body.fontSize, color: colors.text },
   saveBtn: { backgroundColor: colors.rose, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderRadius: radius.chips },
   saveBtnDisabled: { backgroundColor: colors.textMuted, opacity: 0.5 },
-  saveText: { color: colors.cardBg, fontWeight: '700', fontSize: typography.small.fontSize },
+  saveText: { color: colors.onAccent, fontWeight: '700', fontSize: typography.small.fontSize },
 
   none: { fontSize: typography.small.fontSize, color: colors.textLight },
   limitRow: { marginTop: spacing.sm },

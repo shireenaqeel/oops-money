@@ -9,11 +9,15 @@ import CategoryBudgets from '../components/CategoryBudgets';
 import BestieMode from '../components/BestieMode';
 import GoalsModal from './GoalsModal';
 import { useAppContext } from '../hooks/useAppContext';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { spacing, radius, typography, ThemeColors } from '../constants/theme';
+import { useTheme, useThemeMeta } from '../hooks/useTheme';
 import { fmtINR } from '../utils';
 
 export default function SettingsScreen() {
   const { income, budget, splurgeFund, letters, addLetter, deleteLetter, resetAll, nightShield, setNightShield, billReminders, setBillReminders, recurring } = useAppContext();
+  const colors = useTheme();
+  const styles = makeStyles(colors);
+  const { themeId, setTheme, palettes } = useThemeMeta();
   const [draft, setDraft] = useState('');
   const [showImport, setShowImport] = useState(false);
   const [showGoals, setShowGoals] = useState(false);
@@ -98,6 +102,22 @@ export default function SettingsScreen() {
           <Text style={styles.importArrow}>›</Text>
         </Pressable>
 
+        {/* theme picker */}
+        <View style={styles.card}>
+          <Text style={styles.cardLabel}>THEME 🎨</Text>
+          <View style={styles.themeWrap}>
+            {palettes.map((p) => {
+              const active = p.id === themeId;
+              return (
+                <Pressable key={p.id} onPress={() => setTheme(p.id)} style={[styles.themeChip, active && styles.themeChipActive]}>
+                  <Text style={styles.themeEmoji}>{p.emoji}</Text>
+                  <Text style={[styles.themeName, active && styles.themeNameActive]}>{p.name}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
         {/* sapna jar — savings goals */}
         <Pressable style={styles.goalsBtn} onPress={() => setShowGoals(true)}>
           <Text style={styles.goalsEmoji}>🫙</Text>
@@ -154,7 +174,7 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   content: { padding: spacing.lg },
   flex1: { flex: 1 },
   heading: { fontSize: typography.heading.fontSize, fontWeight: '800', color: colors.text, marginBottom: spacing.lg },
@@ -163,6 +183,12 @@ const styles = StyleSheet.create({
   shieldTitle: { fontSize: typography.body.fontSize, fontWeight: '700', color: colors.text },
   shieldSub: { fontSize: typography.small.fontSize, color: colors.text, opacity: 0.7, marginTop: 1, marginRight: spacing.sm },
   billRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.butter, borderRadius: radius.cards, padding: spacing.md, marginBottom: spacing.md },
+  themeWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  themeChip: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, backgroundColor: colors.cream, borderRadius: radius.chips, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, borderWidth: 1.5, borderColor: colors.border },
+  themeChipActive: { backgroundColor: colors.lavender, borderColor: colors.rose },
+  themeEmoji: { fontSize: 15 },
+  themeName: { fontSize: typography.small.fontSize, color: colors.textLight, fontWeight: '600' },
+  themeNameActive: { color: colors.onAccent, fontWeight: '700' },
   goalsBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.sage, borderRadius: radius.cards, padding: spacing.md, marginBottom: spacing.md },
   goalsEmoji: { fontSize: 22, marginRight: spacing.md },
   goalsTitle: { fontSize: typography.body.fontSize, fontWeight: '700', color: colors.text },
@@ -192,7 +218,7 @@ const styles = StyleSheet.create({
   letterInput: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.inputs, padding: spacing.md, fontSize: typography.body.fontSize, color: colors.text, minHeight: 70, textAlignVertical: 'top' },
   letterBtn: { backgroundColor: colors.lilac, paddingVertical: spacing.sm, borderRadius: radius.buttons, alignItems: 'center', marginTop: spacing.sm },
   letterBtnDisabled: { backgroundColor: colors.textMuted, opacity: 0.5 },
-  letterBtnText: { color: colors.cardBg, fontSize: typography.small.fontSize, fontWeight: '700' },
+  letterBtnText: { color: colors.onAccent, fontSize: typography.small.fontSize, fontWeight: '700' },
   letterItem: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: colors.cream, borderRadius: radius.inputs, padding: spacing.md, marginTop: spacing.sm },
   letterText: { flex: 1, fontSize: typography.small.fontSize, color: colors.text, fontStyle: 'italic', lineHeight: 19 },
   letterDel: { fontSize: 14, color: colors.textMuted, marginLeft: spacing.sm },

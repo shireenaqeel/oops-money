@@ -6,7 +6,8 @@ import { Screen } from '../components/shared';
 import AddToJailModal from './AddToJailModal';
 import { useAppContext } from '../hooks/useAppContext';
 import { ImpulseItem } from '../types';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { spacing, radius, typography, ThemeColors } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { fmtINR, fmtDateLabel } from '../utils';
 import { buriedMsg } from '../constants/copy';
 
@@ -22,6 +23,8 @@ function isoOfMs(ms: number): string {
 
 export default function ImpulseJailScreen() {
   const { impulse, letters, buryImpulse, releaseImpulse, rejailImpulse, deleteImpulse } = useAppContext();
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const [showAdd, setShowAdd] = useState(false);
   const [nowTs, setNowTs] = useState(Date.now());
   const [letterSeed] = useState(() => Math.floor(Math.random() * 100000)); // pick one letter per visit
@@ -174,7 +177,7 @@ export default function ImpulseJailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
   flex1: { flex: 1, minWidth: 0 },
   heading: { fontSize: typography.heading.fontSize, fontWeight: '800', color: colors.text },
@@ -204,7 +207,7 @@ const styles = StyleSheet.create({
   buryText: { fontSize: typography.small.fontSize, fontWeight: '700', color: colors.text },
   releaseBtn: { flex: 1, backgroundColor: colors.rose, paddingVertical: spacing.sm, borderRadius: radius.buttons, alignItems: 'center' },
   releaseEarly: { backgroundColor: colors.peach },
-  releaseText: { fontSize: typography.small.fontSize, fontWeight: '700', color: colors.cardBg },
+  releaseText: { fontSize: typography.small.fontSize, fontWeight: '700', color: colors.onAccent },
 
   graveyard: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   tomb: { width: '48%', flexGrow: 1, alignItems: 'center', backgroundColor: colors.cardBg, borderTopLeftRadius: 40, borderTopRightRadius: 40, borderBottomLeftRadius: radius.small, borderBottomRightRadius: radius.small, paddingVertical: spacing.lg, paddingHorizontal: spacing.md, borderWidth: 1, borderColor: colors.border },
@@ -214,7 +217,7 @@ const styles = StyleSheet.create({
   tombSaved: { fontSize: typography.body.fontSize, color: colors.sage, fontWeight: '800', marginTop: spacing.xs },
   tombDate: { fontSize: typography.tiny.fontSize, color: colors.textMuted, marginTop: 1 },
   bringBackBtn: { backgroundColor: colors.lilac, paddingVertical: spacing.xs, paddingHorizontal: spacing.md, borderRadius: radius.buttons, marginTop: spacing.sm },
-  bringBackText: { fontSize: typography.tiny.fontSize, color: colors.cardBg, fontWeight: '700' },
+  bringBackText: { fontSize: typography.tiny.fontSize, color: colors.onAccent, fontWeight: '700' },
 
   cavedRow: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: colors.cardBg, borderRadius: radius.inputs, padding: spacing.md, marginBottom: spacing.sm },
   cavedName: { fontSize: typography.small.fontSize, color: colors.textLight },
@@ -222,5 +225,5 @@ const styles = StyleSheet.create({
   hint: { fontSize: typography.tiny.fontSize, color: colors.textMuted, textAlign: 'center', marginTop: spacing.xs },
 
   fab: { position: 'absolute', right: spacing.lg, bottom: spacing.lg, width: 58, height: 58, borderRadius: 999, backgroundColor: colors.lilac, alignItems: 'center', justifyContent: 'center', shadowColor: colors.lilac, shadowOpacity: 0.5, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
-  fabPlus: { color: colors.cardBg, fontSize: 30, marginTop: -2 },
+  fabPlus: { color: colors.onAccent, fontSize: 30, marginTop: -2 },
 });

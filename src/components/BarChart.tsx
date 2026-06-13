@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Rect } from 'react-native-svg';
-import { colors, spacing, typography } from '../constants/theme';
+import { spacing, typography, ThemeColors } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 
 export interface BarDatum {
   label: string;
@@ -11,6 +12,8 @@ export interface BarDatum {
 
 export default function BarChart({ data, color, height = 80 }: { data: BarDatum[]; color: string; height?: number }) {
   const [width, setWidth] = useState(0); // measured once the row lays out
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const max = Math.max(...data.map((d) => d.value), 1);
   const n = data.length;
   const gap = 6;
@@ -41,7 +44,7 @@ export default function BarChart({ data, color, height = 80 }: { data: BarDatum[
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   labels: { flexDirection: 'row', marginTop: spacing.xs },
   label: { flex: 1, textAlign: 'center', fontSize: typography.tiny.fontSize, color: colors.textMuted },
 });

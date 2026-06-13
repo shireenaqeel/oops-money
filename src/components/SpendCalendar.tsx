@@ -3,7 +3,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Expense } from '../types';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { spacing, radius, typography, ThemeColors } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { fmtINRShort } from '../utils';
 
 const DAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -16,7 +17,7 @@ function iso(d: Date): string {
 }
 
 // Pick a heat colour for a day given its spend vs the month's busiest day.
-function heatColor(spent: number, max: number): string {
+function heatColor(spent: number, max: number, colors: ThemeColors): string {
   if (spent <= 0) return colors.cream; // no-spend day
   const r = max > 0 ? spent / max : 0;
   if (r <= 0.33) return colors.mint; // light day
@@ -25,6 +26,8 @@ function heatColor(spent: number, max: number): string {
 }
 
 export default function SpendCalendar({ expenses, month, year }: { expenses: Expense[]; month?: number; year?: number }) {
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const now = new Date();
   const m = month ?? now.getMonth();
   const y = year ?? now.getFullYear();
@@ -67,7 +70,7 @@ export default function SpendCalendar({ expenses, month, year }: { expenses: Exp
             <View key={`b${i}`} style={styles.cell} />
           ) : (
             <View key={c.date} style={styles.cell}>
-              <View style={[styles.tile, { backgroundColor: heatColor(c.spent, max) }, c.date === todayIso && styles.today]}>
+              <View style={[styles.tile, { backgroundColor: heatColor(c.spent, max, colors) }, c.date === todayIso && styles.today]}>
                 <Text style={styles.dayNum}>{c.day}</Text>
               </View>
             </View>
@@ -89,7 +92,7 @@ export default function SpendCalendar({ expenses, month, year }: { expenses: Exp
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   row: { flexDirection: 'row' },
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
   cell: { width: `${100 / 7}%`, aspectRatio: 1, padding: 2 },

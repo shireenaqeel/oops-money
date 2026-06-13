@@ -4,7 +4,8 @@
 import React, { useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useAppContext } from '../hooks/useAppContext';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { spacing, radius, typography, ThemeColors } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 
 // A few late-night sassy lines; one is picked at random each time the shield appears.
 const LINES = [
@@ -17,6 +18,7 @@ const LINES = [
 
 export default function NightShield({ onProceed, onSnooze }: { onProceed: () => void; onSnooze: () => void }) {
   const { letters } = useAppContext();
+  const styles = makeStyles(useTheme());
   // Pick one sassy line + (if you've written any) one of your own future-me letters for this showing.
   const line = useMemo(() => LINES[Math.floor(Math.random() * LINES.length)], []);
   const letter = useMemo(() => (letters.length ? letters[Math.floor(Math.random() * letters.length)] : null), [letters]);
@@ -49,7 +51,7 @@ export default function NightShield({ onProceed, onSnooze }: { onProceed: () => 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   sheet: {
     backgroundColor: colors.cardBg,
     borderTopLeftRadius: radius.modals,
@@ -75,7 +77,7 @@ const styles = StyleSheet.create({
   letterText: { fontSize: typography.body.fontSize, color: colors.text, fontStyle: 'italic', lineHeight: 21 },
 
   sleepBtn: { width: '100%', backgroundColor: colors.periwinkle, paddingVertical: spacing.md, borderRadius: radius.buttons, alignItems: 'center' },
-  sleepText: { color: colors.cardBg, fontSize: typography.body.fontSize, fontWeight: '700' },
+  sleepText: { color: colors.onAccent, fontSize: typography.body.fontSize, fontWeight: '700' },
   proceedBtn: { paddingVertical: spacing.md, marginTop: spacing.xs },
   proceedText: { color: colors.textMuted, fontSize: typography.small.fontSize, fontWeight: '600' },
 });

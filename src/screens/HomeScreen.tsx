@@ -7,7 +7,8 @@ import RegretAuditModal from './RegretAuditModal';
 import AlertList from '../components/AlertList';
 import { useAppContext } from '../hooks/useAppContext';
 import { Expense } from '../types';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { spacing, radius, typography, ThemeColors } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { fmtINR, fmtDateLabel, getToday, daysSince } from '../utils';
 import { monthExpenses, sumExpenses, getBudgetState, getAlerts, getStreaks } from '../utils/calculations';
 import { buildConfession, confessToBestie } from '../utils/bestie';
@@ -18,6 +19,8 @@ const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'Ju
 const REGRET_EMOJI: Record<string, string> = { worth: '😍', meh: '😐', regret: '😭' };
 
 export default function HomeScreen() {
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const { expenses, budget, splurgeFund, customCats, catBudgets, bestieName, bestiePhone, deleteExpense } = useAppContext();
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
@@ -44,7 +47,7 @@ export default function HomeScreen() {
 
   const thisMonth = monthExpenses(expenses, month, year);
   const spent = sumExpenses(thisMonth);
-  const bs = getBudgetState(spent, budget);
+  const bs = getBudgetState(spent, budget, colors);
   const alerts = getAlerts(expenses, budget, splurgeFund, customCats, month, year, getToday(), catBudgets);
   const streaks = getStreaks(expenses, budget);
   const recent = thisMonth.slice(0, 8); // newest first (expenses are stored newest-first)
@@ -194,7 +197,7 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
   flex1: { flex: 1, minWidth: 0 },
   diaryLabel: { fontSize: typography.tiny.fontSize, color: colors.textMuted, letterSpacing: 3, textTransform: 'uppercase', textAlign: 'center', marginBottom: spacing.md },
@@ -303,5 +306,5 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 6,
   },
-  fabPlus: { color: colors.cardBg, fontSize: 30, fontWeight: '400', marginTop: -2 },
+  fabPlus: { color: colors.onAccent, fontSize: 30, fontWeight: '400', marginTop: -2 },
 });

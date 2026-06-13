@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Modal } from 'react-native';
 import { useAppContext } from '../hooks/useAppContext';
 import { Expense } from '../types';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { spacing, radius, typography, ThemeColors } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { fmtINR, fmtDateLabel, daysSince } from '../utils';
 import { findCat } from '../constants/categories';
 import { COPY } from '../constants/copy';
@@ -17,6 +18,8 @@ const VERDICTS = [
 
 export default function RegretAuditModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { expenses, customCats, rateExpense } = useAppContext();
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const [queue, setQueue] = useState<Expense[]>([]);
   const [index, setIndex] = useState(0);
 
@@ -83,7 +86,7 @@ export default function RegretAuditModal({ visible, onClose }: { visible: boolea
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: '#00000055' },
   wrap: { flex: 1, justifyContent: 'flex-end' },
   sheet: { backgroundColor: colors.cardBg, borderTopLeftRadius: radius.modals, borderTopRightRadius: radius.modals, padding: spacing.lg, paddingBottom: spacing.xl },
@@ -107,5 +110,5 @@ const styles = StyleSheet.create({
   doneEmoji: { fontSize: 44, marginBottom: spacing.md },
   doneText: { fontSize: typography.body.fontSize, color: colors.textLight, textAlign: 'center', marginBottom: spacing.lg },
   closeBtn: { backgroundColor: colors.rose, paddingVertical: spacing.md, paddingHorizontal: spacing.xl, borderRadius: radius.buttons },
-  closeText: { color: colors.cardBg, fontSize: typography.body.fontSize, fontWeight: '700' },
+  closeText: { color: colors.onAccent, fontSize: typography.body.fontSize, fontWeight: '700' },
 });

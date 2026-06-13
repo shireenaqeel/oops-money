@@ -7,7 +7,8 @@ import AlertList from '../components/AlertList';
 import SpendCalendar from '../components/SpendCalendar';
 import MonthlyWrappedModal from './MonthlyWrappedModal';
 import { useAppContext } from '../hooks/useAppContext';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { spacing, radius, typography, ThemeColors } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { fmtINR, getToday } from '../utils';
 import { monthExpenses, sumExpenses, getAlerts } from '../utils/calculations';
 import { getCycleInfo, getCycleSpendInsight } from '../utils/cycle';
@@ -26,6 +27,8 @@ function toISO(d: Date): string {
 
 export default function InsightsScreen() {
   const { expenses, budget, splurgeFund, customCats, catBudgets, periodStarts, cycleLength } = useAppContext();
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const [showWrapped, setShowWrapped] = useState(false);
 
   // Cycle insights (V2): current phase + whether PMS-week spending runs higher.
@@ -328,12 +331,12 @@ function buildTips(total: number, byCat: { cat: { name: string }; amount: number
   return tips;
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
   heading: { fontSize: typography.heading.fontSize, fontWeight: '800', color: colors.text, marginBottom: spacing.md },
   wrappedBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.lavender, borderRadius: radius.cards, paddingVertical: spacing.md, paddingHorizontal: spacing.lg, marginBottom: spacing.md },
-  wrappedText: { flex: 1, fontSize: typography.body.fontSize, fontWeight: '700', color: colors.cardBg },
-  wrappedArrow: { fontSize: 22, color: colors.cardBg },
+  wrappedText: { flex: 1, fontSize: typography.body.fontSize, fontWeight: '700', color: colors.onAccent },
+  wrappedArrow: { fontSize: 22, color: colors.onAccent },
 
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   gridCard: {

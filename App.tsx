@@ -7,7 +7,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AppProvider, useAppContext } from './src/hooks/useAppContext';
-import { colors } from './src/constants/theme';
+import { ThemeProvider, useTheme, useThemeMeta } from './src/hooks/useTheme';
 import HomeScreen from './src/screens/HomeScreen';
 import InsightsScreen from './src/screens/InsightsScreen';
 import RecurringScreen from './src/screens/RecurringScreen';
@@ -26,6 +26,7 @@ function tabIcon(emoji: string) {
 
 // The 4 main bottom tabs shown after onboarding.
 function MainTabs() {
+  const colors = useTheme();
   return (
     <Tab.Navigator
       screenOptions={{
@@ -52,15 +53,23 @@ function RootNavigator() {
   return onboarded ? <MainTabs /> : <OnboardingScreen />;
 }
 
+// Status bar icons flip to light on dark themes.
+function ThemedStatusBar() {
+  const { isDark } = useThemeMeta();
+  return <StatusBar style={isDark ? 'light' : 'dark'} />;
+}
+
 export default function App() {
   return (
     <SafeAreaProvider>
-      <AppProvider>
-        <NavigationContainer>
-          <RootNavigator />
-        </NavigationContainer>
-        <StatusBar style="dark" />
-      </AppProvider>
+      <ThemeProvider>
+        <AppProvider>
+          <NavigationContainer>
+            <RootNavigator />
+          </NavigationContainer>
+          <ThemedStatusBar />
+        </AppProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, Modal, ScrollView } from 'react-native';
 import { useAppContext } from '../hooks/useAppContext';
 import { Category } from '../types';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { spacing, radius, typography, ThemeColors } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 
 // Curated emoji palette to pick from (no extra library needed).
 const EMOJIS = ['🎨', '🧶', '🎸', '🎮', '🍿', '🌿', '🪴', '🐶', '🐱', '☕', '🍷', '🎂', '🎁', '✈️', '🏖️', '💅', '👗', '📚', '✏️', '🧘', '🚲', '🛍️', '🎧', '📷', '🪙', '🍩', '🌸', '✨', '💖', '🔮'];
@@ -19,6 +20,8 @@ export default function AddCategoryModal({
   onCreated: (cat: Category) => void;
 }) {
   const { addCustomCat } = useAppContext();
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const [emoji, setEmoji] = useState(EMOJIS[0]);
   const [name, setName] = useState('');
 
@@ -82,7 +85,7 @@ export default function AddCategoryModal({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: '#00000066' },
   centerWrap: { flex: 1, justifyContent: 'center', padding: spacing.lg },
   sheet: { backgroundColor: colors.cardBg, borderRadius: radius.modals, padding: spacing.lg },
@@ -99,5 +102,5 @@ const styles = StyleSheet.create({
   emojiText: { fontSize: 22 },
   btn: { backgroundColor: colors.rose, paddingVertical: spacing.md, borderRadius: radius.buttons, alignItems: 'center', marginTop: spacing.lg },
   btnDisabled: { backgroundColor: colors.textMuted, opacity: 0.5 },
-  btnText: { color: colors.cardBg, fontSize: typography.body.fontSize, fontWeight: '700' },
+  btnText: { color: colors.onAccent, fontSize: typography.body.fontSize, fontWeight: '700' },
 });

@@ -2,9 +2,11 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Alert } from '../utils/calculations';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { spacing, radius, typography, ThemeColors } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 
 export default function AlertList({ alerts }: { alerts: Alert[] }) {
+  const styles = makeStyles(useTheme());
   if (alerts.length === 0) return null;
   return (
     <>
@@ -21,7 +23,7 @@ export default function AlertList({ alerts }: { alerts: Alert[] }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   card: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.blush, borderRadius: radius.inputs, padding: spacing.md, marginTop: spacing.md, borderLeftWidth: 4, borderLeftColor: colors.rose },
   emoji: { fontSize: 22, marginRight: spacing.md },
   flex1: { flex: 1 },

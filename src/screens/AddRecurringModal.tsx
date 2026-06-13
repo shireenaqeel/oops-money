@@ -2,7 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { useAppContext } from '../hooks/useAppContext';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { spacing, radius, typography, ThemeColors } from '../constants/theme';
+import { useTheme } from '../hooks/useTheme';
 import { findCat } from '../constants/categories';
 
 // Common categories for bills (keeps the picker short).
@@ -10,6 +11,8 @@ const BILL_CATS = ['rent', 'subscriptions', 'utilities', 'gym', 'transport', 'me
 
 export default function AddRecurringModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { addRecurring } = useAppContext();
+  const colors = useTheme();
+  const styles = makeStyles(colors);
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
   const [day, setDay] = useState('');
@@ -78,7 +81,7 @@ export default function AddRecurringModal({ visible, onClose }: { visible: boole
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: '#00000055' },
   wrap: { flex: 1, justifyContent: 'flex-end' },
   sheet: { backgroundColor: colors.cardBg, borderTopLeftRadius: radius.modals, borderTopRightRadius: radius.modals, padding: spacing.lg, paddingBottom: spacing.xl },
@@ -97,8 +100,8 @@ const styles = StyleSheet.create({
   catWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   catPill: { paddingVertical: spacing.sm, paddingHorizontal: spacing.md, borderRadius: radius.chips },
   catText: { fontSize: typography.small.fontSize, color: colors.text, fontWeight: '500' },
-  catTextSelected: { color: colors.cardBg, fontWeight: '700' },
+  catTextSelected: { color: colors.onAccent, fontWeight: '700' },
   btn: { backgroundColor: colors.skyBlue, paddingVertical: spacing.md, borderRadius: radius.buttons, alignItems: 'center', marginTop: spacing.lg },
   btnDisabled: { backgroundColor: colors.textMuted, opacity: 0.5 },
-  btnText: { color: colors.cardBg, fontSize: typography.body.fontSize, fontWeight: '700' },
+  btnText: { color: colors.onAccent, fontSize: typography.body.fontSize, fontWeight: '700' },
 });
