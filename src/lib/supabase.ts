@@ -11,6 +11,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false, // we handle the OAuth redirect manually in React Native
+    flowType: 'implicit', // tokens come back in the redirect URL — simplest reliable flow on mobile
   },
 });
 

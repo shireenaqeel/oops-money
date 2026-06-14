@@ -7,6 +7,7 @@ import CSVImportModal from './CSVImportModal';
 import CycleTracker from '../components/CycleTracker';
 import CategoryBudgets from '../components/CategoryBudgets';
 import BestieMode from '../components/BestieMode';
+import CloudBackup from '../components/CloudBackup';
 import GoalsModal from './GoalsModal';
 import { useAppContext } from '../hooks/useAppContext';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
@@ -101,6 +102,9 @@ export default function SettingsScreen() {
           </View>
           <Text style={styles.importArrow}>›</Text>
         </Pressable>
+
+        {/* cloud backup — optional Google sign-in + sync */}
+        <CloudBackup />
 
         {/* theme picker */}
         <View style={styles.card}>

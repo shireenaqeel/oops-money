@@ -3,6 +3,24 @@
 
 ---
 
+## V2+ — Cloud Sync — Phase 2+3: keys pasted + sign-in + sync — 14 Jun 2026
+**What:** Shireen created her Supabase project and pasted her Project URL + anon key into `supabaseConfig.ts`, and ran the SQL that creates the `app_state` table with RLS (each user can only touch their own row). Then built the working sign-in + backup/restore feature.
+**How it works:** Settings 🎀 now shows a **CLOUD BACKUP ☁️** card (only visible once keys are configured). Signed out → "Sign in with Google" button. Signed in → shows email + **Back up ⬆️** / **Restore ⬇️** buttons + sign out. On first sign-in, if the cloud is empty it auto-backs-up; if a backup already exists it does NOT auto-overwrite local (user chooses), so nothing gets clobbered.
+**Sign-in flow:** `implicit` flow — `signInWithOAuth` builds the Google URL, `WebBrowser.openAuthSessionAsync` opens it, tokens come back in the redirect fragment, `setSession` saves them. Redirect scheme = `oopsmoney://auth-callback`.
+**Sync model:** `exportSnapshot()` bundles ALL AsyncStorage keys into one object → upserted as a JSONB blob in `app_state.data`. `restoreFromCloud()` downloads + `importSnapshot()` writes them back, then `reload()` refreshes the UI. Local stays the source of truth.
+**Files added/changed:**
+- `src/storage/index.ts` — `exportSnapshot` / `importSnapshot` helpers
+- `src/lib/sync.ts` — `pushSnapshot` / `pullSnapshot` / `restoreFromCloud`
+- `src/hooks/useAuth.tsx` — auth + sync brain (`AuthProvider` / `useAuth`)
+- `src/components/CloudBackup.tsx` — the Settings card UI
+- `src/screens/SettingsScreen.tsx` — renders `<CloudBackup />`
+- `App.tsx` — wraps app in `<AuthProvider>` (inside `<AppProvider>`)
+- `src/lib/supabase.ts` — `flowType: 'implicit'`; `supabaseConfig.ts` — real keys
+**⚠️ Still needs (homework before the button works):** (1) Supabase dashboard → Authentication → Providers → enable **Google** with a Google Cloud OAuth client ID + secret, (2) add `oopsmoney://auth-callback` to Supabase redirect allow-list. Also: Google login redirect to the custom scheme only fully works in a **built APK / dev build**, not plain Expo Go.
+**How to test (after Google provider setup + APK build):** Settings 🎀 → Cloud Backup → Sign in with Google → pick account → see your email + "pehla backup ho gaya". Reset app, sign in again, tap Restore ⬇️ → data comes back.
+
+---
+
 ## V2+ — Cloud Sync (Supabase + Google) — Phase 1: scaffolding — 14 Jun 2026
 **What:** Started the optional cloud-sync feature. This phase just lays the plumbing; nothing works until Shireen sets up her Supabase project.
 **Decision:** This intentionally relaxes the "no backend" rule (sync only). Local AsyncStorage stays authoritative; sign-in is **optional** (a "sync/back up" layer, not a login gate). Supabase chosen (anon key is client-safe with RLS). Google sign-in.

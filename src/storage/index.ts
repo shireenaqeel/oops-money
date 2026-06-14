@@ -58,3 +58,31 @@ export async function saveString(key: string, value: string): Promise<void> {
 export async function clearAll(): Promise<void> {
   await AsyncStorage.multiRemove(Object.values(KEYS));
 }
+
+// A full picture of the app's data: every key mapped to its raw stored string (or null if unset).
+// Used by cloud sync to upload/download everything at once.
+export type Snapshot = Record<string, string | null>;
+
+// Read every app key into one object — the parcel we upload to the cloud.
+export async function exportSnapshot(): Promise<Snapshot> {
+  const keys = Object.values(KEYS);
+  const entries = await AsyncStorage.multiGet(keys);
+  const snap: Snapshot = {};
+  for (const [k, v] of entries) snap[k] = v;
+  return snap;
+}
+
+// Write a downloaded snapshot back into storage, replacing local data.
+// Only our own keys are touched (anything unknown in the parcel is ignored for safety).
+export async function importSnapshot(snap: Snapshot): Promise<void> {
+  const known = new Set<string>(Object.values(KEYS));
+  const toSet: [string, string][] = [];
+  const toRemove: string[] = [];
+  for (const key of known) {
+    const val = snap[key];
+    if (val == null) toRemove.push(key);
+    else toSet.push([key, val]);
+  }
+  if (toSet.length) await AsyncStorage.multiSet(toSet);
+  if (toRemove.length) await AsyncStorage.multiRemove(toRemove);
+}

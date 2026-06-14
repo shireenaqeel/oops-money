@@ -7,6 +7,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AppProvider, useAppContext } from './src/hooks/useAppContext';
+import { AuthProvider } from './src/hooks/useAuth';
 import { ThemeProvider, useTheme, useThemeMeta } from './src/hooks/useTheme';
 import HomeScreen from './src/screens/HomeScreen';
 import InsightsScreen from './src/screens/InsightsScreen';
@@ -64,10 +65,12 @@ export default function App() {
     <SafeAreaProvider>
       <ThemeProvider>
         <AppProvider>
-          <NavigationContainer>
-            <RootNavigator />
-          </NavigationContainer>
-          <ThemedStatusBar />
+          <AuthProvider>
+            <NavigationContainer>
+              <RootNavigator />
+            </NavigationContainer>
+            <ThemedStatusBar />
+          </AuthProvider>
         </AppProvider>
       </ThemeProvider>
     </SafeAreaProvider>
