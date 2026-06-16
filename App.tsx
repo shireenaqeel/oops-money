@@ -9,6 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppProvider, useAppContext } from './src/hooks/useAppContext';
 import { AuthProvider } from './src/hooks/useAuth';
 import { ThemeProvider, useTheme, useThemeMeta } from './src/hooks/useTheme';
+import { LangProvider } from './src/hooks/useLang';
 import HomeScreen from './src/screens/HomeScreen';
 import InsightsScreen from './src/screens/InsightsScreen';
 import RecurringScreen from './src/screens/RecurringScreen';
@@ -63,16 +64,18 @@ function ThemedStatusBar() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <ThemeProvider>
-        <AppProvider>
-          <AuthProvider>
-            <NavigationContainer>
-              <RootNavigator />
-            </NavigationContainer>
-            <ThemedStatusBar />
-          </AuthProvider>
-        </AppProvider>
-      </ThemeProvider>
+      <LangProvider>
+        <ThemeProvider>
+          <AppProvider>
+            <AuthProvider>
+              <NavigationContainer>
+                <RootNavigator />
+              </NavigationContainer>
+              <ThemedStatusBar />
+            </AuthProvider>
+          </AppProvider>
+        </ThemeProvider>
+      </LangProvider>
     </SafeAreaProvider>
   );
 }

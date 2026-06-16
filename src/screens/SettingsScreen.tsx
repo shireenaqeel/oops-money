@@ -15,6 +15,8 @@ import EventsModal from './EventsModal';
 import { useAppContext } from '../hooks/useAppContext';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme, useThemeMeta } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 import { fmtINR } from '../utils';
 
 export default function SettingsScreen() {
@@ -22,6 +24,7 @@ export default function SettingsScreen() {
   const colors = useTheme();
   const styles = makeStyles(colors);
   const { themeId, setTheme, palettes } = useThemeMeta();
+  const { lang, setLang } = useLang();
   const [draft, setDraft] = useState('');
   const [showImport, setShowImport] = useState(false);
   const [showGoals, setShowGoals] = useState(false);
@@ -157,6 +160,21 @@ export default function SettingsScreen() {
           </View>
           <Text style={styles.goalsArrow}>›</Text>
         </Pressable>
+
+        {/* language picker */}
+        <View style={styles.card}>
+          <Text style={styles.cardLabel}>{L('BHASHA 🗣️', 'LANGUAGE 🗣️')}</Text>
+          <View style={styles.themeWrap}>
+            <Pressable onPress={() => setLang('hinglish')} style={[styles.themeChip, lang === 'hinglish' && styles.themeChipActive]}>
+              <Text style={styles.themeEmoji}>🇮🇳</Text>
+              <Text style={[styles.themeName, lang === 'hinglish' && styles.themeNameActive]}>Hinglish</Text>
+            </Pressable>
+            <Pressable onPress={() => setLang('english')} style={[styles.themeChip, lang === 'english' && styles.themeChipActive]}>
+              <Text style={styles.themeEmoji}>🔤</Text>
+              <Text style={[styles.themeName, lang === 'english' && styles.themeNameActive]}>English</Text>
+            </Pressable>
+          </View>
+        </View>
 
         {/* sapna jar — savings goals */}
         <Pressable style={styles.goalsBtn} onPress={() => setShowGoals(true)}>
