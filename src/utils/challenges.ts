@@ -3,6 +3,7 @@
 import { Challenge, Expense, Category } from '../types';
 import { findCat } from '../constants/categories';
 import { daysSince } from './index';
+import { L } from '../i18n';
 
 // A challenge you can take on. `kind` decides how it's judged:
 //  - 'cap'      → total spend in the window must stay ≤ cap (cap 0 = a no-spend challenge)
@@ -11,7 +12,8 @@ export interface ChallengeTemplate {
   id: string;
   emoji: string;
   title: string;
-  desc: string;
+  desc: string; // Hinglish description
+  descEn: string; // English description
   durationDays: number;
   kind: 'cap' | 'no_group';
   cap?: number; // for 'cap'
@@ -19,10 +21,10 @@ export interface ChallengeTemplate {
 }
 
 export const CHALLENGE_TEMPLATES: ChallengeTemplate[] = [
-  { id: 'no_zomato', emoji: '🍜', title: 'No-Zomato Week', desc: '7 din zero food delivery + cafe — ghar ka khaana time', durationDays: 7, kind: 'no_group', groups: ['Food'] },
-  { id: 'cap500', emoji: '💸', title: '₹500 Week', desc: 'poore 7 din mein ₹500 se kam kharcha', durationDays: 7, kind: 'cap', cap: 500 },
-  { id: 'no_shop', emoji: '🛍️', title: 'No-Shopping 3 Days', desc: '3 din beauty + fashion kuch nahi', durationDays: 3, kind: 'no_group', groups: ['Beauty', 'Fashion'] },
-  { id: 'no_spend3', emoji: '🚫', title: 'No-Spend 3 Days', desc: '3 din bilkul zero kharcha — pakka?', durationDays: 3, kind: 'cap', cap: 0 },
+  { id: 'no_zomato', emoji: '🍜', title: 'No-Zomato Week', desc: '7 din zero food delivery + cafe — ghar ka khaana time', descEn: '7 days of zero food delivery + cafe — home food time', durationDays: 7, kind: 'no_group', groups: ['Food'] },
+  { id: 'cap500', emoji: '💸', title: '₹500 Week', desc: 'poore 7 din mein ₹500 se kam kharcha', descEn: 'spend under ₹500 across the whole 7 days', durationDays: 7, kind: 'cap', cap: 500 },
+  { id: 'no_shop', emoji: '🛍️', title: 'No-Shopping 3 Days', desc: '3 din beauty + fashion kuch nahi', descEn: '3 days of no beauty + fashion', durationDays: 3, kind: 'no_group', groups: ['Beauty', 'Fashion'] },
+  { id: 'no_spend3', emoji: '🚫', title: 'No-Spend 3 Days', desc: '3 din bilkul zero kharcha — pakka?', descEn: '3 days of absolutely zero spending — sure?', durationDays: 3, kind: 'cap', cap: 0 },
 ];
 
 // Find a template by id.
@@ -69,13 +71,13 @@ export function evaluateChallenge(ch: Challenge, expenses: Expense[], customCats
     const spent = windowExp.reduce((s, e) => s + Number(e.amount), 0);
     const cap = template.cap ?? 0;
     failed = spent > cap;
-    detail = cap === 0 ? (spent > 0 ? `oops, ₹${Math.round(spent)} kharch ho gaya` : 'abhi tak ₹0 — slay 💚') : `${Math.round(spent)} / ${cap} kharch`;
+    detail = cap === 0 ? (spent > 0 ? L(`oops, ₹${Math.round(spent)} kharch ho gaya`, `oops, ₹${Math.round(spent)} spent`) : L('abhi tak ₹0 — slay 💚', 'still ₹0 — slay 💚')) : L(`${Math.round(spent)} / ${cap} kharch`, `${Math.round(spent)} / ${cap} spent`);
   } else {
     // no_group: any expense in a forbidden group breaks it
     const groups = template.groups ?? [];
     const slip = windowExp.find((e) => groups.includes(findCat(e.catId, customCats).group));
     failed = !!slip;
-    detail = slip ? `oops, ${findCat(slip.catId, customCats).name} pe kharch ho gaya` : 'abhi tak clean 💚';
+    detail = slip ? L(`oops, ${findCat(slip.catId, customCats).name} pe kharch ho gaya`, `oops, spent on ${findCat(slip.catId, customCats).name}`) : L('abhi tak clean 💚', 'still clean 💚');
   }
 
   let status: ChallengeStatus['status'] = 'active';

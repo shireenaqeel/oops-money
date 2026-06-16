@@ -2,19 +2,29 @@
 // hands it to WhatsApp (if a number is set) or the OS share sheet. No backend — the phone does the sending.
 import { Share, Linking } from 'react-native';
 import { fmtINR } from './index';
+import { L } from '../i18n';
 
 // Build the confession text from this month's numbers. Tone: sassy, non-judgmental (CLAUDE.md).
 export function buildConfession(spent: number, budget: number, name: string): string {
   const who = name ? `${name}` : 'bestie';
   if (budget > 0 && spent > budget) {
     const over = spent - budget;
-    return `oops ${who} 💀 maine is mahine ₹${fmtINR(spent).slice(1)} kharch kar diya (budget ₹${fmtINR(budget).slice(1)} tha — ₹${fmtINR(over).slice(1)} over). roko mujhe pls 🙏 #OopsMoney`;
+    return L(
+      `oops ${who} 💀 maine is mahine ₹${fmtINR(spent).slice(1)} kharch kar diya (budget ₹${fmtINR(budget).slice(1)} tha — ₹${fmtINR(over).slice(1)} over). roko mujhe pls 🙏 #OopsMoney`,
+      `oops ${who} 💀 I spent ₹${fmtINR(spent).slice(1)} this month (budget was ₹${fmtINR(budget).slice(1)} — ₹${fmtINR(over).slice(1)} over). stop me pls 🙏 #OopsMoney`
+    );
   }
   if (budget > 0) {
     const left = budget - spent;
-    return `update ${who} 🌸 is mahine ₹${fmtINR(spent).slice(1)} kharch hua, abhi budget mein hoon (₹${fmtINR(left).slice(1)} bacha) — proud of me na? 💅 #OopsMoney`;
+    return L(
+      `update ${who} 🌸 is mahine ₹${fmtINR(spent).slice(1)} kharch hua, abhi budget mein hoon (₹${fmtINR(left).slice(1)} bacha) — proud of me na? 💅 #OopsMoney`,
+      `update ${who} 🌸 spent ₹${fmtINR(spent).slice(1)} this month, still within budget (₹${fmtINR(left).slice(1)} left) — proud of me? 💅 #OopsMoney`
+    );
   }
-  return `hi ${who} 🌸 is mahine ab tak ₹${fmtINR(spent).slice(1)} kharch — mujh pe nazar rakhna 👀 #OopsMoney`;
+  return L(
+    `hi ${who} 🌸 is mahine ab tak ₹${fmtINR(spent).slice(1)} kharch — mujh pe nazar rakhna 👀 #OopsMoney`,
+    `hi ${who} 🌸 spent ₹${fmtINR(spent).slice(1)} so far this month — keep an eye on me 👀 #OopsMoney`
+  );
 }
 
 // Keep only digits for a phone number (strip spaces, +, dashes for the wa.me link).

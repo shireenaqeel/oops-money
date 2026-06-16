@@ -5,6 +5,8 @@ import { View, Text, TextInput, Pressable, StyleSheet, ScrollView } from 'react-
 import { useAppContext } from '../hooks/useAppContext';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 import { fmtINR } from '../utils';
 import { monthExpenses, sumExpenses } from '../utils/calculations';
 import { CATS, findCat } from '../constants/categories';
@@ -13,6 +15,7 @@ export default function CategoryBudgets() {
   const { expenses, customCats, catBudgets, setCatBudget, removeCatBudget } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
+  useLang(); // subscribe so text re-renders when language toggles
   const allCats = [...CATS, ...customCats];
   const [pickedCat, setPickedCat] = useState(CATS[0].id);
   const [amount, setAmount] = useState('');
@@ -32,8 +35,8 @@ export default function CategoryBudgets() {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.cardLabel}>CATEGORY BUDGETS 🎯</Text>
-      <Text style={styles.hint}>kisi category ka monthly limit set karo — cross hua toh Home pe alert milega</Text>
+      <Text style={styles.cardLabel}>{L('CATEGORY BUDGETS 🎯', 'CATEGORY BUDGETS 🎯')}</Text>
+      <Text style={styles.hint}>{L('kisi category ka monthly limit set karo — cross hua toh Home pe alert milega', 'set a monthly limit for a category — cross it and you get an alert on Home')}</Text>
 
       {/* category picker */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.strip} contentContainerStyle={styles.stripContent}>
@@ -54,18 +57,18 @@ export default function CategoryBudgets() {
           style={styles.input}
           value={amount}
           onChangeText={(t) => setAmount(t.replace(/[^0-9]/g, ''))}
-          placeholder="limit"
+          placeholder={L('limit', 'limit')}
           placeholderTextColor={colors.textMuted}
           keyboardType="number-pad"
         />
         <Pressable style={[styles.saveBtn, !amount && styles.saveBtnDisabled]} onPress={save} disabled={!amount}>
-          <Text style={styles.saveText}>set ✦</Text>
+          <Text style={styles.saveText}>{L('set ✦', 'set ✦')}</Text>
         </Pressable>
       </View>
 
       {/* existing limits with this-month progress */}
       {limits.length === 0 ? (
-        <Text style={styles.none}>abhi koi category limit nahi 🌸</Text>
+        <Text style={styles.none}>{L('abhi koi category limit nahi 🌸', 'no category limits yet 🌸')}</Text>
       ) : (
         limits.map(([catId, limit]) => {
           const cat = findCat(catId, customCats);
@@ -87,7 +90,7 @@ export default function CategoryBudgets() {
               <View style={styles.track}>
                 <View style={[styles.fill, { width: `${pct}%`, backgroundColor: barColor }]} />
               </View>
-              {over ? <Text style={styles.overText}>limit cross 💀 {fmtINR(spent - limit)} zyada</Text> : null}
+              {over ? <Text style={styles.overText}>{L(`limit cross 💀 ${fmtINR(spent - limit)} zyada`, `limit crossed 💀 ${fmtINR(spent - limit)} over`)}</Text> : null}
             </View>
           );
         })

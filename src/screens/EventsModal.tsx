@@ -7,6 +7,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAppContext } from '../hooks/useAppContext';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 import { fmtINR, fmtDateLabel, getToday } from '../utils';
 
 // Keep only digits from a typed amount.
@@ -30,6 +32,7 @@ export default function EventsModal({ visible, onClose }: { visible: boolean; on
   const { events, expenses, addEvent, deleteEvent } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
+  useLang(); // subscribe so text re-renders when language toggles
   const [emoji, setEmoji] = useState('🎉');
   const [name, setName] = useState('');
   const [budget, setBudget] = useState('');
@@ -60,8 +63,8 @@ export default function EventsModal({ visible, onClose }: { visible: boolean; on
       <View style={styles.sheetWrap}>
         <ScrollView style={styles.sheet} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.grabber} />
-          <Text style={styles.title}>Season Mode 🎉</Text>
-          <Text style={styles.sub}>Diwali, shaadi, trip — uska alag budget banao, kharche tag karo, alag se track karo ✨</Text>
+          <Text style={styles.title}>{L('Season Mode 🎉', 'Season Mode 🎉')}</Text>
+          <Text style={styles.sub}>{L('Diwali, shaadi, trip — uska alag budget banao, kharche tag karo, alag se track karo ✨', 'Diwali, wedding, trip — make a separate budget, tag spends, track it on its own ✨')}</Text>
 
           {/* new event form */}
           <View style={styles.form}>
@@ -71,7 +74,7 @@ export default function EventsModal({ visible, onClose }: { visible: boolean; on
                 style={styles.nameInput}
                 value={name}
                 onChangeText={setName}
-                placeholder="event (jaise: Diya ki shaadi)"
+                placeholder={L('event (jaise: Diya ki shaadi)', "event (e.g. Diya's wedding)")}
                 placeholderTextColor={colors.textMuted}
               />
             </View>
@@ -81,18 +84,18 @@ export default function EventsModal({ visible, onClose }: { visible: boolean; on
                 style={styles.budgetInput}
                 value={budget}
                 onChangeText={(t) => setBudget(digits(t))}
-                placeholder="event budget"
+                placeholder={L('event budget', 'event budget')}
                 placeholderTextColor={colors.textMuted}
                 keyboardType="number-pad"
               />
             </View>
             <View style={styles.dateRow}>
               <Pressable style={styles.datePill} onPress={() => setPicking('start')}>
-                <Text style={styles.datePillLabel}>se</Text>
+                <Text style={styles.datePillLabel}>{L('se', 'from')}</Text>
                 <Text style={styles.datePillVal}>{fmtDateLabel(start)}</Text>
               </Pressable>
               <Pressable style={styles.datePill} onPress={() => setPicking('end')}>
-                <Text style={styles.datePillLabel}>tak</Text>
+                <Text style={styles.datePillLabel}>{L('tak', 'to')}</Text>
                 <Text style={styles.datePillVal}>{fmtDateLabel(end)}</Text>
               </Pressable>
               <Pressable style={[styles.addBtn, (!name.trim() || !budget) && styles.disabled]} onPress={create} disabled={!name.trim() || !budget}>
@@ -118,7 +121,7 @@ export default function EventsModal({ visible, onClose }: { visible: boolean; on
 
           {/* events list */}
           {events.length === 0 ? (
-            <Text style={styles.empty}>abhi koi event nahi babe — Diwali ya shaadi ka budget banao 🎉</Text>
+            <Text style={styles.empty}>{L('abhi koi event nahi babe — Diwali ya shaadi ka budget banao 🎉', 'no events yet babe — make a Diwali or wedding budget 🎉')}</Text>
           ) : (
             events.map((ev) => {
               const spent = spentOf(ev.id);
@@ -147,9 +150,9 @@ export default function EventsModal({ visible, onClose }: { visible: boolean; on
                     <View style={[styles.fill, { width: `${pct}%`, backgroundColor: over ? colors.budgetOver : colors.peach }]} />
                   </View>
                   {over ? (
-                    <Text style={styles.overText}>oops, event budget se {fmtINR(Math.abs(left))} zyada 💀</Text>
+                    <Text style={styles.overText}>{L(`oops, event budget se ${fmtINR(Math.abs(left))} zyada 💀`, `oops, ${fmtINR(Math.abs(left))} over the event budget 💀`)}</Text>
                   ) : (
-                    <Text style={styles.leftText}>{fmtINR(left)} bacha hai is event ke liye 🎀</Text>
+                    <Text style={styles.leftText}>{L(`${fmtINR(left)} bacha hai is event ke liye 🎀`, `${fmtINR(left)} left for this event 🎀`)}</Text>
                   )}
                 </View>
               );
@@ -157,7 +160,7 @@ export default function EventsModal({ visible, onClose }: { visible: boolean; on
           )}
 
           <Pressable style={styles.closeBtn} onPress={onClose}>
-            <Text style={styles.closeText}>done ✦</Text>
+            <Text style={styles.closeText}>{L('done ✦', 'done ✦')}</Text>
           </Pressable>
         </ScrollView>
       </View>

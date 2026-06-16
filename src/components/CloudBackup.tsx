@@ -4,24 +4,26 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 
 export default function CloudBackup() {
   const { configured, session, email, busy, status, signInWithGoogle, signOut, backupNow, restoreNow } = useAuth();
   const colors = useTheme();
   const styles = makeStyles(colors);
+  useLang(); // subscribe so text re-renders when language toggles
 
   if (!configured) return null; // setup not done yet — stay invisible
 
   return (
     <View style={styles.card}>
-      <Text style={styles.cardLabel}>CLOUD BACKUP ☁️</Text>
+      <Text style={styles.cardLabel}>{L('CLOUD BACKUP ☁️', 'CLOUD BACKUP ☁️')}</Text>
 
       {!session ? (
         <>
           <Text style={styles.hint}>
-            Google se sign in karo taaki tumhara data cloud pe backup ho jaaye — naya phone ya app
-            reinstall pe sab wapas mil jayega. (optional hai, app aise bhi chalega 💾)
+            {L('Google se sign in karo taaki tumhara data cloud pe backup ho jaaye — naya phone ya app reinstall pe sab wapas mil jayega. (optional hai, app aise bhi chalega 💾)', 'Sign in with Google so your data backs up to the cloud — on a new phone or reinstall you get it all back. (optional, the app works without it too 💾)')}
           </Text>
           <Pressable style={[styles.primaryBtn, busy && styles.btnDisabled]} onPress={signInWithGoogle} disabled={busy}>
             {busy ? <ActivityIndicator color={colors.onAccent} /> : <Text style={styles.primaryText}>Sign in with Google ☁️</Text>}
@@ -32,7 +34,7 @@ export default function CloudBackup() {
           <View style={styles.signedRow}>
             <Text style={styles.signedEmoji}>✅</Text>
             <View style={styles.flex1}>
-              <Text style={styles.signedTitle}>signed in</Text>
+              <Text style={styles.signedTitle}>{L('signed in', 'signed in')}</Text>
               <Text style={styles.signedEmail}>{email}</Text>
             </View>
           </View>
@@ -47,7 +49,7 @@ export default function CloudBackup() {
           </View>
 
           <Pressable onPress={signOut} disabled={busy} hitSlop={8}>
-            <Text style={styles.signOut}>sign out</Text>
+            <Text style={styles.signOut}>{L('sign out', 'sign out')}</Text>
           </Pressable>
         </>
       )}

@@ -3,6 +3,18 @@
 
 ---
 
+## V3 — Language toggle 🗣️ (Hinglish / English) — 16 Jun 2026
+**What:** Settings 🎀 → **BHASHA / LANGUAGE 🗣️** card to switch the whole app between **🇮🇳 Hinglish** (default) and **🔤 English**. The choice applies instantly everywhere and is remembered.
+**Why / how (IMPORTANT for future me):** all microcopy was hardcoded Hinglish across 31 files. Rather than a keyed dictionary, added a tiny helper **`L(hinglish, english)`** in `src/i18n/index.ts` that returns the right string for the active language, backed by a **module-level** current language so even pure util functions (alerts, personality, salary curve, challenges, benchmark, broke-math, confession, notifications) translate — not just components.
+- `src/hooks/useLang.tsx` (new) — `LangProvider` holds the active language (persisted to `om_lang`), `useLang()` subscribes. `App.tsx` wraps everything in `<LangProvider>` (outermost).
+- **Every screen/component that shows text calls `useLang()` once** so it re-renders on toggle; the strings themselves come from `L(...)`. Module-level lists (onboarding steps, night-shield lines, challenge templates, cycle phase messages) keep both languages and pick at render.
+- Strings that were already plain English (e.g. "log this spend", COPY.*, mood labels) were left as-is (same in both) to keep the diff sane.
+**Files:** `src/i18n/index.ts`, `src/hooks/useLang.tsx`, `App.tsx`, `src/storage/index.ts` (+`lang` key), and ~28 screen/component/util files wrapped with `L()`.
+**How to test on phone:** Reload → **Settings 🎀 → LANGUAGE** → tap **English** → whole app (Home, Insights, Jail, Bills, all modals, alerts, personality) flips to English instantly; tap **Hinglish** to flip back. Force-close + reopen → choice persists.
+**Next up:** fresh APK build (cloud sync, benchmark, and everything since the last build need it).
+
+---
+
 ## V3 — Anonymous Bestie Benchmark 📊 — 16 Jun 2026
 **What:** Insights ✿ → a new **"BESTIE BENCHMARK"** card that compares *your* category-group spending mix to the anonymous average of all Oops Money users — *"💄 Beauty: tu average se 2.3x zyada kharchti hai 👀 (tu 28% · avg 12%)"*. Signed out it nudges you to sign in; with a tiny user pool it says "tu pehli bestie hai".
 **Why:** A *social* angle — only possible now that we have a cloud (Supabase). Standout vs every other tracker, and privacy-safe.

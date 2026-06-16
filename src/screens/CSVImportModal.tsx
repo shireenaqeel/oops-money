@@ -6,6 +6,8 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { useAppContext } from '../hooks/useAppContext';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 import { fmtINR } from '../utils';
 import { findCat } from '../constants/categories';
 import { parseBankCSV, ParsedExpense } from '../utils/csv';
@@ -14,6 +16,7 @@ export default function CSVImportModal({ visible, onClose }: { visible: boolean;
   const { bulkAddExpenses, customCats } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
+  useLang(); // subscribe so text re-renders when language toggles
   const [parsed, setParsed] = useState<ParsedExpense[]>([]);
   const [step, setStep] = useState<'pick' | 'preview'>('pick');
   const [busy, setBusy] = useState(false);
@@ -42,14 +45,14 @@ export default function CSVImportModal({ visible, onClose }: { visible: boolean;
       const items = parseBankCSV(content);
       setBusy(false);
       if (items.length === 0) {
-        setError('koi transaction nahi mili — kya yeh sahi CSV hai?');
+        setError(L('koi transaction nahi mili — kya yeh sahi CSV hai?', 'no transactions found — is this the right CSV?'));
         return;
       }
       setParsed(items);
       setStep('preview');
     } catch (e) {
       setBusy(false);
-      setError('file padhne mein dikkat — dobara try karo');
+      setError(L('file padhne mein dikkat — dobara try karo', 'trouble reading the file — try again'));
     }
   }
 
@@ -68,7 +71,7 @@ export default function CSVImportModal({ visible, onClose }: { visible: boolean;
 
           {step === 'pick' ? (
             <>
-              <Text style={styles.title}>bank statement import 📂</Text>
+              <Text style={styles.title}>{L('bank statement import 📂', 'bank statement import 📂')}</Text>
               <View style={styles.infoBox}>
                 <Text style={styles.infoLine}>✦ HDFC: NetBanking → Download Statement (CSV)</Text>
                 <Text style={styles.infoLine}>✦ ICICI: iMobile → Statements → Export CSV</Text>
@@ -79,15 +82,15 @@ export default function CSVImportModal({ visible, onClose }: { visible: boolean;
                 <ActivityIndicator color={colors.rose} style={{ marginVertical: spacing.md }} />
               ) : (
                 <Pressable style={styles.btn} onPress={pickFile}>
-                  <Text style={styles.btnText}>choose CSV file ✦</Text>
+                  <Text style={styles.btnText}>{L('choose CSV file ✦', 'choose CSV file ✦')}</Text>
                 </Pressable>
               )}
               {error ? <Text style={styles.error}>{error}</Text> : null}
             </>
           ) : (
             <>
-              <Text style={styles.title}>found {parsed.length} transactions ✨</Text>
-              <Text style={styles.sub}>categories auto-detect ho gayi — import karein?</Text>
+              <Text style={styles.title}>{L(`found ${parsed.length} transactions ✨`, `found ${parsed.length} transactions ✨`)}</Text>
+              <Text style={styles.sub}>{L('categories auto-detect ho gayi — import karein?', 'categories auto-detected — import them?')}</Text>
               <ScrollView style={styles.previewList} showsVerticalScrollIndicator={false}>
                 {parsed.slice(0, 12).map((e, i) => {
                   const cat = findCat(e.catId, customCats);
@@ -100,14 +103,14 @@ export default function CSVImportModal({ visible, onClose }: { visible: boolean;
                     </View>
                   );
                 })}
-                {parsed.length > 12 ? <Text style={styles.more}>...and {parsed.length - 12} more</Text> : null}
+                {parsed.length > 12 ? <Text style={styles.more}>{L(`...and ${parsed.length - 12} more`, `...and ${parsed.length - 12} more`)}</Text> : null}
               </ScrollView>
               <View style={styles.btnRow}>
                 <Pressable style={styles.btnCancel} onPress={() => setStep('pick')}>
-                  <Text style={styles.btnCancelText}>back</Text>
+                  <Text style={styles.btnCancelText}>{L('back', 'back')}</Text>
                 </Pressable>
                 <Pressable style={styles.btnConfirm} onPress={confirm}>
-                  <Text style={styles.btnText}>import all ✦</Text>
+                  <Text style={styles.btnText}>{L('import all ✦', 'import all ✦')}</Text>
                 </Pressable>
               </View>
             </>

@@ -4,6 +4,7 @@ import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { Recurring } from '../types';
 import { fmtINR } from './index';
+import { L } from '../i18n';
 
 // Show the reminder even if the app happens to be open when it fires.
 Notifications.setNotificationHandler({
@@ -53,8 +54,8 @@ export async function scheduleBillReminders(recurring: Recurring[]): Promise<voi
     const when = nextDueReminder(bill.day, now);
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: `${bill.name} due hai aaj 🔔`,
-        body: `${fmtINR(bill.amount)} ka bill — bhulna mat babe 💸`,
+        title: L(`${bill.name} due hai aaj 🔔`, `${bill.name} is due today 🔔`),
+        body: L(`${fmtINR(bill.amount)} ka bill — bhulna mat babe 💸`, `${fmtINR(bill.amount)} bill — don't forget babe 💸`),
       },
       trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: when },
     });

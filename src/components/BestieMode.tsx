@@ -5,6 +5,8 @@ import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 import { useAppContext } from '../hooks/useAppContext';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 import { monthExpenses, sumExpenses } from '../utils/calculations';
 import { buildConfession, confessToBestie } from '../utils/bestie';
 
@@ -12,6 +14,7 @@ export default function BestieMode() {
   const { bestieName, bestiePhone, setBestie, expenses, budget } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
+  useLang(); // subscribe so text re-renders when language toggles
   const [name, setName] = useState(bestieName);
   const [phone, setPhone] = useState(bestiePhone);
   const saved = bestieName.trim().length > 0;
@@ -30,8 +33,8 @@ export default function BestieMode() {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.cardLabel}>BESTIE MODE 🤝</Text>
-      <Text style={styles.hint}>apni accountability bestie add karo — jab budget gaya, ek tap me unhe confess karo (WhatsApp/SMS se). sab tumhare phone pe, koi data share nahi hota apne aap.</Text>
+      <Text style={styles.cardLabel}>{L('BESTIE MODE 🤝', 'BESTIE MODE 🤝')}</Text>
+      <Text style={styles.hint}>{L('apni accountability bestie add karo — jab budget gaya, ek tap me unhe confess karo (WhatsApp/SMS se). sab tumhare phone pe, koi data share nahi hota apne aap.', 'add your accountability bestie — when the budget is blown, confess to them in one tap (via WhatsApp/SMS). all on your phone, nothing is shared automatically.')}</Text>
 
       <View style={styles.row}>
         <Text style={styles.emoji}>👯</Text>
@@ -39,7 +42,7 @@ export default function BestieMode() {
           style={styles.input}
           value={name}
           onChangeText={setName}
-          placeholder="bestie ka naam"
+          placeholder={L('bestie ka naam', "bestie's name")}
           placeholderTextColor={colors.textMuted}
         />
       </View>
@@ -49,19 +52,19 @@ export default function BestieMode() {
           style={styles.input}
           value={phone}
           onChangeText={setPhone}
-          placeholder="WhatsApp number (optional, with code: 91...)"
+          placeholder={L('WhatsApp number (optional, with code: 91...)', 'WhatsApp number (optional, with code: 91...)')}
           placeholderTextColor={colors.textMuted}
           keyboardType="phone-pad"
         />
       </View>
 
       <Pressable style={[styles.saveBtn, !dirty && styles.saveBtnDisabled]} onPress={() => setBestie(name.trim(), phone.trim())} disabled={!dirty}>
-        <Text style={styles.saveText}>{saved ? 'update bestie ✦' : 'save bestie ✦'}</Text>
+        <Text style={styles.saveText}>{saved ? L('update bestie ✦', 'update bestie ✦') : L('save bestie ✦', 'save bestie ✦')}</Text>
       </Pressable>
 
       {saved ? (
         <Pressable style={styles.confessBtn} onPress={confess}>
-          <Text style={styles.confessText}>💌 confess to {bestieName} now</Text>
+          <Text style={styles.confessText}>{L(`💌 confess to ${bestieName} now`, `💌 confess to ${bestieName} now`)}</Text>
         </Pressable>
       ) : null}
     </View>

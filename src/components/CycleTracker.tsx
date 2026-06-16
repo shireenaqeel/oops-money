@@ -6,15 +6,24 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAppContext } from '../hooks/useAppContext';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 import { fmtDateLabel, getToday } from '../utils';
 import { getCycleInfo, Phase } from '../utils/cycle';
 
-// A gentle, non-judgmental line for the current phase.
+// A gentle, non-judgmental line for the current phase (Hinglish).
 const PHASE_MSG: Record<Phase, string> = {
   period: 'period chal raha hai 🌸 — rest, chai aur self-care. budget ki tension abhi mat lo',
   pms: 'PMS week, babe 💕 cravings aur impulse buys high ho sakte hain — khud pe gentle raho',
   normal: 'cycle ke beech mein ho — all good ✨',
   unknown: 'pehla period log karo, phir yahan tumhara cycle + prediction dikhega 🌸',
+};
+// English version of the phase lines.
+const PHASE_MSG_EN: Record<Phase, string> = {
+  period: 'period time 🌸 — rest, chai and self-care. don\'t stress about budget right now',
+  pms: 'PMS week, babe 💕 cravings and impulse buys may run high — be gentle with yourself',
+  normal: "you're mid-cycle — all good ✨",
+  unknown: 'log your first period, then your cycle + prediction show here 🌸',
 };
 // Local yyyy-mm-dd for a picked Date.
 function isoOf(d: Date): string {
@@ -27,6 +36,7 @@ export default function CycleTracker() {
   const { periodStarts, cycleLength, logPeriodStart, removePeriodStart, setCycleLength } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
+  useLang(); // subscribe so text re-renders when language toggles
   // phase banner background, themed
   const PHASE_BG: Record<Phase, string> = { period: colors.blush, pms: colors.coral, normal: colors.sage, unknown: colors.periwinkle };
   const [showPicker, setShowPicker] = useState(false);
@@ -34,30 +44,30 @@ export default function CycleTracker() {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.cardLabel}>CYCLE TRACKING 🌸</Text>
-      <Text style={styles.hint}>period log karo — Insights mein dikhega ki PMS week mein kharcha badhta hai ya nahi. (sab kuch tumhare phone pe, private)</Text>
+      <Text style={styles.cardLabel}>{L('CYCLE TRACKING 🌸', 'CYCLE TRACKING 🌸')}</Text>
+      <Text style={styles.hint}>{L('period log karo — Insights mein dikhega ki PMS week mein kharcha badhta hai ya nahi. (sab kuch tumhare phone pe, private)', 'log your period — Insights shows whether PMS-week spending rises or not. (all on your phone, private)')}</Text>
 
       {/* current phase banner */}
       <View style={[styles.phase, { backgroundColor: PHASE_BG[info.phase] }]}>
-        <Text style={styles.phaseText}>{PHASE_MSG[info.phase]}</Text>
-        {info.dayOfCycle && info.dayOfCycle > 0 ? <Text style={styles.phaseDay}>cycle day {info.dayOfCycle}</Text> : null}
+        <Text style={styles.phaseText}>{L(PHASE_MSG[info.phase], PHASE_MSG_EN[info.phase])}</Text>
+        {info.dayOfCycle && info.dayOfCycle > 0 ? <Text style={styles.phaseDay}>{L(`cycle day ${info.dayOfCycle}`, `cycle day ${info.dayOfCycle}`)}</Text> : null}
       </View>
 
       {/* next predicted */}
       {info.nextPredicted ? (
         <Text style={styles.predict}>
-          🔮 agla period: <Text style={styles.predictStrong}>{fmtDateLabel(info.nextPredicted)}</Text>
-          {info.daysToNext != null && info.daysToNext >= 0 ? ` (${info.daysToNext} din mein)` : ''}
+          {L('🔮 agla period:', '🔮 next period:')} <Text style={styles.predictStrong}>{fmtDateLabel(info.nextPredicted)}</Text>
+          {info.daysToNext != null && info.daysToNext >= 0 ? L(` (${info.daysToNext} din mein)`, ` (in ${info.daysToNext} days)`) : ''}
         </Text>
       ) : null}
 
       {/* log buttons */}
       <View style={styles.btnRow}>
         <Pressable style={styles.logBtn} onPress={() => logPeriodStart(getToday())}>
-          <Text style={styles.logBtnText}>period shuru hua aaj 🌸</Text>
+          <Text style={styles.logBtnText}>{L('period shuru hua aaj 🌸', 'period started today 🌸')}</Text>
         </Pressable>
         <Pressable style={styles.dayBtn} onPress={() => setShowPicker(true)}>
-          <Text style={styles.dayBtnText}>📅 koi aur din</Text>
+          <Text style={styles.dayBtnText}>{L('📅 koi aur din', '📅 another day')}</Text>
         </Pressable>
       </View>
       {showPicker ? (
@@ -79,7 +89,7 @@ export default function CycleTracker() {
           <Pressable style={styles.stepBtn} onPress={() => setCycleLength(cycleLength - 1)} hitSlop={8}>
             <Text style={styles.stepText}>−</Text>
           </Pressable>
-          <Text style={styles.lenVal}>{cycleLength} din</Text>
+          <Text style={styles.lenVal}>{L(`${cycleLength} din`, `${cycleLength} days`)}</Text>
           <Pressable style={styles.stepBtn} onPress={() => setCycleLength(cycleLength + 1)} hitSlop={8}>
             <Text style={styles.stepText}>+</Text>
           </Pressable>

@@ -5,16 +5,19 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useAppContext } from '../hooks/useAppContext';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 import { brokeMath } from '../utils';
 
 export default function BrokeMath({ amount }: { amount: number }) {
   const { income } = useAppContext();
   const styles = makeStyles(useTheme());
+  useLang(); // subscribe so text re-renders when language toggles
   const lines = brokeMath(amount, Number(income) || 0);
   if (lines.length === 0) return null;
   return (
     <View style={styles.wrap}>
-      <Text style={styles.label}>broke math 🧮</Text>
+      <Text style={styles.label}>{L('broke math 🧮', 'broke math 🧮')}</Text>
       <View style={styles.chips}>
         {lines.map((l, i) => (
           <View key={i} style={styles.chip}>

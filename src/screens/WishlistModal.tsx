@@ -5,6 +5,8 @@ import { View, Text, TextInput, Pressable, StyleSheet, Modal, ScrollView } from 
 import { useAppContext } from '../hooks/useAppContext';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 import { fmtINR, fmtDateLabel } from '../utils';
 
 // Keep only digits from a typed amount.
@@ -23,6 +25,7 @@ export default function WishlistModal({ visible, onClose }: { visible: boolean; 
   const { wishlist, addWish, updateWishPerDay, deleteWish } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
+  useLang(); // subscribe so text re-renders when language toggles
   const [emoji, setEmoji] = useState('🌟');
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
@@ -46,8 +49,8 @@ export default function WishlistModal({ visible, onClose }: { visible: boolean; 
       <View style={styles.sheetWrap}>
         <ScrollView style={styles.sheet} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.grabber} />
-          <Text style={styles.title}>Manifest Board 🌟</Text>
-          <Text style={styles.sub}>jo chahiye usse abhi mat khareedo — yahan daalo, save karke manifest karo ✨</Text>
+          <Text style={styles.title}>{L('Manifest Board 🌟', 'Manifest Board 🌟')}</Text>
+          <Text style={styles.sub}>{L('jo chahiye usse abhi mat khareedo — yahan daalo, save karke manifest karo ✨', "don't buy what you want right now — add it here, save up and manifest it ✨")}</Text>
 
           {/* new wish form */}
           <View style={styles.form}>
@@ -57,7 +60,7 @@ export default function WishlistModal({ visible, onClose }: { visible: boolean; 
                 style={styles.nameInput}
                 value={name}
                 onChangeText={setName}
-                placeholder="kya chahiye? (jaise: Zara dress)"
+                placeholder={L('kya chahiye? (jaise: Zara dress)', 'what do you want? (e.g. Zara dress)')}
                 placeholderTextColor={colors.textMuted}
               />
             </View>
@@ -68,7 +71,7 @@ export default function WishlistModal({ visible, onClose }: { visible: boolean; 
                   style={styles.inInput}
                   value={price}
                   onChangeText={(t) => setPrice(digits(t))}
-                  placeholder="price"
+                  placeholder={L('price', 'price')}
                   placeholderTextColor={colors.textMuted}
                   keyboardType="number-pad"
                 />
@@ -79,7 +82,7 @@ export default function WishlistModal({ visible, onClose }: { visible: boolean; 
                   style={styles.inInput}
                   value={perDay}
                   onChangeText={(t) => setPerDay(digits(t))}
-                  placeholder="roz (50)"
+                  placeholder={L('roz (50)', 'daily (50)')}
                   placeholderTextColor={colors.textMuted}
                   keyboardType="number-pad"
                 />
@@ -92,7 +95,7 @@ export default function WishlistModal({ visible, onClose }: { visible: boolean; 
 
           {/* wishlist */}
           {wishlist.length === 0 ? (
-            <Text style={styles.empty}>abhi koi wish nahi babe — kuch manifest karo ✨</Text>
+            <Text style={styles.empty}>{L('abhi koi wish nahi babe — kuch manifest karo ✨', 'no wishes yet babe — manifest something ✨')}</Text>
           ) : (
             wishlist.map((w) => {
               const days = Math.ceil(w.price / Math.max(w.perDay, 1));
@@ -110,13 +113,13 @@ export default function WishlistModal({ visible, onClose }: { visible: boolean; 
                   </View>
 
                   <Text style={styles.mathLine}>
-                    roz <Text style={styles.bold}>{fmtINR(w.perDay)}</Text> bachao → <Text style={styles.bold}>{days} din</Text> mein tera 💖
+                    {L('roz', 'save')} <Text style={styles.bold}>{fmtINR(w.perDay)}</Text> {L('bachao →', 'a day →')} <Text style={styles.bold}>{L(`${days} din`, `${days} days`)}</Text> {L('mein tera 💖', 'and it\'s yours 💖')}
                   </Text>
-                  <Text style={styles.dateLine}>milega around {fmtDateLabel(isoInDays(days))}</Text>
+                  <Text style={styles.dateLine}>{L(`milega around ${fmtDateLabel(isoInDays(days))}`, `yours around ${fmtDateLabel(isoInDays(days))}`)}</Text>
 
                   {/* adjust daily save */}
                   <View style={styles.stepRow}>
-                    <Text style={styles.stepLabel}>roz kitna bachegi?</Text>
+                    <Text style={styles.stepLabel}>{L('roz kitna bachegi?', 'how much per day?')}</Text>
                     <Pressable style={styles.stepBtn} onPress={() => updateWishPerDay(w.id, Math.max(1, w.perDay - 10))} hitSlop={6}>
                       <Text style={styles.stepBtnText}>−</Text>
                     </Pressable>
@@ -131,7 +134,7 @@ export default function WishlistModal({ visible, onClose }: { visible: boolean; 
           )}
 
           <Pressable style={styles.closeBtn} onPress={onClose}>
-            <Text style={styles.closeText}>done ✦</Text>
+            <Text style={styles.closeText}>{L('done ✦', 'done ✦')}</Text>
           </Pressable>
         </ScrollView>
       </View>

@@ -1,6 +1,7 @@
 // utils/index.ts — pure formatting / calculation / id helpers. No UI, no state, no storage.
 import { Category } from '../types';
 import { CATS, MERCHANT_MAP } from '../constants/categories';
+import { L } from '../i18n';
 
 const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -65,10 +66,10 @@ export function brokeMath(amount: number, monthlyIncome: number): string[] {
   if (coffees >= 1) lines.push(`☕ ${coffees} coffee${coffees > 1 ? 's' : ''}`);
   if (monthlyIncome > 0) {
     const days = amount / (monthlyIncome / 30);
-    lines.push(`💼 ${trim(days)} din ki kamai`);
+    lines.push(L(`💼 ${trim(days)} din ki kamai`, `💼 ${trim(days)} days of pay`));
   }
   const netflix = amount / 649;
-  if (netflix >= 1) lines.push(`📺 ${trim(netflix)} mahine Netflix`);
+  if (netflix >= 1) lines.push(L(`📺 ${trim(netflix)} mahine Netflix`, `📺 ${trim(netflix)} months of Netflix`));
   const autos = Math.round(amount / 50);
   if (autos >= 1) lines.push(`🛺 ${autos} auto ride${autos > 1 ? 's' : ''}`);
   return lines;

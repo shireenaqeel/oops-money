@@ -5,12 +5,15 @@ import { View, Text, Pressable, StyleSheet, Modal, ScrollView } from 'react-nati
 import { useAppContext } from '../hooks/useAppContext';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 import { CHALLENGE_TEMPLATES, evaluateChallenge } from '../utils/challenges';
 
 export default function ChallengesModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { challenges, expenses, customCats, startChallenge, abandonChallenge } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
+  useLang(); // subscribe so text re-renders when language toggles
 
   // Evaluate every taken-on challenge against the expenses (drop any with a missing template).
   const evaluated = challenges
@@ -27,14 +30,14 @@ export default function ChallengesModal({ visible, onClose }: { visible: boolean
         <ScrollView style={styles.sheet} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.grabber} />
           <Text style={styles.title}>Challenges 🏆</Text>
-          <Text style={styles.sub}>ek chhota challenge lo, jeeto, trophy kamao 💪 {wins > 0 ? `· ${wins} 🏆 jeete` : ''}</Text>
+          <Text style={styles.sub}>{L('ek chhota challenge lo, jeeto, trophy kamao 💪', 'take a small challenge, win, earn a trophy 💪')} {wins > 0 ? L(`· ${wins} 🏆 jeete`, `· ${wins} 🏆 won`) : ''}</Text>
 
           {/* your active / finished challenges */}
           {evaluated.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>YOUR CHALLENGES</Text>
+              <Text style={styles.sectionLabel}>{L('YOUR CHALLENGES', 'YOUR CHALLENGES')}</Text>
               {evaluated.map(({ ch, st }) => {
-                const badge = st.status === 'won' ? '🏆 jeet gayi!' : st.status === 'failed' ? '💔 oops, gaya' : `⏳ ${st.daysLeft} din baaki`;
+                const badge = st.status === 'won' ? L('🏆 jeet gayi!', '🏆 you won!') : st.status === 'failed' ? L('💔 oops, gaya', '💔 oops, lost') : L(`⏳ ${st.daysLeft} din baaki`, `⏳ ${st.daysLeft} days left`);
                 const badgeColor = st.status === 'won' ? colors.mint : st.status === 'failed' ? colors.coral : colors.butter;
                 return (
                   <View key={ch.id} style={styles.activeCard}>
@@ -62,7 +65,7 @@ export default function ChallengesModal({ visible, onClose }: { visible: boolean
 
           {/* pick a new challenge */}
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>NAYA CHALLENGE LO</Text>
+            <Text style={styles.sectionLabel}>{L('NAYA CHALLENGE LO', 'TAKE A NEW CHALLENGE')}</Text>
             {CHALLENGE_TEMPLATES.map((t) => {
               const taken = activeTemplateIds.has(t.id);
               return (
@@ -70,10 +73,10 @@ export default function ChallengesModal({ visible, onClose }: { visible: boolean
                   <Text style={styles.tplEmoji}>{t.emoji}</Text>
                   <View style={styles.flex1}>
                     <Text style={styles.tplTitle}>{t.title}</Text>
-                    <Text style={styles.tplDesc}>{t.desc}</Text>
+                    <Text style={styles.tplDesc}>{L(t.desc, t.descEn)}</Text>
                   </View>
                   <Pressable style={[styles.startBtn, taken && styles.disabled]} onPress={() => startChallenge(t.id)} disabled={taken}>
-                    <Text style={styles.startText}>{taken ? 'chal raha' : 'start'}</Text>
+                    <Text style={styles.startText}>{taken ? L('chal raha', 'active') : L('start', 'start')}</Text>
                   </Pressable>
                 </View>
               );
@@ -81,7 +84,7 @@ export default function ChallengesModal({ visible, onClose }: { visible: boolean
           </View>
 
           <Pressable style={styles.closeBtn} onPress={onClose}>
-            <Text style={styles.closeText}>done ✦</Text>
+            <Text style={styles.closeText}>{L('done ✦', 'done ✦')}</Text>
           </Pressable>
         </ScrollView>
       </View>

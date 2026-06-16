@@ -6,6 +6,8 @@ import { useAppContext } from '../hooks/useAppContext';
 import { Category } from '../types';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 
 // Curated emoji palette to pick from (no extra library needed).
 const EMOJIS = ['🎨', '🧶', '🎸', '🎮', '🍿', '🌿', '🪴', '🐶', '🐱', '☕', '🍷', '🎂', '🎁', '✈️', '🏖️', '💅', '👗', '📚', '✏️', '🧘', '🚲', '🛍️', '🎧', '📷', '🪙', '🍩', '🌸', '✨', '💖', '🔮'];
@@ -22,6 +24,7 @@ export default function AddCategoryModal({
   const { addCustomCat } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
+  useLang(); // subscribe so text re-renders when language toggles
   const [emoji, setEmoji] = useState(EMOJIS[0]);
   const [name, setName] = useState('');
 
@@ -48,12 +51,12 @@ export default function AddCategoryModal({
       <Pressable style={styles.overlay} onPress={onClose} />
       <View style={styles.centerWrap} pointerEvents="box-none">
         <View style={styles.sheet}>
-          <Text style={styles.title}>apni category banao 🌷</Text>
+          <Text style={styles.title}>{L('apni category banao 🌷', 'make your own category 🌷')}</Text>
 
           {/* preview */}
           <View style={styles.preview}>
             <Text style={styles.previewEmoji}>{emoji}</Text>
-            <Text style={styles.previewName}>{name.trim() || 'category name...'}</Text>
+            <Text style={styles.previewName}>{name.trim() || L('category name...', 'category name...')}</Text>
           </View>
 
           {/* name input */}
@@ -61,13 +64,13 @@ export default function AddCategoryModal({
             style={styles.input}
             value={name}
             onChangeText={setName}
-            placeholder="naam likho (Art, Plants, etc.)"
+            placeholder={L('naam likho (Art, Plants, etc.)', 'type a name (Art, Plants, etc.)')}
             placeholderTextColor={colors.textMuted}
             autoFocus
           />
 
           {/* emoji grid */}
-          <Text style={styles.label}>emoji chuno</Text>
+          <Text style={styles.label}>{L('emoji chuno', 'pick an emoji')}</Text>
           <ScrollView style={styles.emojiScroll} contentContainerStyle={styles.emojiGrid} showsVerticalScrollIndicator={false}>
             {EMOJIS.map((e) => (
               <Pressable key={e} onPress={() => setEmoji(e)} style={[styles.emojiCell, emoji === e && styles.emojiCellActive]}>
@@ -77,7 +80,7 @@ export default function AddCategoryModal({
           </ScrollView>
 
           <Pressable style={[styles.btn, !canSave && styles.btnDisabled]} onPress={onCreate} disabled={!canSave}>
-            <Text style={styles.btnText}>add ✦</Text>
+            <Text style={styles.btnText}>{L('add ✦', 'add ✦')}</Text>
           </Pressable>
         </View>
       </View>

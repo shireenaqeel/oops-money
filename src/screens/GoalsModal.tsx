@@ -5,6 +5,8 @@ import { View, Text, TextInput, Pressable, StyleSheet, Modal, ScrollView } from 
 import { useAppContext } from '../hooks/useAppContext';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 import { fmtINR } from '../utils';
 
 // Keep only digits from a typed amount.
@@ -14,6 +16,7 @@ export default function GoalsModal({ visible, onClose }: { visible: boolean; onC
   const { goals, addGoal, addToGoal, withdrawFromGoal, deleteGoal } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
+  useLang(); // subscribe so text re-renders when language toggles
   const [emoji, setEmoji] = useState('🫙');
   const [name, setName] = useState('');
   const [target, setTarget] = useState('');
@@ -38,8 +41,8 @@ export default function GoalsModal({ visible, onClose }: { visible: boolean; onC
       <View style={styles.sheetWrap}>
         <ScrollView style={styles.sheet} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.grabber} />
-          <Text style={styles.title}>Sapna Jar 🫙</Text>
-          <Text style={styles.sub}>apne sapne ke liye paise side karo — jar bharta dekho ✨</Text>
+          <Text style={styles.title}>{L('Sapna Jar 🫙', 'Dream Jar 🫙')}</Text>
+          <Text style={styles.sub}>{L('apne sapne ke liye paise side karo — jar bharta dekho ✨', 'set money aside for your dream — watch the jar fill ✨')}</Text>
 
           {/* new goal form */}
           <View style={styles.form}>
@@ -49,7 +52,7 @@ export default function GoalsModal({ visible, onClose }: { visible: boolean; onC
                 style={styles.nameInput}
                 value={name}
                 onChangeText={setName}
-                placeholder="sapna (jaise: Goa trip)"
+                placeholder={L('sapna (jaise: Goa trip)', 'dream (e.g. Goa trip)')}
                 placeholderTextColor={colors.textMuted}
               />
             </View>
@@ -60,20 +63,20 @@ export default function GoalsModal({ visible, onClose }: { visible: boolean; onC
                   style={styles.targetInput}
                   value={target}
                   onChangeText={(t) => setTarget(digits(t))}
-                  placeholder="target"
+                  placeholder={L('target', 'target')}
                   placeholderTextColor={colors.textMuted}
                   keyboardType="number-pad"
                 />
               </View>
               <Pressable style={[styles.addGoalBtn, (!name.trim() || !target) && styles.disabled]} onPress={create} disabled={!name.trim() || !target}>
-                <Text style={styles.addGoalText}>+ naya sapna</Text>
+                <Text style={styles.addGoalText}>{L('+ naya sapna', '+ new dream')}</Text>
               </Pressable>
             </View>
           </View>
 
           {/* goals list */}
           {goals.length === 0 ? (
-            <Text style={styles.empty}>abhi koi sapna nahi babe — ek add karo ✨</Text>
+            <Text style={styles.empty}>{L('abhi koi sapna nahi babe — ek add karo ✨', 'no dreams yet babe — add one ✨')}</Text>
           ) : (
             goals.map((g) => {
               const pct = g.target > 0 ? Math.min(Math.round((g.saved / g.target) * 100), 100) : 0;
@@ -99,9 +102,9 @@ export default function GoalsModal({ visible, onClose }: { visible: boolean; onC
                   </View>
 
                   {done ? (
-                    <Text style={styles.doneText}>🎉 sapna poora! you did it babe 💚</Text>
+                    <Text style={styles.doneText}>{L('🎉 sapna poora! you did it babe 💚', '🎉 dream complete! you did it babe 💚')}</Text>
                   ) : (
-                    <Text style={styles.leftText}>{fmtINR(left)} aur — almost there 🌸</Text>
+                    <Text style={styles.leftText}>{L(`${fmtINR(left)} aur — almost there 🌸`, `${fmtINR(left)} more — almost there 🌸`)}</Text>
                   )}
 
                   {/* add / withdraw savings */}
@@ -112,7 +115,7 @@ export default function GoalsModal({ visible, onClose }: { visible: boolean; onC
                         style={styles.amtInput}
                         value={amts[g.id] || ''}
                         onChangeText={(t) => setAmts((p) => ({ ...p, [g.id]: digits(t) }))}
-                        placeholder="amount"
+                        placeholder={L('amount', 'amount')}
                         placeholderTextColor={colors.textMuted}
                         keyboardType="number-pad"
                       />
@@ -125,7 +128,7 @@ export default function GoalsModal({ visible, onClose }: { visible: boolean; onC
                         setAmts((p) => ({ ...p, [g.id]: '' }));
                       }}
                     >
-                      <Text style={styles.jodoText}>jodo 🪙</Text>
+                      <Text style={styles.jodoText}>{L('jodo 🪙', 'add 🪙')}</Text>
                     </Pressable>
                     <Pressable
                       style={[styles.nikaloBtn, amtOf(g.id) <= 0 && styles.disabled]}
@@ -135,7 +138,7 @@ export default function GoalsModal({ visible, onClose }: { visible: boolean; onC
                         setAmts((p) => ({ ...p, [g.id]: '' }));
                       }}
                     >
-                      <Text style={styles.nikaloText}>nikalo</Text>
+                      <Text style={styles.nikaloText}>{L('nikalo', 'withdraw')}</Text>
                     </Pressable>
                   </View>
                 </View>
@@ -144,7 +147,7 @@ export default function GoalsModal({ visible, onClose }: { visible: boolean; onC
           )}
 
           <Pressable style={styles.closeBtn} onPress={onClose}>
-            <Text style={styles.closeText}>done ✦</Text>
+            <Text style={styles.closeText}>{L('done ✦', 'done ✦')}</Text>
           </Pressable>
         </ScrollView>
       </View>
