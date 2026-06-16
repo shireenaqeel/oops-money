@@ -5,6 +5,7 @@ import { Screen } from '../components/shared';
 import BarChart, { BarDatum } from '../components/BarChart';
 import AlertList from '../components/AlertList';
 import SpendCalendar from '../components/SpendCalendar';
+import PaisaPersonality from '../components/PaisaPersonality';
 import MonthlyWrappedModal from './MonthlyWrappedModal';
 import { useAppContext } from '../hooks/useAppContext';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
@@ -124,6 +125,9 @@ export default function InsightsScreen() {
           <Text style={styles.wrappedText}>✨ see your Monthly Wrapped</Text>
           <Text style={styles.wrappedArrow}>›</Text>
         </Pressable>
+
+        {/* paisa personality — shareable archetype */}
+        <PaisaPersonality />
 
         {/* danger alerts (same as Home) */}
         <AlertList alerts={getAlerts(expenses, budget, splurgeFund, customCats, month, year, getToday(), catBudgets)} />

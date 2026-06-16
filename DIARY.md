@@ -3,6 +3,19 @@
 
 ---
 
+## V3 — Paisa Personality 🔮 — 16 Jun 2026
+**What:** Insights ✿ now opens with a **"YOUR PAISA PERSONALITY"** card — it reads your spending and gives you a fun, shareable archetype like 💅 The Glow-Up Queen, 🍕 The Foodie Forever, 😩 The Stress Spender, 💸 The Payday Baller, 🎉 The Weekend Warrior, ✨ The Soft-Launch Spender, 👑 Treat-Yourself Tycoon, or 💚 The Budgeting Baddie. Each has a sassy Hinglish tagline + a supporting stat, and a **share it ✦** button that sends it to WhatsApp/Insta/notes.
+**Why:** No other expense app has a "personality type" — it's instantly screenshot-able and gives the dry numbers a fun, viral wrapper. 100% local maths over existing expenses, zero new data collected, zero new packages (uses RN's built-in `Share`).
+**How it works:** `getPaisaPersonality()` tallies category-group shares (Beauty/Fashion/Food), splurge %, weekend %, first-10-days-of-month %, and stress/sad mood share, scores each archetype, and picks the strongest. Needs ≥5 expenses, else shows 🔮 "The Mystery Spender" (no share). If nothing dominates → 💚 Budgeting Baddie.
+**Files added/changed:**
+- `src/utils/personality.ts` — the archetype scoring (new)
+- `src/components/PaisaPersonality.tsx` — the card + share (new)
+- `src/screens/InsightsScreen.tsx` — mounts the card at the top
+**How to test on phone:** Reload → **Insights ✿** → top card shows your personality (log a few expenses across categories/moods first) → tap **share it ✦** → share sheet opens with your archetype.
+**Next up:** Salary Curve 💸 ("rich for 3 days").
+
+---
+
 ## V2+ — Cloud Sync — Phase 2+3: keys pasted + sign-in + sync — 14 Jun 2026
 **What:** Shireen created her Supabase project and pasted her Project URL + anon key into `supabaseConfig.ts`, and ran the SQL that creates the `app_state` table with RLS (each user can only touch their own row). Then built the working sign-in + backup/restore feature.
 **How it works:** Settings 🎀 now shows a **CLOUD BACKUP ☁️** card (only visible once keys are configured). Signed out → "Sign in with Google" button. Signed in → shows email + **Back up ⬆️** / **Restore ⬇️** buttons + sign out. On first sign-in, if the cloud is empty it auto-backs-up; if a backup already exists it does NOT auto-overwrite local (user chooses), so nothing gets clobbered.
