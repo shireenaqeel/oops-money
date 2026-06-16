@@ -3,6 +3,21 @@
 
 ---
 
+## V3 — Manifest Board 🌟 (wishlist + save-up math) — 16 Jun 2026
+**What:** Settings 🎀 → **🌟 Manifest Board**: instead of impulse-buying, add the thing you want (emoji + name + price + how much you'll save daily). Each wish shows the math — *"roz ₹50 bachao → 60 din mein tera 💖 (milega around 15 Aug)"* — and − / + buttons to adjust the daily save and watch the countdown change. ✕ removes a wish (resisted or bought).
+**Why:** Turns *wanting* into a delayed, goal-shaped plan — a positive cousin of Impulse Jail. Different from Sapna Jar (that's a savings jar you stash into; this is desire-delay with auto-countdown). Fully local, no new packages.
+**How it works:** New `WishItem` type + `om_wishlist` storage key + context actions (`addWish` / `updateWishPerDay` / `deleteWish`). Days-to-afford = ceil(price ÷ perDay); the friendly date reuses `fmtDateLabel(today + days)`.
+**Files added/changed:**
+- `src/types/index.ts` — `WishItem`
+- `src/storage/index.ts` — `wishlist` key
+- `src/hooks/useAppContext.tsx` — `wishlist` state + addWish/updateWishPerDay/deleteWish
+- `src/screens/WishlistModal.tsx` — the board UI (new)
+- `src/screens/SettingsScreen.tsx` — Manifest Board button + modal
+**How to test on phone:** Reload → **Settings 🎀 → 🌟 Manifest Board** → add a wish (e.g. Zara dress, ₹3000, roz 50) → see "60 din mein tera" → tap − / + to change daily save → countdown updates; ✕ removes it.
+**Next up:** Challenges 🏆.
+
+---
+
 ## V3 — Salary Curve 💸 ("rich for 3 days") — 16 Jun 2026
 **What:** Insights ✿ → a new **"RICH FOR 3 DAYS"** card showing how front-loaded the month's spending is: a sassy headline (e.g. *"aadha paisa 6 tareekh tak hi udd gaya 💸"*) plus a 4-bar chart of spend per week-of-month (1–7, 8–14, 15–21, 22+).
 **Why:** The payday → broke arc is painfully relatable for the target user, and no boring expense app visualises it. Pure local maths; reuses the existing `BarChart`.

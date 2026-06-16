@@ -1,7 +1,7 @@
 // useAppContext.tsx — MAIN STATE MANAGEMENT. The single source of truth for app data.
 // Loads everything from storage once on launch, then every screen reads/writes through this hook.
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { Category, Expense, Goal, CatBudgets, ImpulseItem, Letter, Recurring } from '../types';
+import { Category, Expense, Goal, CatBudgets, ImpulseItem, Letter, Recurring, WishItem } from '../types';
 import { KEYS, clearAll, loadJSON, loadString, saveJSON, saveString } from '../storage';
 import { PASTEL_COLORS, findCat } from '../constants/categories';
 import { genId, getToday } from '../utils';
@@ -27,6 +27,7 @@ interface AppState {
   billReminders: boolean; // bill reminder notifications on/off (V2)
   bestieName: string; // accountability bestie's name (V2, local)
   bestiePhone: string; // bestie's WhatsApp/SMS number, optional (V2, local)
+  wishlist: WishItem[]; // manifest board / wishlist (V3)
   completeOnboarding: () => Promise<void>;
   saveOnboarding: (data: { income: string; budget: string; splurgeFund: string }) => Promise<void>;
   addExpense: (e: Omit<Expense, 'id'>) => Promise<void>;
@@ -57,6 +58,9 @@ interface AppState {
   deleteGoal: (id: string) => Promise<void>;
   setBillReminders: (on: boolean) => Promise<boolean>; // returns false if permission denied
   setBestie: (name: string, phone: string) => Promise<void>;
+  addWish: (name: string, emoji: string, price: number, perDay: number) => Promise<void>;
+  updateWishPerDay: (id: string, perDay: number) => Promise<void>;
+  deleteWish: (id: string) => Promise<void>;
   addCustomCat: (name: string, emoji: string) => Promise<Category>;
   deleteCustomCat: (id: string) => Promise<void>;
   resetAll: () => Promise<void>;
@@ -85,10 +89,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [billReminders, setBillRemindersState] = useState(false);
   const [bestieName, setBestieName] = useState('');
   const [bestiePhone, setBestiePhone] = useState('');
+  const [wishlist, setWishlist] = useState<WishItem[]>([]);
 
   // Pull all persisted data from storage into state.
   const reload = useCallback(async () => {
-    const [exp, rec, imp, ltrs, cc, bud, inc, spl, onb, shield, pStarts, cLen, cBudgets, gls, billRem, bName, bPhone] = await Promise.all([
+    const [exp, rec, imp, ltrs, cc, bud, inc, spl, onb, shield, pStarts, cLen, cBudgets, gls, billRem, bName, bPhone, wish] = await Promise.all([
       loadJSON<Expense[]>(KEYS.expenses, []),
       loadJSON<Recurring[]>(KEYS.recurring, []),
       loadJSON<ImpulseItem[]>(KEYS.impulse, []),
@@ -106,6 +111,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       loadString(KEYS.billReminders),
       loadString(KEYS.bestieName),
       loadString(KEYS.bestiePhone),
+      loadJSON<WishItem[]>(KEYS.wishlist, []),
     ]);
     setExpenses(exp);
     setRecurring(rec);
@@ -124,6 +130,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setBillRemindersState(billRem === 'true');
     setBestieName(bName);
     setBestiePhone(bPhone);
+    setWishlist(wish);
   }, []);
 
   // On first mount, load everything, then drop the loading flag.
@@ -463,6 +470,37 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     scheduleBillReminders(recurring).catch(() => {});
   }, [loading, billReminders, recurring]);
 
+  // Add a wish to the manifest board (newest first). perDay = how much she'll set aside daily.
+  const addWish = useCallback(
+    async (name: string, emoji: string, price: number, perDay: number) => {
+      const item: WishItem = { id: genId(), name, emoji, price: Math.round(price), perDay: Math.max(1, Math.round(perDay)), createdAt: Date.now() };
+      const next = [item, ...wishlist];
+      setWishlist(next);
+      await saveJSON(KEYS.wishlist, next);
+    },
+    [wishlist]
+  );
+
+  // Change how much per day a wish saves up (re-does the countdown maths in the UI).
+  const updateWishPerDay = useCallback(
+    async (id: string, perDay: number) => {
+      const next = wishlist.map((w) => (w.id === id ? { ...w, perDay: Math.max(1, Math.round(perDay)) } : w));
+      setWishlist(next);
+      await saveJSON(KEYS.wishlist, next);
+    },
+    [wishlist]
+  );
+
+  // Remove a wish (resisted, or bought it — either way off the board).
+  const deleteWish = useCallback(
+    async (id: string) => {
+      const next = wishlist.filter((w) => w.id !== id);
+      setWishlist(next);
+      await saveJSON(KEYS.wishlist, next);
+    },
+    [wishlist]
+  );
+
   // Create a new custom category (emoji + name), auto-assign a colour, save, and return it.
   const addCustomCat = useCallback(
     async (name: string, emoji: string): Promise<Category> => {
@@ -511,6 +549,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     billReminders,
     bestieName,
     bestiePhone,
+    wishlist,
     completeOnboarding,
     saveOnboarding,
     addExpense,
@@ -541,6 +580,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     deleteGoal,
     setBillReminders,
     setBestie,
+    addWish,
+    updateWishPerDay,
+    deleteWish,
     addCustomCat,
     deleteCustomCat,
     resetAll,

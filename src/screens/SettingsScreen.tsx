@@ -9,6 +9,7 @@ import CategoryBudgets from '../components/CategoryBudgets';
 import BestieMode from '../components/BestieMode';
 import CloudBackup from '../components/CloudBackup';
 import GoalsModal from './GoalsModal';
+import WishlistModal from './WishlistModal';
 import { useAppContext } from '../hooks/useAppContext';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme, useThemeMeta } from '../hooks/useTheme';
@@ -22,6 +23,7 @@ export default function SettingsScreen() {
   const [draft, setDraft] = useState('');
   const [showImport, setShowImport] = useState(false);
   const [showGoals, setShowGoals] = useState(false);
+  const [showWishlist, setShowWishlist] = useState(false);
 
   // Toggle bill reminders; if permission is denied, flip back off and explain.
   async function toggleBills(on: boolean) {
@@ -122,6 +124,16 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* manifest board — wishlist with save-up math */}
+        <Pressable style={styles.wishBtn} onPress={() => setShowWishlist(true)}>
+          <Text style={styles.goalsEmoji}>🌟</Text>
+          <View style={styles.flex1}>
+            <Text style={styles.goalsTitle}>Manifest Board</Text>
+            <Text style={styles.goalsSub}>jo chahiye usse impulse-buy mat karo — save karke manifest karo 💖</Text>
+          </View>
+          <Text style={styles.goalsArrow}>›</Text>
+        </Pressable>
+
         {/* sapna jar — savings goals */}
         <Pressable style={styles.goalsBtn} onPress={() => setShowGoals(true)}>
           <Text style={styles.goalsEmoji}>🫙</Text>
@@ -174,6 +186,7 @@ export default function SettingsScreen() {
       </ScrollView>
       <CSVImportModal visible={showImport} onClose={() => setShowImport(false)} />
       <GoalsModal visible={showGoals} onClose={() => setShowGoals(false)} />
+      <WishlistModal visible={showWishlist} onClose={() => setShowWishlist(false)} />
     </Screen>
   );
 }
@@ -194,6 +207,7 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   themeName: { fontSize: typography.small.fontSize, color: colors.textLight, fontWeight: '600' },
   themeNameActive: { color: colors.onAccent, fontWeight: '700' },
   goalsBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.sage, borderRadius: radius.cards, padding: spacing.md, marginBottom: spacing.md },
+  wishBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.babyBlue, borderRadius: radius.cards, padding: spacing.md, marginBottom: spacing.md },
   goalsEmoji: { fontSize: 22, marginRight: spacing.md },
   goalsTitle: { fontSize: typography.body.fontSize, fontWeight: '700', color: colors.text },
   goalsSub: { fontSize: typography.small.fontSize, color: colors.text, opacity: 0.7, marginTop: 1, marginRight: spacing.sm },

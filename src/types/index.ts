@@ -53,6 +53,16 @@ export interface Goal {
   createdAt: number; // ms timestamp
 }
 
+// A "manifest board" wish — something you want, with save-up math instead of impulse-buying (V3).
+export interface WishItem {
+  id: string;
+  name: string;
+  emoji: string;
+  price: number; // what it costs
+  perDay: number; // how much you'll set aside each day toward it
+  createdAt: number; // ms timestamp
+}
+
 // Per-category monthly spending limits, keyed by category id (V2).
 export type CatBudgets = Record<string, number>;
 
