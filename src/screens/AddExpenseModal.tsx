@@ -25,6 +25,8 @@ import NightShield from '../components/NightShield';
 import { Expense } from '../types';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 import { CATS, CAT_GROUPS, findCat } from '../constants/categories';
 import { MOODS } from '../constants/moods';
 import { COPY } from '../constants/copy';
@@ -56,6 +58,7 @@ export default function AddExpenseModal({
   const { addExpense, updateExpense, customCats, nightShield, events } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
+  useLang(); // subscribe so text re-renders when language toggles
   const allCats = [...CATS, ...customCats];
   const groups = ['All', ...CAT_GROUPS, ...(customCats.length > 0 ? ['Custom'] : [])];
   const isEditing = !!editing;
@@ -142,9 +145,9 @@ export default function AddExpenseModal({
     }
     setNote(text);
     const cat = parsed.catId ? findCat(parsed.catId, customCats) : null;
-    if (parsed.amount > 0 && cat) setVoiceMsg(`samajh gaya: ${fmtINR(parsed.amount)} • ${cat.name} ✓`);
-    else if (parsed.amount > 0) setVoiceMsg(`${fmtINR(parsed.amount)} mil gaya — category select kar lo babe`);
-    else setVoiceMsg('amount samajh nahi aaya 😅 neeche type kar do');
+    if (parsed.amount > 0 && cat) setVoiceMsg(L(`samajh gaya: ${fmtINR(parsed.amount)} • ${cat.name} ✓`, `got it: ${fmtINR(parsed.amount)} • ${cat.name} ✓`));
+    else if (parsed.amount > 0) setVoiceMsg(L(`${fmtINR(parsed.amount)} mil gaya — category select kar lo babe`, `${fmtINR(parsed.amount)} found — pick a category babe`));
+    else setVoiceMsg(L('amount samajh nahi aaya 😅 neeche type kar do', "couldn't catch the amount 😅 type it below"));
   }
 
   // Pick a payment screenshot from the gallery and keep a private on-device copy on this expense.
@@ -153,7 +156,7 @@ export default function AddExpenseModal({
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert('Permission chahiye', 'Screenshot lagane ke liye gallery ka access do, babe 🌸');
+        Alert.alert(L('Permission chahiye', 'Permission needed'), L('Screenshot lagane ke liye gallery ka access do, babe 🌸', 'Give gallery access to attach a screenshot, babe 🌸'));
         return;
       }
       const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.6 });
@@ -171,9 +174,9 @@ export default function AddExpenseModal({
         // copy failed — keep the original uri (fine for this session)
       }
       setReceiptUri(saved);
-      setVoiceMsg('screenshot lag gaya 📸 — ab amount type/bol ke bhar do');
+      setVoiceMsg(L('screenshot lag gaya 📸 — ab amount type/bol ke bhar do', 'screenshot attached 📸 — now type/say the amount'));
     } catch {
-      Alert.alert('oops', 'screenshot nahi khul paya, dobara try karo 💕');
+      Alert.alert('oops', L('screenshot nahi khul paya, dobara try karo 💕', "couldn't open the screenshot, try again 💕"));
     }
   }
 
@@ -208,24 +211,24 @@ export default function AddExpenseModal({
         ) : (
         <ScrollView style={styles.sheet} contentContainerStyle={styles.sheetContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.grabber} />
-          <Text style={styles.title}>{isEditing ? 'kharcha edit karo ✦' : 'naya kharcha ✦'}</Text>
+          <Text style={styles.title}>{isEditing ? L('kharcha edit karo ✦', 'edit expense ✦') : L('naya kharcha ✦', 'new expense ✦')}</Text>
 
           {/* voice add — speak via the keyboard mic, we fill the form (V2) */}
           {!isEditing ? (
             <View style={styles.voiceCard}>
-              <Text style={styles.voiceLabel}>🎤 bol ke bharo — keyboard ka mic dabao</Text>
+              <Text style={styles.voiceLabel}>{L('🎤 bol ke bharo — keyboard ka mic dabao', '🎤 say it — tap your keyboard mic')}</Text>
               <View style={styles.voiceRow}>
                 <TextInput
                   style={styles.voiceInput}
                   value={voiceText}
                   onChangeText={setVoiceText}
-                  placeholder="jaise: 500 Zomato, do hazaar Myntra"
+                  placeholder={L('jaise: 500 Zomato, do hazaar Myntra', 'e.g. 500 Zomato, two thousand Myntra')}
                   placeholderTextColor={colors.textMuted}
                   onSubmitEditing={applyVoice}
                   returnKeyType="done"
                 />
                 <Pressable style={[styles.voiceBtn, !voiceText.trim() && styles.voiceBtnDisabled]} onPress={applyVoice} disabled={!voiceText.trim()}>
-                  <Text style={styles.voiceBtnText}>samjho ✨</Text>
+                  <Text style={styles.voiceBtnText}>{L('samjho ✨', 'parse ✨')}</Text>
                 </Pressable>
               </View>
               {voiceMsg ? <Text style={styles.voiceMsg}>{voiceMsg}</Text> : null}
@@ -249,7 +252,7 @@ export default function AddExpenseModal({
           <BrokeMath amount={num} />
 
           {/* category groups */}
-          <Text style={styles.label}>category</Text>
+          <Text style={styles.label}>{L('category', 'category')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.groupStrip} contentContainerStyle={styles.groupStripContent}>
             {groups.map((g) => (
               <Pressable key={g} onPress={() => setGroup(g)} style={[styles.groupPill, group === g && styles.groupPillActive]}>
@@ -270,12 +273,12 @@ export default function AddExpenseModal({
             })}
             {/* create your own category */}
             <Pressable onPress={() => setShowCatModal(true)} style={styles.addCatPill}>
-              <Text style={styles.addCatText}>+ apni category</Text>
+              <Text style={styles.addCatText}>{L('+ apni category', '+ your own')}</Text>
             </Pressable>
           </View>
 
           {/* mood */}
-          <Text style={styles.label}>kaisa mood tha? (optional)</Text>
+          <Text style={styles.label}>{L('kaisa mood tha? (optional)', "what's the mood? (optional)")}</Text>
           <View style={styles.moodRow}>
             {MOODS.map((m) => {
               const selected = m.id === mood;
@@ -293,7 +296,7 @@ export default function AddExpenseModal({
             style={styles.noteInput}
             value={note}
             onChangeText={setNote}
-            placeholder="little note... (Sephora haul, gym fee, etc.)"
+            placeholder={L('little note... (Sephora haul, gym fee, etc.)', 'little note... (Sephora haul, gym fee, etc.)')}
             placeholderTextColor={colors.textMuted}
           />
 
@@ -302,8 +305,8 @@ export default function AddExpenseModal({
             <View style={styles.receiptRow}>
               <Image source={{ uri: receiptUri }} style={styles.receiptThumb} />
               <View style={styles.flex1}>
-                <Text style={styles.receiptTitle}>screenshot laga hai 📸</Text>
-                <Text style={styles.receiptSub}>amount + category upar bhar do</Text>
+                <Text style={styles.receiptTitle}>{L('screenshot laga hai 📸', 'screenshot attached 📸')}</Text>
+                <Text style={styles.receiptSub}>{L('amount + category upar bhar do', 'fill amount + category above')}</Text>
               </View>
               <Pressable onPress={() => setReceiptUri(undefined)} hitSlop={10}>
                 <Text style={styles.receiptDel}>✕</Text>
@@ -311,20 +314,20 @@ export default function AddExpenseModal({
             </View>
           ) : (
             <Pressable style={styles.screenshotBtn} onPress={pickScreenshot}>
-              <Text style={styles.screenshotText}>📸 payment screenshot lagao (optional)</Text>
+              <Text style={styles.screenshotText}>{L('📸 payment screenshot lagao (optional)', '📸 attach payment screenshot (optional)')}</Text>
             </Pressable>
           )}
 
           {/* date: quick chips + a picker for any past date */}
           <View style={styles.dateRow}>
             <Pressable onPress={() => setDate(getToday())} style={[styles.datePill, isToday && styles.datePillActive]}>
-              <Text style={[styles.dateText, isToday && styles.dateTextActive]}>Today</Text>
+              <Text style={[styles.dateText, isToday && styles.dateTextActive]}>{L('Today', 'Today')}</Text>
             </Pressable>
             <Pressable onPress={() => setDate(getYesterday())} style={[styles.datePill, isYesterday && styles.datePillActive]}>
-              <Text style={[styles.dateText, isYesterday && styles.dateTextActive]}>Yesterday</Text>
+              <Text style={[styles.dateText, isYesterday && styles.dateTextActive]}>{L('Yesterday', 'Yesterday')}</Text>
             </Pressable>
             <Pressable onPress={() => setShowPicker(true)} style={[styles.datePill, isOtherDate && styles.datePillActive]}>
-              <Text style={[styles.dateText, isOtherDate && styles.dateTextActive]}>{isOtherDate ? `📅 ${fmtDateLabel(date)}` : '📅 koi din'}</Text>
+              <Text style={[styles.dateText, isOtherDate && styles.dateTextActive]}>{isOtherDate ? `📅 ${fmtDateLabel(date)}` : L('📅 koi din', '📅 pick a day')}</Text>
             </Pressable>
           </View>
           {showPicker ? (
@@ -342,8 +345,8 @@ export default function AddExpenseModal({
           {/* splurge toggle */}
           <View style={styles.splurgeRow}>
             <View style={styles.flex1}>
-              <Text style={styles.splurgeTitle}>Splurge fund se? 🛍️</Text>
-              <Text style={styles.splurgeSub}>guilt-free zone — no shame babe</Text>
+              <Text style={styles.splurgeTitle}>{L('Splurge fund se? 🛍️', 'From splurge fund? 🛍️')}</Text>
+              <Text style={styles.splurgeSub}>{L('guilt-free zone — no shame babe', 'guilt-free zone — no shame babe')}</Text>
             </View>
             <Switch value={isSplurge} onValueChange={setIsSplurge} trackColor={{ false: colors.border, true: colors.rose }} thumbColor={colors.cardBg} />
           </View>
@@ -351,10 +354,10 @@ export default function AddExpenseModal({
           {/* festival/shaadi event tag (only if any events exist) */}
           {events.length > 0 ? (
             <>
-              <Text style={styles.label}>kisi event ka kharcha? 🎉 (optional)</Text>
+              <Text style={styles.label}>{L('kisi event ka kharcha? 🎉 (optional)', 'part of an event? 🎉 (optional)')}</Text>
               <View style={styles.moodRow}>
                 <Pressable onPress={() => setEventId('')} style={[styles.eventPill, !eventId && styles.eventPillActive]}>
-                  <Text style={[styles.eventText, !eventId && styles.eventTextActive]}>none</Text>
+                  <Text style={[styles.eventText, !eventId && styles.eventTextActive]}>{L('none', 'none')}</Text>
                 </Pressable>
                 {events.map((ev) => {
                   const selected = ev.id === eventId;
@@ -369,7 +372,7 @@ export default function AddExpenseModal({
           ) : null}
 
           {/* was it worth it? (regret verdict — editable) */}
-          <Text style={styles.label}>was it worth it? (optional)</Text>
+          <Text style={styles.label}>{L('was it worth it? (optional)', 'was it worth it? (optional)')}</Text>
           <View style={styles.moodRow}>
             {VERDICTS.map((v) => {
               const selected = v.id === regret;
@@ -384,7 +387,7 @@ export default function AddExpenseModal({
 
           {/* log / save button */}
           <Pressable style={[styles.logBtn, saved && styles.logBtnSaved, !canLog && styles.logBtnDisabled]} onPress={onLog} disabled={!canLog || saved}>
-            <Text style={styles.logText}>{saved ? COPY.logged : isEditing ? 'save changes ✦' : 'log this spend ✦'}</Text>
+            <Text style={styles.logText}>{saved ? COPY.logged : isEditing ? L('save changes ✦', 'save changes ✦') : L('log this spend ✦', 'log this spend ✦')}</Text>
           </Pressable>
         </ScrollView>
         )}

@@ -36,9 +36,9 @@ export default function SettingsScreen() {
   async function toggleBills(on: boolean) {
     const ok = await setBillReminders(on);
     if (on && !ok) {
-      Alert.alert('Notifications band hain', 'Phone settings mein Oops Money ke liye notifications allow karo, phir try karo 🔔');
+      Alert.alert(L('Notifications band hain', 'Notifications are off'), L('Phone settings mein Oops Money ke liye notifications allow karo, phir try karo 🔔', 'Allow notifications for Oops Money in phone settings, then try again 🔔'));
     } else if (on && ok && recurring.length === 0) {
-      Alert.alert('reminders on! 🔔', 'Abhi koi bill nahi hai — Bills tab 🔁 mein bill add karo, reminder apne aap set ho jayega.');
+      Alert.alert(L('reminders on! 🔔', 'reminders on! 🔔'), L('Abhi koi bill nahi hai — Bills tab 🔁 mein bill add karo, reminder apne aap set ho jayega.', 'No bills yet — add one in the Bills tab 🔁 and a reminder sets itself.'));
     }
   }
 
@@ -52,9 +52,9 @@ export default function SettingsScreen() {
 
   // Ask for confirmation, then wipe all data and return to onboarding.
   function confirmReset() {
-    Alert.alert('Sab reset kar dein?', 'Saara data (income, budget, kharche) delete ho jayega. Pakka?', [
-      { text: 'rehne do', style: 'cancel' },
-      { text: 'haan, reset', style: 'destructive', onPress: () => resetAll() },
+    Alert.alert(L('Sab reset kar dein?', 'Reset everything?'), L('Saara data (income, budget, kharche) delete ho jayega. Pakka?', 'All your data (income, budget, expenses) will be deleted. Sure?'), [
+      { text: L('rehne do', 'cancel'), style: 'cancel' },
+      { text: L('haan, reset', 'yes, reset'), style: 'destructive', onPress: () => resetAll() },
     ]);
   }
 
@@ -76,18 +76,18 @@ export default function SettingsScreen() {
         <Text style={styles.heading}>Settings 🎀</Text>
 
         <View style={styles.card}>
-          <Text style={styles.cardLabel}>YOUR SETUP</Text>
-          <Row emoji="💰" label="Monthly income" value={income} />
-          <Row emoji="🎯" label="Monthly budget" value={budget} />
-          <Row emoji="🛍️" label="Splurge fund" value={splurgeFund} />
+          <Text style={styles.cardLabel}>{L('YOUR SETUP', 'YOUR SETUP')}</Text>
+          <Row emoji="💰" label={L('Monthly income', 'Monthly income')} value={income} />
+          <Row emoji="🎯" label={L('Monthly budget', 'Monthly budget')} value={budget} />
+          <Row emoji="🛍️" label={L('Splurge fund', 'Splurge fund')} value={splurgeFund} />
         </View>
 
         {/* late-night shopping shield toggle */}
         <View style={styles.shieldRow}>
           <Text style={styles.shieldEmoji}>🌙</Text>
           <View style={styles.flex1}>
-            <Text style={styles.shieldTitle}>Late-night shield</Text>
-            <Text style={styles.shieldSub}>11pm–4am pe kharcha add karne se pehle ek "so jao babe" reminder</Text>
+            <Text style={styles.shieldTitle}>{L('Late-night shield', 'Late-night shield')}</Text>
+            <Text style={styles.shieldSub}>{L('11pm–4am pe kharcha add karne se pehle ek "so jao babe" reminder', 'a "go to sleep babe" reminder before adding a spend between 11pm–4am')}</Text>
           </View>
           <Switch value={nightShield} onValueChange={setNightShield} trackColor={{ false: colors.border, true: colors.periwinkle }} thumbColor={colors.cardBg} />
         </View>
@@ -96,8 +96,8 @@ export default function SettingsScreen() {
         <View style={styles.billRow}>
           <Text style={styles.shieldEmoji}>🔔</Text>
           <View style={styles.flex1}>
-            <Text style={styles.shieldTitle}>Bill reminders</Text>
-            <Text style={styles.shieldSub}>recurring bill ke due din subah ek reminder ('rent due hai aaj 🔔')</Text>
+            <Text style={styles.shieldTitle}>{L('Bill reminders', 'Bill reminders')}</Text>
+            <Text style={styles.shieldSub}>{L("recurring bill ke due din subah ek reminder ('rent due hai aaj 🔔')", "a morning reminder on each recurring bill's due day ('rent is due today 🔔')")}</Text>
           </View>
           <Switch value={billReminders} onValueChange={toggleBills} trackColor={{ false: colors.border, true: colors.butter }} thumbColor={colors.cardBg} />
         </View>
@@ -106,8 +106,8 @@ export default function SettingsScreen() {
         <Pressable style={styles.importBtn} onPress={() => setShowImport(true)}>
           <Text style={styles.importEmoji}>📂</Text>
           <View style={styles.flex1}>
-            <Text style={styles.importTitle}>Import bank statement</Text>
-            <Text style={styles.importSub}>HDFC / ICICI / SBI / Paytm CSV — auto-detect categories</Text>
+            <Text style={styles.importTitle}>{L('Import bank statement', 'Import bank statement')}</Text>
+            <Text style={styles.importSub}>{L('HDFC / ICICI / SBI / Paytm CSV — auto-detect categories', 'HDFC / ICICI / SBI / Paytm CSV — auto-detect categories')}</Text>
           </View>
           <Text style={styles.importArrow}>›</Text>
         </Pressable>
@@ -117,7 +117,7 @@ export default function SettingsScreen() {
 
         {/* theme picker */}
         <View style={styles.card}>
-          <Text style={styles.cardLabel}>THEME 🎨</Text>
+          <Text style={styles.cardLabel}>{L('THEME 🎨', 'THEME 🎨')}</Text>
           <View style={styles.themeWrap}>
             {palettes.map((p) => {
               const active = p.id === themeId;
@@ -135,8 +135,8 @@ export default function SettingsScreen() {
         <Pressable style={styles.eventBtn} onPress={() => setShowEvents(true)}>
           <Text style={styles.goalsEmoji}>🎉</Text>
           <View style={styles.flex1}>
-            <Text style={styles.goalsTitle}>Season Mode</Text>
-            <Text style={styles.goalsSub}>Diwali / shaadi / trip ka alag budget — kharche alag se track karo ✨</Text>
+            <Text style={styles.goalsTitle}>{L('Season Mode', 'Season Mode')}</Text>
+            <Text style={styles.goalsSub}>{L('Diwali / shaadi / trip ka alag budget — kharche alag se track karo ✨', 'Diwali / wedding / trip — a separate budget, tracked on its own ✨')}</Text>
           </View>
           <Text style={styles.goalsArrow}>›</Text>
         </Pressable>
@@ -145,8 +145,8 @@ export default function SettingsScreen() {
         <Pressable style={styles.challengeBtn} onPress={() => setShowChallenges(true)}>
           <Text style={styles.goalsEmoji}>🏆</Text>
           <View style={styles.flex1}>
-            <Text style={styles.goalsTitle}>Challenges</Text>
-            <Text style={styles.goalsSub}>no-Zomato week, ₹500 week — chhota challenge lo, trophy kamao 💪</Text>
+            <Text style={styles.goalsTitle}>{L('Challenges', 'Challenges')}</Text>
+            <Text style={styles.goalsSub}>{L('no-Zomato week, ₹500 week — chhota challenge lo, trophy kamao 💪', 'no-Zomato week, ₹500 week — take a small challenge, earn a trophy 💪')}</Text>
           </View>
           <Text style={styles.goalsArrow}>›</Text>
         </Pressable>
@@ -155,8 +155,8 @@ export default function SettingsScreen() {
         <Pressable style={styles.wishBtn} onPress={() => setShowWishlist(true)}>
           <Text style={styles.goalsEmoji}>🌟</Text>
           <View style={styles.flex1}>
-            <Text style={styles.goalsTitle}>Manifest Board</Text>
-            <Text style={styles.goalsSub}>jo chahiye usse impulse-buy mat karo — save karke manifest karo 💖</Text>
+            <Text style={styles.goalsTitle}>{L('Manifest Board', 'Manifest Board')}</Text>
+            <Text style={styles.goalsSub}>{L('jo chahiye usse impulse-buy mat karo — save karke manifest karo 💖', "don't impulse-buy what you want — save up and manifest it 💖")}</Text>
           </View>
           <Text style={styles.goalsArrow}>›</Text>
         </Pressable>
@@ -180,8 +180,8 @@ export default function SettingsScreen() {
         <Pressable style={styles.goalsBtn} onPress={() => setShowGoals(true)}>
           <Text style={styles.goalsEmoji}>🫙</Text>
           <View style={styles.flex1}>
-            <Text style={styles.goalsTitle}>Sapna Jar</Text>
-            <Text style={styles.goalsSub}>savings goals — paise side karo, jar bharta dekho ✨</Text>
+            <Text style={styles.goalsTitle}>{L('Sapna Jar', 'Dream Jar')}</Text>
+            <Text style={styles.goalsSub}>{L('savings goals — paise side karo, jar bharta dekho ✨', 'savings goals — set money aside, watch the jar fill ✨')}</Text>
           </View>
           <Text style={styles.goalsArrow}>›</Text>
         </Pressable>
@@ -197,18 +197,18 @@ export default function SettingsScreen() {
 
         {/* future-me letters */}
         <View style={styles.card}>
-          <Text style={styles.cardLabel}>FUTURE-ME LETTERS 💌</Text>
-          <Text style={styles.letterHint}>future tum ko ek note likho — jail ke time yeh dikhega taaki yaad rahe kyun bachat kar rahi ho</Text>
+          <Text style={styles.cardLabel}>{L('FUTURE-ME LETTERS 💌', 'FUTURE-ME LETTERS 💌')}</Text>
+          <Text style={styles.letterHint}>{L('future tum ko ek note likho — jail ke time yeh dikhega taaki yaad rahe kyun bachat kar rahi ho', 'write a note to future you — it shows during impulse jail so you remember why you\'re saving')}</Text>
           <TextInput
             style={styles.letterInput}
             value={draft}
             onChangeText={setDraft}
-            placeholder="dear future me, please mat khareedna woh..."
+            placeholder={L('dear future me, please mat khareedna woh...', "dear future me, please don't buy that...")}
             placeholderTextColor={colors.textMuted}
             multiline
           />
           <Pressable style={[styles.letterBtn, !draft.trim() && styles.letterBtnDisabled]} onPress={saveLetter} disabled={!draft.trim()}>
-            <Text style={styles.letterBtnText}>save letter ✦</Text>
+            <Text style={styles.letterBtnText}>{L('save letter ✦', 'save letter ✦')}</Text>
           </Pressable>
 
           {letters.map((l) => (
@@ -222,9 +222,9 @@ export default function SettingsScreen() {
         </View>
 
         <Pressable style={styles.resetBtn} onPress={confirmReset}>
-          <Text style={styles.resetText}>reset app data (testing)</Text>
+          <Text style={styles.resetText}>{L('reset app data (testing)', 'reset app data (testing)')}</Text>
         </Pressable>
-        <Text style={styles.note}>(yeh button onboarding dobara test karne ke liye hai)</Text>
+        <Text style={styles.note}>{L('(yeh button onboarding dobara test karne ke liye hai)', '(this button is for re-testing onboarding)')}</Text>
       </ScrollView>
       <CSVImportModal visible={showImport} onClose={() => setShowImport(false)} />
       <GoalsModal visible={showGoals} onClose={() => setShowGoals(false)} />

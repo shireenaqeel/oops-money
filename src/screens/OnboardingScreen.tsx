@@ -6,15 +6,20 @@ import { Screen } from '../components/shared';
 import { useAppContext } from '../hooks/useAppContext';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 import { fmtINR } from '../utils';
 
 // Static content for each step. `optional` steps can be skipped (saved as 0).
+// Each step keeps a Hinglish + English title/subtitle; the right one is picked at render.
 const STEPS = [
   {
     key: 'income' as const,
     emoji: '💰',
     title: 'Har mahine kitna aata hai?',
+    titleEn: 'How much comes in each month?',
     subtitle: 'Salary, pocket money, freelance — total monthly income likho',
+    subtitleEn: 'Salary, pocket money, freelance — write your total monthly income',
     placeholder: 'e.g. 30000',
     optional: false,
   },
@@ -22,7 +27,9 @@ const STEPS = [
     key: 'budget' as const,
     emoji: '🎯',
     title: 'Kitna kharch karna hai?',
+    titleEn: 'How much do you want to spend?',
     subtitle: 'Is mahine ka spending budget. Income se thoda kam rakhna = smart move!',
+    subtitleEn: "This month's spending budget. Keeping it below income = smart move!",
     placeholder: 'e.g. 15000',
     optional: false,
   },
@@ -30,7 +37,9 @@ const STEPS = [
     key: 'splurge' as const,
     emoji: '🛍️',
     title: 'Splurge fund banayein?',
+    titleEn: 'Set up a splurge fund?',
     subtitle: 'Guilt-free shopping ke liye alag paisa. Isme kharch karo, no shame! (optional)',
+    subtitleEn: 'Separate money for guilt-free shopping. Spend it, no shame! (optional)',
     placeholder: 'e.g. 3000',
     optional: true,
   },
@@ -40,6 +49,7 @@ export default function OnboardingScreen() {
   const { saveOnboarding } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
+  useLang(); // subscribe so text re-renders when language toggles
   const [step, setStep] = useState(0);
   const [values, setValues] = useState({ income: '', budget: '', splurge: '' });
 
@@ -86,13 +96,13 @@ export default function OnboardingScreen() {
 
         {/* back button (hidden on first step) */}
         <Pressable onPress={onBack} style={styles.backBtn} hitSlop={12} disabled={step === 0}>
-          <Text style={[styles.backText, step === 0 && styles.hidden]}>‹ wapas</Text>
+          <Text style={[styles.backText, step === 0 && styles.hidden]}>{L('‹ wapas', '‹ back')}</Text>
         </Pressable>
 
         <View style={styles.body}>
           <Text style={styles.emoji}>{current.emoji}</Text>
-          <Text style={styles.title}>{current.title}</Text>
-          <Text style={styles.subtitle}>{current.subtitle}</Text>
+          <Text style={styles.title}>{L(current.title, current.titleEn)}</Text>
+          <Text style={styles.subtitle}>{L(current.subtitle, current.subtitleEn)}</Text>
 
           {/* amount input */}
           <View style={styles.inputRow}>
@@ -116,12 +126,12 @@ export default function OnboardingScreen() {
 
         {/* continue / finish button */}
         <Pressable style={[styles.btn, !canContinue && styles.btnDisabled]} onPress={onNext} disabled={!canContinue}>
-          <Text style={styles.btnText}>{isLast ? 'ho gaya, chalo! ✦' : 'aage badho ✦'}</Text>
+          <Text style={styles.btnText}>{isLast ? L('ho gaya, chalo! ✦', "all done, let's go! ✦") : L('aage badho ✦', 'next ✦')}</Text>
         </Pressable>
 
         {/* skip hint for the optional splurge step */}
         {current.optional && num === 0 ? (
-          <Text style={styles.skipHint}>khali chhod do toh skip ho jayega</Text>
+          <Text style={styles.skipHint}>{L('khali chhod do toh skip ho jayega', 'leave it blank to skip')}</Text>
         ) : null}
       </KeyboardAvoidingView>
     </Screen>

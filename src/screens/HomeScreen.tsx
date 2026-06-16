@@ -9,6 +9,8 @@ import { useAppContext } from '../hooks/useAppContext';
 import { Expense } from '../types';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 import { fmtINR, fmtDateLabel, getToday, daysSince } from '../utils';
 import { monthExpenses, sumExpenses, getBudgetState, getAlerts, getStreaks } from '../utils/calculations';
 import { buildConfession, confessToBestie } from '../utils/bestie';
@@ -21,6 +23,7 @@ const REGRET_EMOJI: Record<string, string> = { worth: '😍', meh: '😐', regre
 export default function HomeScreen() {
   const colors = useTheme();
   const styles = makeStyles(colors);
+  useLang(); // subscribe so text re-renders when language toggles
   const { expenses, budget, splurgeFund, customCats, catBudgets, bestieName, bestiePhone, deleteExpense } = useAppContext();
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
@@ -59,38 +62,38 @@ export default function HomeScreen() {
 
   // Confirm, then delete an expense.
   function askDelete(id: string) {
-    RNAlert.alert('Delete this kharcha?', 'Pakka hatana hai?', [
-      { text: 'rehne do', style: 'cancel' },
-      { text: 'haan, delete', style: 'destructive', onPress: () => deleteExpense(id) },
+    RNAlert.alert(L('Delete this kharcha?', 'Delete this expense?'), L('Pakka hatana hai?', 'Sure you want to remove it?'), [
+      { text: L('rehne do', 'cancel'), style: 'cancel' },
+      { text: L('haan, delete', 'yes, delete'), style: 'destructive', onPress: () => deleteExpense(id) },
     ]);
   }
 
   return (
     <Screen>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.diaryLabel}>my money diary ✦</Text>
+        <Text style={styles.diaryLabel}>{L('my money diary ✦', 'my money diary ✦')}</Text>
 
         {/* ── budget card ── */}
         <View style={styles.card}>
-          <Text style={styles.spentLabel}>spent in {MONTH_NAMES[month]}</Text>
+          <Text style={styles.spentLabel}>{L('spent in', 'spent in')} {MONTH_NAMES[month]}</Text>
           <Text style={styles.bigTotal}>{fmtINR(spent)}</Text>
 
           {bs.hasBudget ? (
             <>
               <View style={styles.pill}>
                 <Text style={styles.pillText}>
-                  {bs.over ? `${fmtINR(Math.abs(bs.remaining))} over 💀` : `${fmtINR(bs.remaining)} left 🌸`}
+                  {bs.over ? `${fmtINR(Math.abs(bs.remaining))} ${L('over', 'over')} 💀` : `${fmtINR(bs.remaining)} ${L('left', 'left')} 🌸`}
                 </Text>
               </View>
               <View style={styles.barTrack}>
                 <View style={[styles.barFill, { width: `${bs.pct}%`, backgroundColor: bs.barColor }]} />
               </View>
               <Text style={styles.barCaption}>
-                {bs.over ? 'oops, budget gaya — sambhaalo babe' : bs.pct >= 75 ? COPY.nearBudget : COPY.budgetSafe}
+                {bs.over ? L('oops, budget gaya — sambhaalo babe', 'oops, budget blown — careful babe') : bs.pct >= 75 ? COPY.nearBudget : COPY.budgetSafe}
               </Text>
             </>
           ) : (
-            <Text style={styles.noBudget}>Settings mein budget set karo taaki track kar sako 🎯</Text>
+            <Text style={styles.noBudget}>{L('Settings mein budget set karo taaki track kar sako 🎯', 'Set a budget in Settings so you can track it 🎯')}</Text>
           )}
         </View>
 
@@ -99,7 +102,7 @@ export default function HomeScreen() {
           {streaks.hasBudget ? (
             <View style={styles.streakItem}>
               <Text style={styles.streakNum}>🔥 {streaks.streak}</Text>
-              <Text style={styles.streakLbl}>din budget mein</Text>
+              <Text style={styles.streakLbl}>{L('din budget mein', 'days in budget')}</Text>
             </View>
           ) : null}
           <View style={styles.streakItem}>
@@ -126,8 +129,8 @@ export default function HomeScreen() {
           <Pressable style={styles.bestieBanner} onPress={confessToFriend}>
             <Text style={styles.bestieEmoji}>🤝</Text>
             <View style={styles.flex1}>
-              <Text style={styles.bestieTitle}>{bestieName} ko confess karo?</Text>
-              <Text style={styles.bestieSub}>budget gaya 💀 — bestie ko ek tap me batao</Text>
+              <Text style={styles.bestieTitle}>{L(`${bestieName} ko confess karo?`, `Confess to ${bestieName}?`)}</Text>
+              <Text style={styles.bestieSub}>{L('budget gaya 💀 — bestie ko ek tap me batao', 'budget blown 💀 — tell your bestie in one tap')}</Text>
             </View>
             <Text style={styles.bestieArrow}>💌</Text>
           </Pressable>
@@ -142,7 +145,7 @@ export default function HomeScreen() {
           <View style={styles.empty}>
             <Text style={styles.emptyEmoji}>🌷</Text>
             <Text style={styles.emptyText}>{COPY.empty}</Text>
-            <Text style={styles.emptyHint}>neeche pink "+" dabake apna pehla kharcha add karo ✨</Text>
+            <Text style={styles.emptyHint}>{L('neeche pink "+" dabake apna pehla kharcha add karo ✨', 'tap the pink "+" below to add your first expense ✨')}</Text>
           </View>
         ) : (
           recent.map((e) => {
