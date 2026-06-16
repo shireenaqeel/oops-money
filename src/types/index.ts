@@ -63,6 +63,14 @@ export interface WishItem {
   createdAt: number; // ms timestamp
 }
 
+// A money challenge the user took on (V3). The template id + start date is all we store;
+// win/fail is computed live from expenses so it's always accurate.
+export interface Challenge {
+  id: string;
+  templateId: string; // links to a CHALLENGE_TEMPLATES entry
+  startDate: string; // ISO yyyy-mm-dd when she started it
+}
+
 // Per-category monthly spending limits, keyed by category id (V2).
 export type CatBudgets = Record<string, number>;
 

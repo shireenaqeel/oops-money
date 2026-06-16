@@ -1,7 +1,7 @@
 // useAppContext.tsx — MAIN STATE MANAGEMENT. The single source of truth for app data.
 // Loads everything from storage once on launch, then every screen reads/writes through this hook.
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { Category, Expense, Goal, CatBudgets, ImpulseItem, Letter, Recurring, WishItem } from '../types';
+import { Category, Expense, Goal, CatBudgets, ImpulseItem, Letter, Recurring, WishItem, Challenge } from '../types';
 import { KEYS, clearAll, loadJSON, loadString, saveJSON, saveString } from '../storage';
 import { PASTEL_COLORS, findCat } from '../constants/categories';
 import { genId, getToday } from '../utils';
@@ -28,6 +28,7 @@ interface AppState {
   bestieName: string; // accountability bestie's name (V2, local)
   bestiePhone: string; // bestie's WhatsApp/SMS number, optional (V2, local)
   wishlist: WishItem[]; // manifest board / wishlist (V3)
+  challenges: Challenge[]; // money challenges taken on (V3)
   completeOnboarding: () => Promise<void>;
   saveOnboarding: (data: { income: string; budget: string; splurgeFund: string }) => Promise<void>;
   addExpense: (e: Omit<Expense, 'id'>) => Promise<void>;
@@ -61,6 +62,8 @@ interface AppState {
   addWish: (name: string, emoji: string, price: number, perDay: number) => Promise<void>;
   updateWishPerDay: (id: string, perDay: number) => Promise<void>;
   deleteWish: (id: string) => Promise<void>;
+  startChallenge: (templateId: string) => Promise<void>;
+  abandonChallenge: (id: string) => Promise<void>;
   addCustomCat: (name: string, emoji: string) => Promise<Category>;
   deleteCustomCat: (id: string) => Promise<void>;
   resetAll: () => Promise<void>;
@@ -90,10 +93,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [bestieName, setBestieName] = useState('');
   const [bestiePhone, setBestiePhone] = useState('');
   const [wishlist, setWishlist] = useState<WishItem[]>([]);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
 
   // Pull all persisted data from storage into state.
   const reload = useCallback(async () => {
-    const [exp, rec, imp, ltrs, cc, bud, inc, spl, onb, shield, pStarts, cLen, cBudgets, gls, billRem, bName, bPhone, wish] = await Promise.all([
+    const [exp, rec, imp, ltrs, cc, bud, inc, spl, onb, shield, pStarts, cLen, cBudgets, gls, billRem, bName, bPhone, wish, chals] = await Promise.all([
       loadJSON<Expense[]>(KEYS.expenses, []),
       loadJSON<Recurring[]>(KEYS.recurring, []),
       loadJSON<ImpulseItem[]>(KEYS.impulse, []),
@@ -112,6 +116,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       loadString(KEYS.bestieName),
       loadString(KEYS.bestiePhone),
       loadJSON<WishItem[]>(KEYS.wishlist, []),
+      loadJSON<Challenge[]>(KEYS.challenges, []),
     ]);
     setExpenses(exp);
     setRecurring(rec);
@@ -131,6 +136,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setBestieName(bName);
     setBestiePhone(bPhone);
     setWishlist(wish);
+    setChallenges(chals);
   }, []);
 
   // On first mount, load everything, then drop the loading flag.
@@ -501,6 +507,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [wishlist]
   );
 
+  // Take on a money challenge — records the template + today as the start date.
+  const startChallenge = useCallback(
+    async (templateId: string) => {
+      const item: Challenge = { id: genId(), templateId, startDate: getToday() };
+      const next = [item, ...challenges];
+      setChallenges(next);
+      await saveJSON(KEYS.challenges, next);
+    },
+    [challenges]
+  );
+
+  // Give up / clear a challenge (also used to "claim" a finished one off the board).
+  const abandonChallenge = useCallback(
+    async (id: string) => {
+      const next = challenges.filter((c) => c.id !== id);
+      setChallenges(next);
+      await saveJSON(KEYS.challenges, next);
+    },
+    [challenges]
+  );
+
   // Create a new custom category (emoji + name), auto-assign a colour, save, and return it.
   const addCustomCat = useCallback(
     async (name: string, emoji: string): Promise<Category> => {
@@ -550,6 +577,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     bestieName,
     bestiePhone,
     wishlist,
+    challenges,
     completeOnboarding,
     saveOnboarding,
     addExpense,
@@ -583,6 +611,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addWish,
     updateWishPerDay,
     deleteWish,
+    startChallenge,
+    abandonChallenge,
     addCustomCat,
     deleteCustomCat,
     resetAll,

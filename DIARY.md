@@ -3,6 +3,22 @@
 
 ---
 
+## V3 — Challenges 🏆 — 16 Jun 2026
+**What:** Settings 🎀 → **🏆 Challenges**: take on a short money challenge — 🍜 No-Zomato Week (7 days no food-delivery/cafe), 💸 ₹500 Week (≤₹500 in 7 days), 🛍️ No-Shopping 3 Days (no beauty/fashion), 🚫 No-Spend 3 Days. Active ones show a live progress bar + status badge (⏳ X din baaki / 🏆 jeet gayi! / 💔 oops gaya) and a running detail line. Win count shows in the header.
+**Why:** Gamified, daily-stickiness feature — very Gen-Z and addictive. Win/fail is computed **live from the expenses** (not stored), so it can never go stale or be cheated.
+**How it works:** New `Challenge` type (just templateId + startDate) + `om_challenges` key + context `startChallenge`/`abandonChallenge`. `src/utils/challenges.ts` holds the templates + `evaluateChallenge()`, which checks expenses inside the [start, start+duration) window: `cap` challenges sum spend vs a cap (cap 0 = no-spend), `no_group` challenges fail if any expense lands in a forbidden category group. ISO date-string comparison keeps the window filter simple.
+**Files added/changed:**
+- `src/types/index.ts` — `Challenge`
+- `src/storage/index.ts` — `challenges` key
+- `src/hooks/useAppContext.tsx` — `challenges` state + startChallenge/abandonChallenge
+- `src/utils/challenges.ts` — templates + live evaluator (new)
+- `src/screens/ChallengesModal.tsx` — the UI (new)
+- `src/screens/SettingsScreen.tsx` — Challenges button + modal
+**How to test on phone:** Reload → **Settings 🎀 → 🏆 Challenges** → tap **start** on ₹500 Week → it appears under YOUR CHALLENGES with a progress bar → log a big expense → badge flips to 💔; log nothing for the duration → 🏆. ✕ clears it.
+**Next up:** Festival/Shaadi Season Mode 🎉.
+
+---
+
 ## V3 — Manifest Board 🌟 (wishlist + save-up math) — 16 Jun 2026
 **What:** Settings 🎀 → **🌟 Manifest Board**: instead of impulse-buying, add the thing you want (emoji + name + price + how much you'll save daily). Each wish shows the math — *"roz ₹50 bachao → 60 din mein tera 💖 (milega around 15 Aug)"* — and − / + buttons to adjust the daily save and watch the countdown change. ✕ removes a wish (resisted or bought).
 **Why:** Turns *wanting* into a delayed, goal-shaped plan — a positive cousin of Impulse Jail. Different from Sapna Jar (that's a savings jar you stash into; this is desire-delay with auto-countdown). Fully local, no new packages.
