@@ -23,6 +23,19 @@ export interface Expense {
   isSplurge?: boolean; // counted against the splurge fund (feature 4)
   regret?: 'worth' | 'meh' | 'regret'; // 7-day post-purchase verdict (feature 9)
   receiptUri?: string; // attached payment screenshot, saved on-device (V2 screenshot add)
+  eventId?: string; // tags this spend to a festival/shaadi event budget (V3)
+}
+
+// A temporary "season" budget — Diwali, a friend's wedding, a trip — tracked separately (V3).
+// Expenses tagged with this event's id count toward its budget.
+export interface EventBudget {
+  id: string;
+  name: string;
+  emoji: string;
+  budget: number;
+  startDate: string; // ISO yyyy-mm-dd
+  endDate: string; // ISO yyyy-mm-dd
+  createdAt: number; // ms timestamp
 }
 
 // An item put in "impulse jail" — something you're tempted to buy but are waiting on.

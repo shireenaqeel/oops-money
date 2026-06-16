@@ -11,6 +11,7 @@ import CloudBackup from '../components/CloudBackup';
 import GoalsModal from './GoalsModal';
 import WishlistModal from './WishlistModal';
 import ChallengesModal from './ChallengesModal';
+import EventsModal from './EventsModal';
 import { useAppContext } from '../hooks/useAppContext';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme, useThemeMeta } from '../hooks/useTheme';
@@ -26,6 +27,7 @@ export default function SettingsScreen() {
   const [showGoals, setShowGoals] = useState(false);
   const [showWishlist, setShowWishlist] = useState(false);
   const [showChallenges, setShowChallenges] = useState(false);
+  const [showEvents, setShowEvents] = useState(false);
 
   // Toggle bill reminders; if permission is denied, flip back off and explain.
   async function toggleBills(on: boolean) {
@@ -126,6 +128,16 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* festival / shaadi season mode */}
+        <Pressable style={styles.eventBtn} onPress={() => setShowEvents(true)}>
+          <Text style={styles.goalsEmoji}>🎉</Text>
+          <View style={styles.flex1}>
+            <Text style={styles.goalsTitle}>Season Mode</Text>
+            <Text style={styles.goalsSub}>Diwali / shaadi / trip ka alag budget — kharche alag se track karo ✨</Text>
+          </View>
+          <Text style={styles.goalsArrow}>›</Text>
+        </Pressable>
+
         {/* challenges */}
         <Pressable style={styles.challengeBtn} onPress={() => setShowChallenges(true)}>
           <Text style={styles.goalsEmoji}>🏆</Text>
@@ -200,6 +212,7 @@ export default function SettingsScreen() {
       <GoalsModal visible={showGoals} onClose={() => setShowGoals(false)} />
       <WishlistModal visible={showWishlist} onClose={() => setShowWishlist(false)} />
       <ChallengesModal visible={showChallenges} onClose={() => setShowChallenges(false)} />
+      <EventsModal visible={showEvents} onClose={() => setShowEvents(false)} />
     </Screen>
   );
 }
@@ -222,6 +235,7 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   goalsBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.sage, borderRadius: radius.cards, padding: spacing.md, marginBottom: spacing.md },
   wishBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.babyBlue, borderRadius: radius.cards, padding: spacing.md, marginBottom: spacing.md },
   challengeBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.periwinkle, borderRadius: radius.cards, padding: spacing.md, marginBottom: spacing.md },
+  eventBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.coral, borderRadius: radius.cards, padding: spacing.md, marginBottom: spacing.md },
   goalsEmoji: { fontSize: 22, marginRight: spacing.md },
   goalsTitle: { fontSize: typography.body.fontSize, fontWeight: '700', color: colors.text },
   goalsSub: { fontSize: typography.small.fontSize, color: colors.text, opacity: 0.7, marginTop: 1, marginRight: spacing.sm },

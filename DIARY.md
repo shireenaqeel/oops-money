@@ -3,6 +3,22 @@
 
 ---
 
+## V3 — Festival / Shaadi Season Mode 🎉 — 16 Jun 2026
+**What:** Settings 🎀 → **🎉 Season Mode**: make a temporary event budget (Diwali, a friend's shaadi, a trip) with its own emoji, ₹ budget, and start/end dates. In the add-expense sheet a new **"kisi event ka kharcha? 🎉"** row appears (only once you have an event) to tag a spend to it. The Season Mode screen then tracks each event separately — spent vs budget bar, days range, and an over-budget warning.
+**Why:** Indian women spend in big festival/wedding bursts that a single monthly budget hides — and no mainstream tracker does this nicely. It's a standout, very-localised feature.
+**How it works:** New `EventBudget` type + optional `eventId` on `Expense` + `om_events` storage key + context `addEvent`/`deleteEvent`. Tagging is explicit (you pick the event when logging), so event spend = sum of expenses whose `eventId` matches — clean and never conflated with rent/normal spend. Deleting an event leaves the expenses intact.
+**Files added/changed:**
+- `src/types/index.ts` — `EventBudget` + `Expense.eventId`
+- `src/storage/index.ts` — `events` key
+- `src/hooks/useAppContext.tsx` — `events` state + addEvent/deleteEvent
+- `src/screens/EventsModal.tsx` — create + track events (new)
+- `src/screens/AddExpenseModal.tsx` — event tag selector + saves `eventId`
+- `src/screens/SettingsScreen.tsx` — Season Mode button + modal
+**How to test on phone:** Reload → **Settings 🎀 → 🎉 Season Mode** → add an event (e.g. Diwali, ₹10,000, se/tak dates) → go log a spend → pick the event under "kisi event ka kharcha?" → back in Season Mode the event bar fills with only those tagged spends.
+**Next up:** Anonymous Bestie Benchmark 📊 (needs Supabase — a little SQL homework).
+
+---
+
 ## V3 — Challenges 🏆 — 16 Jun 2026
 **What:** Settings 🎀 → **🏆 Challenges**: take on a short money challenge — 🍜 No-Zomato Week (7 days no food-delivery/cafe), 💸 ₹500 Week (≤₹500 in 7 days), 🛍️ No-Shopping 3 Days (no beauty/fashion), 🚫 No-Spend 3 Days. Active ones show a live progress bar + status badge (⏳ X din baaki / 🏆 jeet gayi! / 💔 oops gaya) and a running detail line. Win count shows in the header.
 **Why:** Gamified, daily-stickiness feature — very Gen-Z and addictive. Win/fail is computed **live from the expenses** (not stored), so it can never go stale or be cheated.

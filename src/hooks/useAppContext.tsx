@@ -1,7 +1,7 @@
 // useAppContext.tsx — MAIN STATE MANAGEMENT. The single source of truth for app data.
 // Loads everything from storage once on launch, then every screen reads/writes through this hook.
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { Category, Expense, Goal, CatBudgets, ImpulseItem, Letter, Recurring, WishItem, Challenge } from '../types';
+import { Category, Expense, Goal, CatBudgets, ImpulseItem, Letter, Recurring, WishItem, Challenge, EventBudget } from '../types';
 import { KEYS, clearAll, loadJSON, loadString, saveJSON, saveString } from '../storage';
 import { PASTEL_COLORS, findCat } from '../constants/categories';
 import { genId, getToday } from '../utils';
@@ -29,6 +29,7 @@ interface AppState {
   bestiePhone: string; // bestie's WhatsApp/SMS number, optional (V2, local)
   wishlist: WishItem[]; // manifest board / wishlist (V3)
   challenges: Challenge[]; // money challenges taken on (V3)
+  events: EventBudget[]; // festival/shaadi season budgets (V3)
   completeOnboarding: () => Promise<void>;
   saveOnboarding: (data: { income: string; budget: string; splurgeFund: string }) => Promise<void>;
   addExpense: (e: Omit<Expense, 'id'>) => Promise<void>;
@@ -64,6 +65,8 @@ interface AppState {
   deleteWish: (id: string) => Promise<void>;
   startChallenge: (templateId: string) => Promise<void>;
   abandonChallenge: (id: string) => Promise<void>;
+  addEvent: (name: string, emoji: string, budget: number, startDate: string, endDate: string) => Promise<void>;
+  deleteEvent: (id: string) => Promise<void>;
   addCustomCat: (name: string, emoji: string) => Promise<Category>;
   deleteCustomCat: (id: string) => Promise<void>;
   resetAll: () => Promise<void>;
@@ -94,10 +97,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [bestiePhone, setBestiePhone] = useState('');
   const [wishlist, setWishlist] = useState<WishItem[]>([]);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [events, setEvents] = useState<EventBudget[]>([]);
 
   // Pull all persisted data from storage into state.
   const reload = useCallback(async () => {
-    const [exp, rec, imp, ltrs, cc, bud, inc, spl, onb, shield, pStarts, cLen, cBudgets, gls, billRem, bName, bPhone, wish, chals] = await Promise.all([
+    const [exp, rec, imp, ltrs, cc, bud, inc, spl, onb, shield, pStarts, cLen, cBudgets, gls, billRem, bName, bPhone, wish, chals, evts] = await Promise.all([
       loadJSON<Expense[]>(KEYS.expenses, []),
       loadJSON<Recurring[]>(KEYS.recurring, []),
       loadJSON<ImpulseItem[]>(KEYS.impulse, []),
@@ -117,6 +121,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       loadString(KEYS.bestiePhone),
       loadJSON<WishItem[]>(KEYS.wishlist, []),
       loadJSON<Challenge[]>(KEYS.challenges, []),
+      loadJSON<EventBudget[]>(KEYS.events, []),
     ]);
     setExpenses(exp);
     setRecurring(rec);
@@ -137,6 +142,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setBestiePhone(bPhone);
     setWishlist(wish);
     setChallenges(chals);
+    setEvents(evts);
   }, []);
 
   // On first mount, load everything, then drop the loading flag.
@@ -528,6 +534,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [challenges]
   );
 
+  // Create a festival/shaadi season budget (newest first).
+  const addEvent = useCallback(
+    async (name: string, emoji: string, budget: number, startDate: string, endDate: string) => {
+      const item: EventBudget = { id: genId(), name, emoji, budget: Math.round(budget), startDate, endDate, createdAt: Date.now() };
+      const next = [item, ...events];
+      setEvents(next);
+      await saveJSON(KEYS.events, next);
+    },
+    [events]
+  );
+
+  // Delete an event budget (the tagged expenses stay; they just lose the tag visually).
+  const deleteEvent = useCallback(
+    async (id: string) => {
+      const next = events.filter((e) => e.id !== id);
+      setEvents(next);
+      await saveJSON(KEYS.events, next);
+    },
+    [events]
+  );
+
   // Create a new custom category (emoji + name), auto-assign a colour, save, and return it.
   const addCustomCat = useCallback(
     async (name: string, emoji: string): Promise<Category> => {
@@ -578,6 +605,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     bestiePhone,
     wishlist,
     challenges,
+    events,
     completeOnboarding,
     saveOnboarding,
     addExpense,
@@ -613,6 +641,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     deleteWish,
     startChallenge,
     abandonChallenge,
+    addEvent,
+    deleteEvent,
     addCustomCat,
     deleteCustomCat,
     resetAll,

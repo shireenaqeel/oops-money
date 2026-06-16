@@ -53,7 +53,7 @@ export default function AddExpenseModal({
   onClose: () => void;
   editing?: Expense | null;
 }) {
-  const { addExpense, updateExpense, customCats, nightShield } = useAppContext();
+  const { addExpense, updateExpense, customCats, nightShield, events } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
   const allCats = [...CATS, ...customCats];
@@ -70,6 +70,7 @@ export default function AddExpenseModal({
   const [date, setDate] = useState(getToday());
   const [isSplurge, setIsSplurge] = useState(false);
   const [regret, setRegret] = useState<'' | 'worth' | 'meh' | 'regret'>('');
+  const [eventId, setEventId] = useState(''); // tag this spend to a festival/shaadi event (V3)
   const [saved, setSaved] = useState(false);
   // Voice logging (V2): she speaks via the keyboard mic into this field; we parse it into the form.
   const [voiceText, setVoiceText] = useState('');
@@ -96,6 +97,7 @@ export default function AddExpenseModal({
       setIsSplurge(!!editing.isSplurge);
       setRegret(editing.regret ?? '');
       setReceiptUri(editing.receiptUri);
+      setEventId(editing.eventId ?? '');
     } else {
       setAmount('');
       setCatId(CATS[0].id);
@@ -105,6 +107,7 @@ export default function AddExpenseModal({
       setIsSplurge(false);
       setRegret('');
       setReceiptUri(undefined);
+      setEventId('');
     }
     setVoiceText('');
     setVoiceMsg('');
@@ -188,6 +191,7 @@ export default function AddExpenseModal({
       isSplurge,
       regret: regret || undefined,
       receiptUri,
+      eventId: eventId || undefined,
     };
     if (editing) await updateExpense(editing.id, payload);
     else await addExpense(payload);
@@ -344,6 +348,26 @@ export default function AddExpenseModal({
             <Switch value={isSplurge} onValueChange={setIsSplurge} trackColor={{ false: colors.border, true: colors.rose }} thumbColor={colors.cardBg} />
           </View>
 
+          {/* festival/shaadi event tag (only if any events exist) */}
+          {events.length > 0 ? (
+            <>
+              <Text style={styles.label}>kisi event ka kharcha? 🎉 (optional)</Text>
+              <View style={styles.moodRow}>
+                <Pressable onPress={() => setEventId('')} style={[styles.eventPill, !eventId && styles.eventPillActive]}>
+                  <Text style={[styles.eventText, !eventId && styles.eventTextActive]}>none</Text>
+                </Pressable>
+                {events.map((ev) => {
+                  const selected = ev.id === eventId;
+                  return (
+                    <Pressable key={ev.id} onPress={() => setEventId(selected ? '' : ev.id)} style={[styles.eventPill, selected && styles.eventPillActive]}>
+                      <Text style={[styles.eventText, selected && styles.eventTextActive]}>{ev.emoji} {ev.name}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </>
+          ) : null}
+
           {/* was it worth it? (regret verdict — editable) */}
           <Text style={styles.label}>was it worth it? (optional)</Text>
           <View style={styles.moodRow}>
@@ -438,6 +462,11 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   datePillActive: { backgroundColor: colors.skyBlue },
   dateText: { fontSize: typography.small.fontSize, color: colors.textLight, fontWeight: '600' },
   dateTextActive: { fontSize: typography.small.fontSize, color: colors.onAccent, fontWeight: '600' },
+
+  eventPill: { paddingVertical: spacing.xs, paddingHorizontal: spacing.md, borderRadius: radius.chips, backgroundColor: colors.cream },
+  eventPillActive: { backgroundColor: colors.peach },
+  eventText: { fontSize: typography.small.fontSize, color: colors.textLight, fontWeight: '600' },
+  eventTextActive: { color: colors.text, fontWeight: '700' },
 
   splurgeRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.lg, backgroundColor: colors.blush, borderRadius: radius.inputs, padding: spacing.md },
   splurgeTitle: { fontSize: typography.body.fontSize, fontWeight: '700', color: colors.text },

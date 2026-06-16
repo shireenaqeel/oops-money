@@ -24,6 +24,7 @@ export const KEYS = {
   theme: 'om_theme', // selected colour theme id (V2)
   wishlist: 'om_wishlist', // manifest board wishlist items (V3)
   challenges: 'om_challenges', // money challenges taken on (V3)
+  events: 'om_events', // festival/shaadi season event budgets (V3)
 } as const;
 
 // Read + JSON-parse a value, returning the fallback if it's missing or corrupted.
