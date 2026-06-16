@@ -6,6 +6,8 @@ import { useAppContext } from '../hooks/useAppContext';
 import { Expense } from '../types';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 import { fmtINR, fmtDateLabel, daysSince } from '../utils';
 import { findCat } from '../constants/categories';
 import { COPY } from '../constants/copy';
@@ -20,6 +22,7 @@ export default function RegretAuditModal({ visible, onClose }: { visible: boolea
   const { expenses, customCats, rateExpense } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
+  useLang(); // subscribe so text re-renders when language toggles
   const [queue, setQueue] = useState<Expense[]>([]);
   const [index, setIndex] = useState(0);
 
@@ -49,9 +52,9 @@ export default function RegretAuditModal({ visible, onClose }: { visible: boolea
           {!current ? (
             <View style={styles.doneWrap}>
               <Text style={styles.doneEmoji}>✨</Text>
-              <Text style={styles.doneText}>{queue.length === 0 ? 'kuch review karne ko nahi babe — sab fresh hai' : 'all done! honesty looks good on you 💅'}</Text>
+              <Text style={styles.doneText}>{queue.length === 0 ? L('kuch review karne ko nahi babe — sab fresh hai', 'nothing to review babe — all fresh') : L('all done! honesty looks good on you 💅', 'all done! honesty looks good on you 💅')}</Text>
               <Pressable style={styles.closeBtn} onPress={onClose}>
-                <Text style={styles.closeText}>ho gaya ✦</Text>
+                <Text style={styles.closeText}>{L('ho gaya ✦', 'done ✦')}</Text>
               </Pressable>
             </View>
           ) : (
@@ -66,7 +69,7 @@ export default function RegretAuditModal({ visible, onClose }: { visible: boolea
                 <Text style={styles.itemAmt}>{fmtINR(current.amount)}</Text>
                 <Text style={styles.itemName}>{current.note || findCat(current.catId, customCats).name}</Text>
                 <Text style={styles.itemDate}>
-                  {daysSince(current.date)} days ago · {fmtDateLabel(current.date)}
+                  {daysSince(current.date)} {L('days ago', 'days ago')} · {fmtDateLabel(current.date)}
                 </Text>
               </View>
 

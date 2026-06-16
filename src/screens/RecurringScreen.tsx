@@ -6,6 +6,8 @@ import AddRecurringModal from './AddRecurringModal';
 import { useAppContext } from '../hooks/useAppContext';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 import { fmtINR } from '../utils';
 import { findCat } from '../constants/categories';
 
@@ -19,6 +21,7 @@ export default function RecurringScreen() {
   const { recurring, customCats, logRecurring, deleteRecurring } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
+  useLang(); // subscribe so text re-renders when language toggles
   const [showAdd, setShowAdd] = useState(false);
 
   const today = new Date().getDate();
@@ -33,14 +36,14 @@ export default function RecurringScreen() {
   // Log the bill as today's expense, with a little confirmation.
   function onLog(id: string, name: string) {
     logRecurring(id);
-    Alert.alert('logged babe 🌸', `${name} aaj ke kharche mein add ho gaya`);
+    Alert.alert('logged babe 🌸', L(`${name} aaj ke kharche mein add ho gaya`, `${name} added to today's expenses`));
   }
 
   // Confirm then delete a bill.
   function onDelete(id: string) {
-    Alert.alert('bill hatana hai?', 'Yeh recurring bill delete ho jayega.', [
-      { text: 'rehne do', style: 'cancel' },
-      { text: 'haan, delete', style: 'destructive', onPress: () => deleteRecurring(id) },
+    Alert.alert(L('bill hatana hai?', 'Remove this bill?'), L('Yeh recurring bill delete ho jayega.', 'This recurring bill will be deleted.'), [
+      { text: L('rehne do', 'cancel'), style: 'cancel' },
+      { text: L('haan, delete', 'yes, delete'), style: 'destructive', onPress: () => deleteRecurring(id) },
     ]);
   }
 
@@ -48,20 +51,20 @@ export default function RecurringScreen() {
     <Screen>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.heading}>Recurring Bills 🔁</Text>
-        <Text style={styles.intro}>har mahine ke regular kharche — rent, subscriptions, gym, etc.</Text>
+        <Text style={styles.intro}>{L('har mahine ke regular kharche — rent, subscriptions, gym, etc.', 'your regular monthly expenses — rent, subscriptions, gym, etc.')}</Text>
 
         {recurring.length > 0 ? (
           <View style={styles.totalBanner}>
             <Text style={styles.totalAmt}>{fmtINR(monthlyTotal)}</Text>
-            <Text style={styles.totalLabel}>har mahine fixed kharcha</Text>
+            <Text style={styles.totalLabel}>{L('har mahine fixed kharcha', 'fixed spending every month')}</Text>
           </View>
         ) : null}
 
         {recurring.length === 0 ? (
           <View style={styles.empty}>
             <Text style={styles.emptyEmoji}>🧾</Text>
-            <Text style={styles.emptyText}>koi bill nahi abhi</Text>
-            <Text style={styles.emptyHint}>neeche "+" se apna pehla recurring bill add karo ✨</Text>
+            <Text style={styles.emptyText}>{L('koi bill nahi abhi', 'no bills yet')}</Text>
+            <Text style={styles.emptyHint}>{L('neeche "+" se apna pehla recurring bill add karo ✨', 'tap "+" below to add your first recurring bill ✨')}</Text>
           </View>
         ) : (
           recurring
@@ -71,7 +74,7 @@ export default function RecurringScreen() {
               const cat = findCat(rec.catId, customCats);
               const emoji = cat.name.split(' ')[0];
               const left = daysLeft(rec.day);
-              const dueText = left === 0 ? 'due today! 👀' : `${left} day${left > 1 ? 's' : ''} left`;
+              const dueText = left === 0 ? L('due today! 👀', 'due today! 👀') : L(`${left} din baaki`, `${left} day${left > 1 ? 's' : ''} left`);
               return (
                 <View key={rec.id} style={styles.billCard}>
                   <View style={[styles.billIcon, { backgroundColor: cat.bg }]}>
@@ -80,14 +83,14 @@ export default function RecurringScreen() {
                   <View style={styles.flex1}>
                     <Text style={styles.billName}>{rec.name}</Text>
                     <Text style={styles.billDue}>
-                      every {rec.day}
+                      {L('har', 'every')} {rec.day}
                       {ordinal(rec.day)} · {dueText}
                     </Text>
                   </View>
                   <View style={styles.billRight}>
                     <Text style={styles.billAmt}>{fmtINR(rec.amount)}</Text>
                     <Pressable style={styles.logBtn} onPress={() => onLog(rec.id, rec.name)}>
-                      <Text style={styles.logText}>log now</Text>
+                      <Text style={styles.logText}>{L('log now', 'log now')}</Text>
                     </Pressable>
                   </View>
                   <Pressable onPress={() => onDelete(rec.id)} hitSlop={10} style={styles.delBtn}>

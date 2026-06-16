@@ -5,12 +5,15 @@ import { useAppContext } from '../hooks/useAppContext';
 import BrokeMath from '../components/BrokeMath';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 import { COPY } from '../constants/copy';
 
 export default function AddToJailModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { addImpulse } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
+  useLang(); // subscribe so text re-renders when language toggles
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
@@ -43,14 +46,14 @@ export default function AddToJailModal({ visible, onClose }: { visible: boolean;
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.wrap}>
         <View style={styles.sheet}>
           <View style={styles.grabber} />
-          <Text style={styles.title}>impulse jail mein daalo 🔒</Text>
-          <Text style={styles.sub}>jo cheez khareedne ka mann hai — 24 ghante ruko, phir decide karo</Text>
+          <Text style={styles.title}>{L('impulse jail mein daalo 🔒', 'send to impulse jail 🔒')}</Text>
+          <Text style={styles.sub}>{L('jo cheez khareedne ka mann hai — 24 ghante ruko, phir decide karo', "the thing you want to buy — wait 24 hours, then decide")}</Text>
 
           <TextInput
             style={styles.input}
             value={name}
             onChangeText={setName}
-            placeholder="kya cheez? (woh dress, gadget...)"
+            placeholder={L('kya cheez? (woh dress, gadget...)', 'what is it? (that dress, gadget...)')}
             placeholderTextColor={colors.textMuted}
             autoFocus
           />
@@ -60,7 +63,7 @@ export default function AddToJailModal({ visible, onClose }: { visible: boolean;
               style={styles.amountInput}
               value={amount}
               onChangeText={(t) => setAmount(t.replace(/[^0-9]/g, ''))}
-              placeholder="kitne ka hai?"
+              placeholder={L('kitne ka hai?', 'how much is it?')}
               placeholderTextColor={colors.textMuted}
               keyboardType="number-pad"
             />
@@ -70,12 +73,12 @@ export default function AddToJailModal({ visible, onClose }: { visible: boolean;
             style={styles.input}
             value={note}
             onChangeText={setNote}
-            placeholder="kyun chahiye? (optional)"
+            placeholder={L('kyun chahiye? (optional)', 'why do you want it? (optional)')}
             placeholderTextColor={colors.textMuted}
           />
 
           <Pressable style={[styles.btn, saved && styles.btnSaved, !canSave && styles.btnDisabled]} onPress={onSentence} disabled={!canSave || saved}>
-            <Text style={styles.btnText}>{saved ? COPY.jailSuccess : 'sentence it 🔒'}</Text>
+            <Text style={styles.btnText}>{saved ? COPY.jailSuccess : L('sentence it 🔒', 'sentence it 🔒')}</Text>
           </Pressable>
         </View>
       </KeyboardAvoidingView>

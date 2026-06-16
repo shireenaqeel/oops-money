@@ -6,46 +6,50 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useAppContext } from '../hooks/useAppContext';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 
-// A few late-night sassy lines; one is picked at random each time the shield appears.
-const LINES = [
-  'raat ke is time pe cart bharne ka mann? 🌙',
-  '3am ki shopping = subah ka regret, trust me',
-  'late-night impulse detected... saans lo, babe ✨',
-  'neend > Nykaa cart, I promise bestie',
-  'kal subah bhi yeh deal yahin hogi (pakka)',
+// A few late-night sassy lines (Hinglish + English); one index is picked per showing.
+const LINES: [string, string][] = [
+  ['raat ke is time pe cart bharne ka mann? 🌙', 'filling your cart at this hour? 🌙'],
+  ['3am ki shopping = subah ka regret, trust me', '3am shopping = morning regret, trust me'],
+  ['late-night impulse detected... saans lo, babe ✨', 'late-night impulse detected... breathe, babe ✨'],
+  ['neend > Nykaa cart, I promise bestie', 'sleep > the Nykaa cart, I promise bestie'],
+  ['kal subah bhi yeh deal yahin hogi (pakka)', "this deal will still be here tomorrow morning (promise)"],
 ];
 
 export default function NightShield({ onProceed, onSnooze }: { onProceed: () => void; onSnooze: () => void }) {
   const { letters } = useAppContext();
   const styles = makeStyles(useTheme());
+  useLang(); // subscribe so text re-renders when language toggles
   // Pick one sassy line + (if you've written any) one of your own future-me letters for this showing.
-  const line = useMemo(() => LINES[Math.floor(Math.random() * LINES.length)], []);
+  const lineIdx = useMemo(() => Math.floor(Math.random() * LINES.length), []);
+  const line = L(LINES[lineIdx][0], LINES[lineIdx][1]);
   const letter = useMemo(() => (letters.length ? letters[Math.floor(Math.random() * letters.length)] : null), [letters]);
 
   return (
     <View style={styles.sheet}>
       <View style={styles.grabber} />
       <Text style={styles.moon}>🌙</Text>
-      <Text style={styles.title}>so jao na, babe</Text>
+      <Text style={styles.title}>{L('so jao na, babe', 'go to sleep, babe')}</Text>
       <Text style={styles.line}>{line}</Text>
 
       {/* your own past words, shown back to you */}
       {letter ? (
         <View style={styles.letterCard}>
-          <Text style={styles.letterLabel}>tumne khud likha tha 💌</Text>
+          <Text style={styles.letterLabel}>{L('tumne khud likha tha 💌', 'you wrote this yourself 💌')}</Text>
           <Text style={styles.letterText}>"{letter.text}"</Text>
         </View>
       ) : null}
 
       {/* primary: walk away */}
       <Pressable style={styles.sleepBtn} onPress={onSnooze}>
-        <Text style={styles.sleepText}>theek hai, so jaati hoon 😴</Text>
+        <Text style={styles.sleepText}>{L('theek hai, so jaati hoon 😴', "okay, I'll sleep 😴")}</Text>
       </Pressable>
 
       {/* secondary: proceed to the real form anyway */}
       <Pressable style={styles.proceedBtn} onPress={onProceed} hitSlop={8}>
-        <Text style={styles.proceedText}>nahi, abhi log karna hai</Text>
+        <Text style={styles.proceedText}>{L('nahi, abhi log karna hai', 'no, I want to log it now')}</Text>
       </Pressable>
     </View>
   );

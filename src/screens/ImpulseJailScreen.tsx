@@ -8,6 +8,8 @@ import { useAppContext } from '../hooks/useAppContext';
 import { ImpulseItem } from '../types';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 import { fmtINR, fmtDateLabel } from '../utils';
 import { buriedMsg } from '../constants/copy';
 
@@ -25,6 +27,7 @@ export default function ImpulseJailScreen() {
   const { impulse, letters, buryImpulse, releaseImpulse, rejailImpulse, deleteImpulse } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
+  useLang(); // subscribe so text re-renders when language toggles
   const [showAdd, setShowAdd] = useState(false);
   const [nowTs, setNowTs] = useState(Date.now());
   const [letterSeed] = useState(() => Math.floor(Math.random() * 100000)); // pick one letter per visit
@@ -45,7 +48,7 @@ export default function ImpulseJailScreen() {
   // How much time is left on an item's 24h clock.
   function remainingText(createdAt: number): string {
     const ms = createdAt + JAIL_MS - nowTs;
-    if (ms <= 0) return 'time served — ab decide karo!';
+    if (ms <= 0) return L('time served — ab decide karo!', 'time served — decide now!');
     const h = Math.floor(ms / 3600000);
     const m = Math.floor((ms % 3600000) / 60000);
     const s = Math.floor((ms % 60000) / 1000);
@@ -71,9 +74,9 @@ export default function ImpulseJailScreen() {
       releaseImpulse(item.id);
       return;
     }
-    Alert.alert('itni jaldi? 👀', `abhi ${remainingText(item.createdAt).replace(' 🔒', '')} — pakka abhi khareedna hai? (spending mein add ho jayega)`, [
-      { text: 'ruk jaungi 💪', style: 'cancel' },
-      { text: 'haan, buy 🛍️', style: 'destructive', onPress: () => releaseImpulse(item.id) },
+    Alert.alert(L('itni jaldi? 👀', 'so soon? 👀'), L(`abhi ${remainingText(item.createdAt).replace(' 🔒', '')} — pakka abhi khareedna hai? (spending mein add ho jayega)`, `still ${remainingText(item.createdAt).replace(' 🔒', '')} — sure you want to buy now? (it'll be added to spending)`), [
+      { text: L('ruk jaungi 💪', "I'll wait 💪"), style: 'cancel' },
+      { text: L('haan, buy 🛍️', 'yes, buy 🛍️'), style: 'destructive', onPress: () => releaseImpulse(item.id) },
     ]);
   }
 
@@ -81,12 +84,12 @@ export default function ImpulseJailScreen() {
     <Screen>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.heading}>Impulse Jail 🔒</Text>
-        <Text style={styles.intro}>khareedne ka mann hai? pehle yahan band karo. 24 ghante baad bhi chahiye toh le lena 💅</Text>
+        <Text style={styles.intro}>{L('khareedne ka mann hai? pehle yahan band karo. 24 ghante baad bhi chahiye toh le lena 💅', 'tempted to buy? jail it here first. if you still want it after 24 hours, go ahead 💅')}</Text>
 
         {/* a letter from past you (Feature 11) */}
         {featuredLetter ? (
           <View style={styles.letterCard}>
-            <Text style={styles.letterLabel}>💌 future you se ek baat</Text>
+            <Text style={styles.letterLabel}>{L('💌 future you se ek baat', '💌 a word from future you')}</Text>
             <Text style={styles.letterBody}>{featuredLetter.text}</Text>
           </View>
         ) : null}
@@ -95,14 +98,14 @@ export default function ImpulseJailScreen() {
         {totalSaved > 0 ? (
           <View style={styles.savedBanner}>
             <Text style={styles.savedAmt}>{fmtINR(totalSaved)}</Text>
-            <Text style={styles.savedLabel}>impulse buys resist karke bachaye 👑</Text>
+            <Text style={styles.savedLabel}>{L('impulse buys resist karke bachaye 👑', 'saved by resisting impulse buys 👑')}</Text>
           </View>
         ) : null}
 
         {/* jailed items */}
         <Text style={styles.sectionLabel}>IN JAIL ({jailed.length})</Text>
         {jailed.length === 0 ? (
-          <Text style={styles.muted}>jail khali hai — koi temptation? neeche "+" dabao</Text>
+          <Text style={styles.muted}>{L('jail khali hai — koi temptation? neeche "+" dabao', 'jail is empty — any temptation? tap "+" below')}</Text>
         ) : (
           jailed.map((item) => {
             const unlocked = isUnlocked(item.createdAt);
@@ -157,14 +160,14 @@ export default function ImpulseJailScreen() {
         {released.length > 0 ? (
           <>
             <Text style={styles.sectionLabel}>YOU CAVED 🛍️</Text>
-            <Text style={styles.muted}>ye spending mein add ho gaye — Home pe dikhenge</Text>
+            <Text style={styles.muted}>{L('ye spending mein add ho gaye — Home pe dikhenge', 'these got added to spending — they show on Home')}</Text>
             {released.map((item) => (
               <Pressable key={item.id} style={styles.cavedRow} onLongPress={() => deleteImpulse(item.id)}>
                 <Text style={styles.cavedName}>{item.name}</Text>
                 <Text style={styles.cavedAmt}>{fmtINR(item.amount)}</Text>
               </Pressable>
             ))}
-            <Text style={styles.hint}>(long-press kisi item ko hatane ke liye)</Text>
+            <Text style={styles.hint}>{L('(long-press kisi item ko hatane ke liye)', '(long-press an item to remove it)')}</Text>
           </>
         ) : null}
       </ScrollView>

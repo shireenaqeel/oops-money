@@ -4,6 +4,8 @@ import { View, Text, TextInput, Pressable, StyleSheet, Modal, KeyboardAvoidingVi
 import { useAppContext } from '../hooks/useAppContext';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 import { findCat } from '../constants/categories';
 
 // Common categories for bills (keeps the picker short).
@@ -13,6 +15,7 @@ export default function AddRecurringModal({ visible, onClose }: { visible: boole
   const { addRecurring } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
+  useLang(); // subscribe so text re-renders when language toggles
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
   const [day, setDay] = useState('');
@@ -45,9 +48,9 @@ export default function AddRecurringModal({ visible, onClose }: { visible: boole
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.wrap}>
         <View style={styles.sheet}>
           <View style={styles.grabber} />
-          <Text style={styles.title}>recurring bill add karo 🔁</Text>
+          <Text style={styles.title}>{L('recurring bill add karo 🔁', 'add a recurring bill 🔁')}</Text>
 
-          <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="bill name (Netflix, Rent, Gym...)" placeholderTextColor={colors.textMuted} autoFocus />
+          <TextInput style={styles.input} value={name} onChangeText={setName} placeholder={L('bill name (Netflix, Rent, Gym...)', 'bill name (Netflix, Rent, Gym...)')} placeholderTextColor={colors.textMuted} autoFocus />
           <View style={styles.row}>
             <View style={[styles.amountBox, styles.flex1]}>
               <Text style={styles.rupee}>₹</Text>
@@ -57,9 +60,9 @@ export default function AddRecurringModal({ visible, onClose }: { visible: boole
               <TextInput style={styles.dayInput} value={day} onChangeText={(t) => setDay(t.replace(/[^0-9]/g, '').slice(0, 2))} placeholder="day" placeholderTextColor={colors.textMuted} keyboardType="number-pad" />
             </View>
           </View>
-          <Text style={styles.dayHint}>mahine ke kaunse din due hota hai? (1–31)</Text>
+          <Text style={styles.dayHint}>{L('mahine ke kaunse din due hota hai? (1–31)', 'which day of the month is it due? (1–31)')}</Text>
 
-          <Text style={styles.label}>category</Text>
+          <Text style={styles.label}>{L('category', 'category')}</Text>
           <View style={styles.catWrap}>
             {BILL_CATS.map((id) => {
               const cat = findCat(id);
@@ -73,7 +76,7 @@ export default function AddRecurringModal({ visible, onClose }: { visible: boole
           </View>
 
           <Pressable style={[styles.btn, !canSave && styles.btnDisabled]} onPress={onSave} disabled={!canSave}>
-            <Text style={styles.btnText}>save bill ✦</Text>
+            <Text style={styles.btnText}>{L('save bill ✦', 'save bill ✦')}</Text>
           </Pressable>
         </View>
       </KeyboardAvoidingView>
