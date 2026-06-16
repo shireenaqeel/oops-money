@@ -12,6 +12,7 @@ import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { fmtINR, getToday } from '../utils';
 import { monthExpenses, sumExpenses, getAlerts } from '../utils/calculations';
+import { getSalaryCurve } from '../utils/salaryCurve';
 import { getCycleInfo, getCycleSpendInsight } from '../utils/cycle';
 import { findCat } from '../constants/categories';
 import { MOODS } from '../constants/moods';
@@ -63,6 +64,9 @@ export default function InsightsScreen() {
     d.setMonth(now.getMonth() - 5 + i);
     return { label: MONTHS_SHORT[d.getMonth()], value: sumExpenses(monthExpenses(expenses, d.getMonth(), d.getFullYear())) };
   });
+
+  // Salary curve (V2): how front-loaded this month's spending is (the "rich for 3 days" arc).
+  const salaryCurve = getSalaryCurve(expenses, month, year);
 
   // Spend per mood this month (only expenses that have a mood tagged), biggest first.
   const moodExp = thisMonth.filter((e) => e.mood);
@@ -154,6 +158,15 @@ export default function InsightsScreen() {
           <Text style={styles.sectionLabel}>6 MONTH TREND ✦</Text>
           <BarChart data={monthData} color={colors.lavender} />
         </View>
+
+        {/* salary curve — payday → broke arc */}
+        {salaryCurve.hasData ? (
+          <View style={styles.card}>
+            <Text style={styles.sectionLabel}>RICH FOR 3 DAYS 💸</Text>
+            <Text style={styles.moodHeadline}>{salaryCurve.headline}</Text>
+            <BarChart data={salaryCurve.buckets} color={colors.coral} />
+          </View>
+        ) : null}
 
         {/* spend calendar heatmap */}
         <View style={styles.card}>

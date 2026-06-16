@@ -3,6 +3,18 @@
 
 ---
 
+## V3 — Salary Curve 💸 ("rich for 3 days") — 16 Jun 2026
+**What:** Insights ✿ → a new **"RICH FOR 3 DAYS"** card showing how front-loaded the month's spending is: a sassy headline (e.g. *"aadha paisa 6 tareekh tak hi udd gaya 💸"*) plus a 4-bar chart of spend per week-of-month (1–7, 8–14, 15–21, 22+).
+**Why:** The payday → broke arc is painfully relatable for the target user, and no boring expense app visualises it. Pure local maths; reuses the existing `BarChart`.
+**How it works:** `getSalaryCurve()` buckets this month's expenses by day-of-month, computes the % spent in the first 10 days, and finds the day by which half the month's money was gone (`halfwayDay`). The headline switches based on those. Card only shows once there's spend this month.
+**Files added/changed:**
+- `src/utils/salaryCurve.ts` — the curve maths (new)
+- `src/screens/InsightsScreen.tsx` — computes + renders the card (between trend and calendar)
+**How to test on phone:** Reload → **Insights ✿** → scroll to **RICH FOR 3 DAYS** → bars show which week you spend most; log a few early-month expenses to see the "aadha paisa X tareekh tak" line.
+**Next up:** Wishlist / Manifest Board 🌟.
+
+---
+
 ## V3 — Paisa Personality 🔮 — 16 Jun 2026
 **What:** Insights ✿ now opens with a **"YOUR PAISA PERSONALITY"** card — it reads your spending and gives you a fun, shareable archetype like 💅 The Glow-Up Queen, 🍕 The Foodie Forever, 😩 The Stress Spender, 💸 The Payday Baller, 🎉 The Weekend Warrior, ✨ The Soft-Launch Spender, 👑 Treat-Yourself Tycoon, or 💚 The Budgeting Baddie. Each has a sassy Hinglish tagline + a supporting stat, and a **share it ✦** button that sends it to WhatsApp/Insta/notes.
 **Why:** No other expense app has a "personality type" — it's instantly screenshot-able and gives the dry numbers a fun, viral wrapper. 100% local maths over existing expenses, zero new data collected, zero new packages (uses RN's built-in `Share`).
