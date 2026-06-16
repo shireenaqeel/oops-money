@@ -6,6 +6,8 @@ import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-nati
 import { useAppContext } from '../hooks/useAppContext';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { getGroupPercents, buildBenchmarkLines, BenchmarkLine } from '../utils/benchmark';
 import { pushBenchmark, fetchBenchmarkAverages } from '../lib/benchmark';
@@ -15,6 +17,7 @@ export default function BestieBenchmark() {
   const { configured, session } = useAuth();
   const colors = useTheme();
   const styles = makeStyles(colors);
+  useLang(); // subscribe so text re-renders when language toggles
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -52,31 +55,31 @@ export default function BestieBenchmark() {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.label}>BESTIE BENCHMARK 📊</Text>
+      <Text style={styles.label}>{L('BESTIE BENCHMARK 📊', 'BESTIE BENCHMARK 📊')}</Text>
 
       {!session ? (
-        <Text style={styles.muted}>Settings 🎀 mein sign in karo — phir dekho ki tu baaki besties se zyada/kam kahan kharchti hai (sab anonymous 🤫)</Text>
+        <Text style={styles.muted}>{L('Settings 🎀 mein sign in karo — phir dekho ki tu baaki besties se zyada/kam kahan kharchti hai (sab anonymous 🤫)', 'Sign in from Settings 🎀 — then see where you spend more/less than other besties (all anonymous 🤫)')}</Text>
       ) : loading ? (
         <View style={styles.loadingRow}>
           <ActivityIndicator color={colors.rose} />
-          <Text style={styles.muted}>besties se compare kar rahe hain...</Text>
+          <Text style={styles.muted}>{L('besties se compare kar rahe hain...', 'comparing with besties...')}</Text>
         </View>
       ) : error ? (
-        <Text style={styles.muted}>benchmark abhi ready nahi 🙈 (cloud pe SQL setup karna baaki ho sakta hai)</Text>
+        <Text style={styles.muted}>{L('benchmark abhi ready nahi 🙈 (cloud pe SQL setup karna baaki ho sakta hai)', "benchmark isn't ready yet 🙈 (the cloud SQL setup may still be pending)")}</Text>
       ) : lines.length === 0 ? (
-        <Text style={styles.muted}>thoda aur kharcha log karo — phir comparison dikhega 🌸</Text>
+        <Text style={styles.muted}>{L('thoda aur kharcha log karo — phir comparison dikhega 🌸', 'log a bit more spending — then the comparison shows up 🌸')}</Text>
       ) : (
         <>
-          <Text style={styles.headline}>{sample > 1 ? `${sample} besties se compare kiya 👯‍♀️` : 'tu pehli bestie hai! jaise jaise log aayenge, comparison better hoga 💕'}</Text>
+          <Text style={styles.headline}>{sample > 1 ? L(`${sample} besties se compare kiya 👯‍♀️`, `compared with ${sample} besties 👯‍♀️`) : L('tu pehli bestie hai! jaise jaise log aayenge, comparison better hoga 💕', "you're the first bestie! as more join, the comparison gets better 💕")}</Text>
           {lines.slice(0, 4).map((l) => (
             <View key={l.group} style={styles.row}>
               <Text style={styles.rowText}>{l.text}</Text>
               <Text style={styles.rowNums}>
-                tu {l.mine}% · avg {l.avg}%
+                {L('tu', 'you')} {l.mine}% · avg {l.avg}%
               </Text>
             </View>
           ))}
-          <Text style={styles.footnote}>sab anonymous hai — sirf category-percentage compare hota hai, koi amount ya naam nahi 🤫</Text>
+          <Text style={styles.footnote}>{L('sab anonymous hai — sirf category-percentage compare hota hai, koi amount ya naam nahi 🤫', 'all anonymous — only category percentages are compared, no amounts or names 🤫')}</Text>
         </>
       )}
     </View>

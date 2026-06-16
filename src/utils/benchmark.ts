@@ -3,6 +3,7 @@
 // no notes, no identity beyond the user's own row. Pure maths.
 import { Expense, Category } from '../types';
 import { findCat } from '../constants/categories';
+import { L } from '../i18n';
 
 // Percentage of total spend that went to each built-in group, e.g. { Food: 35, Beauty: 20 }.
 export function getGroupPercents(expenses: Expense[], customCats: Category[] = []): Record<string, number> {
@@ -50,9 +51,9 @@ export function buildBenchmarkLines(mine: Record<string, number>, avg: Record<st
     const ratio = m / a;
     const emoji = GROUP_EMOJI[group] ?? '✨';
     let text: string;
-    if (ratio >= 1.5) text = `${emoji} ${group}: tu average se ${ratio.toFixed(1)}x zyada kharchti hai 👀`;
-    else if (ratio <= 0.66) text = `${emoji} ${group}: average se kaafi kam — smart cookie 💚`;
-    else text = `${emoji} ${group}: average ke aas-paas, balanced 🌸`;
+    if (ratio >= 1.5) text = L(`${emoji} ${group}: tu average se ${ratio.toFixed(1)}x zyada kharchti hai 👀`, `${emoji} ${group}: you spend ${ratio.toFixed(1)}x more than average 👀`);
+    else if (ratio <= 0.66) text = L(`${emoji} ${group}: average se kaafi kam — smart cookie 💚`, `${emoji} ${group}: way below average — smart cookie 💚`);
+    else text = L(`${emoji} ${group}: average ke aas-paas, balanced 🌸`, `${emoji} ${group}: around average, balanced 🌸`);
     lines.push({ group, emoji, mine: m, avg: a, text });
   }
   // Sort by how far from "1x" each ratio is (most surprising first).

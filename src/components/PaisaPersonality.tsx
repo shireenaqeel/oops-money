@@ -4,6 +4,8 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet, Share } from 'react-native';
 import { useAppContext } from '../hooks/useAppContext';
 import { useTheme } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { getPaisaPersonality } from '../utils/personality';
 
@@ -11,6 +13,7 @@ export default function PaisaPersonality() {
   const { expenses, customCats } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
+  useLang(); // subscribe so text re-renders when language toggles
 
   const p = getPaisaPersonality(expenses, customCats);
 
@@ -23,14 +26,14 @@ export default function PaisaPersonality() {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.label}>YOUR PAISA PERSONALITY 🔮</Text>
+      <Text style={styles.label}>{L('YOUR PAISA PERSONALITY 🔮', 'YOUR MONEY PERSONALITY 🔮')}</Text>
       <Text style={styles.emoji}>{p.emoji}</Text>
       <Text style={styles.title}>{p.title}</Text>
       <Text style={styles.tagline}>{p.tagline}</Text>
       <Text style={styles.stat}>{p.stat}</Text>
       {p.enough ? (
         <Pressable style={styles.shareBtn} onPress={share}>
-          <Text style={styles.shareText}>share it ✦</Text>
+          <Text style={styles.shareText}>{L('share it ✦', 'share it ✦')}</Text>
         </Pressable>
       ) : null}
     </View>

@@ -4,6 +4,7 @@ import { Expense, Category, CatBudgets } from '../types';
 import { findCat } from '../constants/categories';
 import { fmtINR } from './index';
 import { colors, ThemeColors } from '../constants/theme';
+import { L } from '../i18n';
 
 // Keep only the expenses that fall in the given month + year.
 export function monthExpenses(expenses: Expense[], month: number, year: number): Expense[] {
@@ -119,7 +120,7 @@ export function getAlerts(
     const spent = sumExpenses(monthExp.filter((e) => e.catId === catId));
     if (spent > limit) {
       const cat = findCat(catId, customCats);
-      alerts.push({ emoji: '🎯', title: `${cat.name} limit cross!`, sub: `${fmtINR(spent)} kharch — limit ${fmtINR(limit)} se ${fmtINR(spent - limit)} zyada` });
+      alerts.push({ emoji: '🎯', title: L(`${cat.name} limit cross!`, `${cat.name} limit crossed!`), sub: L(`${fmtINR(spent)} kharch — limit ${fmtINR(limit)} se ${fmtINR(spent - limit)} zyada`, `${fmtINR(spent)} spent — ${fmtINR(spent - limit)} over the ${fmtINR(limit)} limit`) });
     }
   });
 
@@ -128,7 +129,7 @@ export function getAlerts(
   if (splurgeFund > 0) {
     const splurgeSpent = sumExpenses(monthExp.filter((e) => e.isSplurge));
     if (splurgeSpent > splurgeFund) {
-      alerts.push({ emoji: '🛍️', title: 'splurge fund khatam!', sub: `${fmtINR(splurgeSpent)} splurge pe — fund se ${fmtINR(splurgeSpent - splurgeFund)} zyada` });
+      alerts.push({ emoji: '🛍️', title: L('splurge fund khatam!', 'splurge fund used up!'), sub: L(`${fmtINR(splurgeSpent)} splurge pe — fund se ${fmtINR(splurgeSpent - splurgeFund)} zyada`, `${fmtINR(splurgeSpent)} on splurges — ${fmtINR(splurgeSpent - splurgeFund)} over the fund`) });
     }
   }
 
@@ -140,11 +141,11 @@ export function getAlerts(
 
   // 1. Near the budget (80–99%)
   if (pct >= 80 && !over) {
-    alerts.push({ emoji: '⚠️', title: 'Danger zone, babe!', sub: `${Math.round(pct)}% budget use ho gaya — sirf ${fmtINR(remaining)} bacha hai` });
+    alerts.push({ emoji: '⚠️', title: L('Danger zone, babe!', 'Danger zone, babe!'), sub: L(`${Math.round(pct)}% budget use ho gaya — sirf ${fmtINR(remaining)} bacha hai`, `${Math.round(pct)}% of budget used — only ${fmtINR(remaining)} left`) });
   }
   // 2. Over budget
   if (over) {
-    alerts.push({ emoji: '💀', title: 'oops, budget gaya', sub: `${fmtINR(Math.abs(remaining))} over — deep breath, agla mahina better karenge 💕` });
+    alerts.push({ emoji: '💀', title: L('oops, budget gaya', 'oops, budget blown'), sub: L(`${fmtINR(Math.abs(remaining))} over — deep breath, agla mahina better karenge 💕`, `${fmtINR(Math.abs(remaining))} over — deep breath, next month will be better 💕`) });
   }
   // 3. One category eating most of the budget (>45%)
   const byCat = new Map<string, number>();
@@ -159,12 +160,12 @@ export function getAlerts(
   });
   if (topId && topVal / total > 0.45) {
     const cat = findCat(topId, customCats);
-    alerts.push({ emoji: '💸', title: `${cat.name} pe bahut kharch!`, sub: `${Math.round((topVal / total) * 100)}% ek hi category mein — thoda diversify karo?` });
+    alerts.push({ emoji: '💸', title: L(`${cat.name} pe bahut kharch!`, `lots spent on ${cat.name}!`), sub: L(`${Math.round((topVal / total) * 100)}% ek hi category mein — thoda diversify karo?`, `${Math.round((topVal / total) * 100)}% in one category — maybe diversify a little?`) });
   }
   // 4. Today is unusually heavy (2x the daily average)
   const todaySpend = sumExpenses(expenses.filter((e) => e.date === today));
   if (todaySpend > (budget / 30) * 2) {
-    alerts.push({ emoji: '📅', title: 'Aaj ka din heavy hai!', sub: `Aaj ${fmtINR(todaySpend)} kharch — daily average se 2x zyada!` });
+    alerts.push({ emoji: '📅', title: L('Aaj ka din heavy hai!', 'Heavy spending day!'), sub: L(`Aaj ${fmtINR(todaySpend)} kharch — daily average se 2x zyada!`, `${fmtINR(todaySpend)} spent today — 2x the daily average!`) });
   }
   return alerts;
 }

@@ -11,6 +11,8 @@ import MonthlyWrappedModal from './MonthlyWrappedModal';
 import { useAppContext } from '../hooks/useAppContext';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
+import { useLang } from '../hooks/useLang';
+import { L } from '../i18n';
 import { fmtINR, getToday } from '../utils';
 import { monthExpenses, sumExpenses, getAlerts } from '../utils/calculations';
 import { getSalaryCurve } from '../utils/salaryCurve';
@@ -32,6 +34,7 @@ export default function InsightsScreen() {
   const { expenses, budget, splurgeFund, customCats, catBudgets, periodStarts, cycleLength } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
+  useLang(); // subscribe so text re-renders when language toggles
   const [showWrapped, setShowWrapped] = useState(false);
 
   // Cycle insights (V2): current phase + whether PMS-week spending runs higher.
@@ -106,8 +109,8 @@ export default function InsightsScreen() {
       <Screen>
         <View style={styles.empty}>
           <Text style={styles.emptyEmoji}>📊</Text>
-          <Text style={styles.emptyText}>add some spends first babe</Text>
-          <Text style={styles.emptyHint}>insights tabhi dikhenge jab thoda data hoga ✨</Text>
+          <Text style={styles.emptyText}>{L('add some spends first babe', 'add some spends first babe')}</Text>
+          <Text style={styles.emptyHint}>{L('insights tabhi dikhenge jab thoda data hoga ✨', 'insights show up once there\'s a little data ✨')}</Text>
         </View>
       </Screen>
     );
@@ -179,7 +182,7 @@ export default function InsightsScreen() {
         <View style={styles.card}>
           <Text style={styles.sectionLabel}>WHERE IT WENT ✦</Text>
           {byCat.length === 0 ? (
-            <Text style={styles.muted}>is mahine ka kuch nahi — abhi tak 🌸</Text>
+            <Text style={styles.muted}>{L('is mahine ka kuch nahi — abhi tak 🌸', 'nothing this month — yet 🌸')}</Text>
           ) : (
             byCat.map(({ cat, amount }) => {
               const pct = total > 0 ? Math.round((amount / total) * 100) : 0;
@@ -204,7 +207,7 @@ export default function InsightsScreen() {
         <View style={styles.card}>
           <Text style={styles.sectionLabel}>MOOD vs MONEY ✦</Text>
           {byMood.length === 0 ? (
-            <Text style={styles.muted}>kharcha log karte waqt mood tag karo — phir yahan pattern dikhega 😊</Text>
+            <Text style={styles.muted}>{L('kharcha log karte waqt mood tag karo — phir yahan pattern dikhega 😊', 'tag a mood when logging spends — then the pattern shows here 😊')}</Text>
           ) : (
             <>
               <Text style={styles.moodHeadline}>{buildMoodLine(byMood[0].mood.id)}</Text>
@@ -234,7 +237,7 @@ export default function InsightsScreen() {
         <View style={styles.card}>
           <Text style={styles.sectionLabel}>REGRET CHECK ✦</Text>
           {ratedMonth.length === 0 ? (
-            <Text style={styles.muted}>7 din purane kharchon ka regret check Home pe karo — phir pattern yahan dikhega 💭</Text>
+            <Text style={styles.muted}>{L('7 din purane kharchon ka regret check Home pe karo — phir pattern yahan dikhega 💭', 'do the regret check on 7-day-old spends from Home — then the pattern shows here 💭')}</Text>
           ) : (
             <>
               <View style={styles.regretRow}>
@@ -243,11 +246,11 @@ export default function InsightsScreen() {
                 <Text style={styles.regretStat}>😭 {rRegret}</Text>
               </View>
               {regretSum > 0 ? (
-                <Text style={styles.regretLine}>{fmtINR(regretSum)} regret wale kharchon pe gaye 😭</Text>
+                <Text style={styles.regretLine}>{L(`${fmtINR(regretSum)} regret wale kharchon pe gaye 😭`, `${fmtINR(regretSum)} went on regretted spends 😭`)}</Text>
               ) : (
-                <Text style={styles.regretLine}>abhi tak koi regret nahi — slay queen 💅</Text>
+                <Text style={styles.regretLine}>{L('abhi tak koi regret nahi — slay queen 💅', 'no regrets yet — slay queen 💅')}</Text>
               )}
-              {topRegretName ? <Text style={styles.regretLine}>sabse zyada regret: {topRegretName}</Text> : null}
+              {topRegretName ? <Text style={styles.regretLine}>{L(`sabse zyada regret: ${topRegretName}`, `most regretted: ${topRegretName}`)}</Text> : null}
             </>
           )}
         </View>
@@ -256,13 +259,13 @@ export default function InsightsScreen() {
         <View style={styles.card}>
           <Text style={styles.sectionLabel}>CYCLE vs MONEY ✦</Text>
           {!cycleSpend.hasData ? (
-            <Text style={styles.muted}>Settings 🎀 mein period log karo — phir yahan dikhega ki PMS week mein kharcha badhta hai ya nahi 🌸</Text>
+            <Text style={styles.muted}>{L('Settings 🎀 mein period log karo — phir yahan dikhega ki PMS week mein kharcha badhta hai ya nahi 🌸', 'log your period in Settings 🎀 — then see whether PMS-week spending goes up or not 🌸')}</Text>
           ) : (
             <>
               <Text style={styles.moodHeadline}>{buildCycleLine(cycleSpend.higherPct, cycleInfo.phase)}</Text>
               <View style={styles.breakRow}>
                 <View style={styles.breakTop}>
-                  <Text style={styles.breakName}>🩸 PMS week (daily avg)</Text>
+                  <Text style={styles.breakName}>{L('🩸 PMS week (daily avg)', '🩸 PMS week (daily avg)')}</Text>
                   <Text style={styles.breakAmt}>{fmtINR(cycleSpend.pmsDailyAvg)}</Text>
                 </View>
                 <View style={styles.breakTrack}>
@@ -271,7 +274,7 @@ export default function InsightsScreen() {
               </View>
               <View style={styles.breakRow}>
                 <View style={styles.breakTop}>
-                  <Text style={styles.breakName}>🌙 baaki din (daily avg)</Text>
+                  <Text style={styles.breakName}>{L('🌙 baaki din (daily avg)', '🌙 other days (daily avg)')}</Text>
                   <Text style={styles.breakAmt}>{fmtINR(cycleSpend.otherDailyAvg)}</Text>
                 </View>
                 <View style={styles.breakTrack}>
@@ -310,44 +313,44 @@ function cyclePct(value: number, other: number): number {
 
 // A supportive one-liner about PMS-week spending. `higherPct` = how much higher PMS daily spend is.
 function buildCycleLine(higherPct: number | null, phase: string): string {
-  const phasePrefix = phase === 'pms' ? 'PMS week chal raha hai abhi — ' : phase === 'period' ? 'period time — ' : '';
-  if (higherPct == null) return `${phasePrefix}thoda aur data aane do, pattern banta jayega 🌸`;
-  if (higherPct >= 15) return `${phasePrefix}PMS week mein daily kharcha ~${higherPct}% zyada hota hai — cravings real hain babe 💕 thoda heads-up rakho`;
-  if (higherPct <= -15) return `${phasePrefix}PMS week mein actually kam kharcha — proud of you 💅`;
-  return `${phasePrefix}PMS aur baaki dino mein kharcha lagbhag barabar — balanced queen ✨`;
+  const phasePrefix = phase === 'pms' ? L('PMS week chal raha hai abhi — ', 'PMS week right now — ') : phase === 'period' ? L('period time — ', 'period time — ') : '';
+  if (higherPct == null) return `${phasePrefix}${L('thoda aur data aane do, pattern banta jayega 🌸', 'give it a bit more data, the pattern will build 🌸')}`;
+  if (higherPct >= 15) return `${phasePrefix}${L(`PMS week mein daily kharcha ~${higherPct}% zyada hota hai — cravings real hain babe 💕 thoda heads-up rakho`, `daily spending is ~${higherPct}% higher in PMS week — cravings are real babe 💕 stay a little aware`)}`;
+  if (higherPct <= -15) return `${phasePrefix}${L('PMS week mein actually kam kharcha — proud of you 💅', 'you actually spend less in PMS week — proud of you 💅')}`;
+  return `${phasePrefix}${L('PMS aur baaki dino mein kharcha lagbhag barabar — balanced queen ✨', 'PMS and other days spend about the same — balanced queen ✨')}`;
 }
 
 // A sassy one-liner about the mood you spend most in.
 function buildMoodLine(topMoodId: string): string {
   const lines: Record<string, string> = {
-    stressed: '😩 stress mein sabse zyada kharch — stress shopping much? deep breath babe 💕',
-    sad: '🥺 sad spending detected — shopping se mood theek nahi hota, chai try karo ☕',
-    bored: '🥱 boredom = wallet ka dushman... thoda Netflix kar lo instead 😬',
-    treat: '🥳 treat-yourself queen 👑 par thoda sambhaal ke spend karo',
-    happy: '😊 happy spends! at least mood toh achha tha 🌸',
-    meh: '😐 meh mood mein bhi paise ja rahe hain 👀',
+    stressed: L('😩 stress mein sabse zyada kharch — stress shopping much? deep breath babe 💕', '😩 most spent while stressed — stress shopping much? deep breath babe 💕'),
+    sad: L('🥺 sad spending detected — shopping se mood theek nahi hota, chai try karo ☕', "🥺 sad spending detected — shopping won't fix the mood, try chai ☕"),
+    bored: L('🥱 boredom = wallet ka dushman... thoda Netflix kar lo instead 😬', '🥱 boredom = wallet\'s enemy... maybe Netflix instead 😬'),
+    treat: L('🥳 treat-yourself queen 👑 par thoda sambhaal ke spend karo', '🥳 treat-yourself queen 👑 but spend a little carefully'),
+    happy: L('😊 happy spends! at least mood toh achha tha 🌸', '😊 happy spends! at least the mood was good 🌸'),
+    meh: L('😐 meh mood mein bhi paise ja rahe hain 👀', '😐 money\'s going even in a meh mood 👀'),
   };
-  return lines[topMoodId] ?? 'apne mood patterns pe nazar rakho babe ✨';
+  return lines[topMoodId] ?? L('apne mood patterns pe nazar rakho babe ✨', 'keep an eye on your mood patterns babe ✨');
 }
 
 // Build a few personalised tips (mirrors the prototype's advice rules).
 function buildTips(total: number, byCat: { cat: { name: string }; amount: number }[], budgetStr: string, now: Date): string[] {
   const tips: string[] = [];
   if (total === 0) {
-    tips.push('Start logging your spends to get personalised tips 🌸');
+    tips.push(L('Start logging your spends to get personalised tips 🌸', 'Start logging your spends to get personalised tips 🌸'));
     return tips;
   }
   const budget = Number(budgetStr) || 0;
   const remaining = budget - total;
   if (byCat[0]) {
-    tips.push(`💡 ${byCat[0].cat.name} is your top category. 24-hour rule try karo — ek din ruko phir socho still chahiye kya!`);
+    tips.push(L(`💡 ${byCat[0].cat.name} is your top category. 24-hour rule try karo — ek din ruko phir socho still chahiye kya!`, `💡 ${byCat[0].cat.name} is your top category. Try the 24-hour rule — wait a day, then see if you still want it!`));
   }
   if (budget > 0 && total <= budget) {
     const daysLeft = Math.max(30 - now.getDate(), 1);
-    tips.push(`✨ ${fmtINR(remaining)} bacha hai — yaani ~${fmtINR(Math.round(remaining / daysLeft))} per day month end tak!`);
+    tips.push(L(`✨ ${fmtINR(remaining)} bacha hai — yaani ~${fmtINR(Math.round(remaining / daysLeft))} per day month end tak!`, `✨ ${fmtINR(remaining)} left — that's ~${fmtINR(Math.round(remaining / daysLeft))} per day until month end!`));
   }
   if (budget > 0 && total / budget > 0.9) {
-    tips.push('🎯 Budget limit ke kareeb! Ab sirf zaroori kharche — month end aa raha hai.');
+    tips.push(L('🎯 Budget limit ke kareeb! Ab sirf zaroori kharche — month end aa raha hai.', '🎯 Close to your budget limit! Only essentials now — month end is near.'));
   }
   return tips;
 }

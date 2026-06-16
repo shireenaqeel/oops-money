@@ -1,6 +1,7 @@
 // salaryCurve.ts — the "rich for 3 days" pattern: how front-loaded your month's spending is (V2).
 // Pure maths over this month's expenses. Shows the classic payday → broke arc.
 import { Expense } from '../types';
+import { L } from '../i18n';
 
 export interface SalaryCurve {
   hasData: boolean;
@@ -60,13 +61,13 @@ function sumRange(perDay: number[], from: number, to: number): number {
 // A relatable line about how fast the money goes.
 function buildHeadline(firstThirdPct: number, halfwayDay: number | null): string {
   if (halfwayDay != null && halfwayDay <= 10) {
-    return `aadha paisa ${halfwayDay} tareekh tak hi udd gaya 💸 1 ko rani, baaki mahina maggi 🍜`;
+    return L(`aadha paisa ${halfwayDay} tareekh tak hi udd gaya 💸 1 ko rani, baaki mahina maggi 🍜`, `half your money was gone by the ${halfwayDay}th 💸 queen on the 1st, maggi the rest of the month 🍜`);
   }
   if (firstThirdPct >= 50) {
-    return `${firstThirdPct}% kharcha pehle 10 din mein — payday excitement real hai 😭 thoda baad ke liye bachao`;
+    return L(`${firstThirdPct}% kharcha pehle 10 din mein — payday excitement real hai 😭 thoda baad ke liye bachao`, `${firstThirdPct}% spent in the first 10 days — payday excitement is real 😭 save some for later`);
   }
   if (firstThirdPct <= 25) {
-    return `kharcha poore mahine mein achhe se faila hua hai — disciplined queen 💚`;
+    return L(`kharcha poore mahine mein achhe se faila hua hai — disciplined queen 💚`, `spending is nicely spread across the month — disciplined queen 💚`);
   }
-  return `kharcha thoda month-start pe heavy hai (${firstThirdPct}% pehle 10 din mein) — par sambhla hua hai 🌸`;
+  return L(`kharcha thoda month-start pe heavy hai (${firstThirdPct}% pehle 10 din mein) — par sambhla hua hai 🌸`, `spending leans a bit early (${firstThirdPct}% in the first 10 days) — but it's under control 🌸`);
 }
