@@ -3,6 +3,23 @@
 
 ---
 
+## V3 — Anonymous Bestie Benchmark 📊 — 16 Jun 2026
+**What:** Insights ✿ → a new **"BESTIE BENCHMARK"** card that compares *your* category-group spending mix to the anonymous average of all Oops Money users — *"💄 Beauty: tu average se 2.3x zyada kharchti hai 👀 (tu 28% · avg 12%)"*. Signed out it nudges you to sign in; with a tiny user pool it says "tu pehli bestie hai".
+**Why:** A *social* angle — only possible now that we have a cloud (Supabase). Standout vs every other tracker, and privacy-safe.
+**Privacy model (IMPORTANT):** the ONLY thing shared is category-group **percentages** (no amounts, no notes, no names). Each user has one row in `benchmark_stats` with RLS so they can only touch their own row, and there is **no SELECT policy** so individual rows are unreadable. Comparison averages come from a `SECURITY DEFINER` function `benchmark_averages()` that returns aggregates only.
+**How it works:** `getGroupPercents()` (pure util) builds the % map → `pushBenchmark()` upserts it → `fetchBenchmarkAverages()` RPC pulls the community averages → `buildBenchmarkLines()` makes the sassy comparison lines (most-surprising first). The card runs only when configured + signed in.
+**⚠️ Homework before it works:** run **`supabase_benchmark.sql`** (in the project root) once in Supabase → SQL Editor. Like Google sign-in, full sign-in only works in a built APK, not Expo Go.
+**Files added/changed:**
+- `src/utils/benchmark.ts` — group-% maths + comparison lines (new)
+- `src/lib/benchmark.ts` — pushBenchmark + fetchBenchmarkAverages (new)
+- `src/components/BestieBenchmark.tsx` — the Insights card (new)
+- `src/screens/InsightsScreen.tsx` — mounts the card
+- `supabase_benchmark.sql` — the table + RLS + aggregate function to run in Supabase (new)
+**How to test:** Run the SQL → in a built APK sign in (Settings → Cloud Backup) → Insights ✿ → BESTIE BENCHMARK shows your vs-average lines.
+**Next up:** All 6 V3 standout features done 🎉 — fresh APK build is the big remaining step (cloud features + benchmark need it).
+
+---
+
 ## V3 — Festival / Shaadi Season Mode 🎉 — 16 Jun 2026
 **What:** Settings 🎀 → **🎉 Season Mode**: make a temporary event budget (Diwali, a friend's shaadi, a trip) with its own emoji, ₹ budget, and start/end dates. In the add-expense sheet a new **"kisi event ka kharcha? 🎉"** row appears (only once you have an event) to tag a spend to it. The Season Mode screen then tracks each event separately — spent vs budget bar, days range, and an over-budget warning.
 **Why:** Indian women spend in big festival/wedding bursts that a single monthly budget hides — and no mainstream tracker does this nicely. It's a standout, very-localised feature.

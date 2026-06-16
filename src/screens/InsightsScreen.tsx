@@ -6,6 +6,7 @@ import BarChart, { BarDatum } from '../components/BarChart';
 import AlertList from '../components/AlertList';
 import SpendCalendar from '../components/SpendCalendar';
 import PaisaPersonality from '../components/PaisaPersonality';
+import BestieBenchmark from '../components/BestieBenchmark';
 import MonthlyWrappedModal from './MonthlyWrappedModal';
 import { useAppContext } from '../hooks/useAppContext';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
@@ -280,6 +281,9 @@ export default function InsightsScreen() {
             </>
           )}
         </View>
+
+        {/* anonymous bestie benchmark (needs sign-in) */}
+        <BestieBenchmark />
 
         {/* tips */}
         {tips.length > 0 ? (
