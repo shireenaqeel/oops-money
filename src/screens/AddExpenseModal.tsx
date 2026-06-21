@@ -22,7 +22,7 @@ import { useAppContext } from '../hooks/useAppContext';
 import AddCategoryModal from './AddCategoryModal';
 import BrokeMath from '../components/BrokeMath';
 import NightShield from '../components/NightShield';
-import { Expense } from '../types';
+import { Expense, Category } from '../types';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { useLang } from '../hooks/useLang';
@@ -55,7 +55,7 @@ export default function AddExpenseModal({
   onClose: () => void;
   editing?: Expense | null;
 }) {
-  const { addExpense, updateExpense, customCats, nightShield, events } = useAppContext();
+  const { addExpense, updateExpense, customCats, deleteCustomCat, nightShield, events } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
   useLang(); // subscribe so text re-renders when language toggles
@@ -63,6 +63,7 @@ export default function AddExpenseModal({
   const groups = ['All', ...CAT_GROUPS, ...(customCats.length > 0 ? ['Custom'] : [])];
   const isEditing = !!editing;
   const [showCatModal, setShowCatModal] = useState(false);
+  const [editingCat, setEditingCat] = useState<Category | null>(null); // custom cat being edited (null = create mode)
   const [showPicker, setShowPicker] = useState(false);
 
   const [amount, setAmount] = useState('');
@@ -126,6 +127,34 @@ export default function AddExpenseModal({
   // Keep only digits as the amount is typed (rupees, no decimals).
   function onAmount(text: string) {
     setAmount(text.replace(/[^0-9]/g, ''));
+  }
+
+  // Long-press on a custom category pill → choose to edit or delete it.
+  function manageCat(cat: Category) {
+    Alert.alert(cat.name, undefined, [
+      { text: L('✏️ edit', '✏️ edit'), onPress: () => { setEditingCat(cat); setShowCatModal(true); } },
+      { text: L('🗑️ delete', '🗑️ delete'), style: 'destructive', onPress: () => confirmDeleteCat(cat) },
+      { text: L('rehne do', 'cancel'), style: 'cancel' },
+    ]);
+  }
+
+  // Confirm, then delete a custom category; if it was selected, fall back to the first built-in.
+  function confirmDeleteCat(cat: Category) {
+    Alert.alert(
+      L('category delete karein? 🗑️', 'delete this category? 🗑️'),
+      L('purani entries rahengi, bas yeh category list se hat jayegi.', 'past entries stay; this category just leaves the list.'),
+      [
+        { text: L('rehne do', 'cancel'), style: 'cancel' },
+        {
+          text: L('delete', 'delete'),
+          style: 'destructive',
+          onPress: async () => {
+            await deleteCustomCat(cat.id);
+            if (catId === cat.id) { setCatId(CATS[0].id); setGroup('All'); }
+          },
+        },
+      ]
+    );
   }
 
   // Close the sheet (parent clears editing state).
@@ -261,21 +290,30 @@ export default function AddExpenseModal({
             ))}
           </ScrollView>
 
-          {/* category pills */}
+          {/* category pills — long-press your own ones to edit/delete */}
           <View style={styles.catWrap}>
             {visibleCats.map((c) => {
               const selected = c.id === catId;
+              const isCustom = customCats.some((cc) => cc.id === c.id);
               return (
-                <Pressable key={c.id} onPress={() => setCatId(c.id)} style={[styles.catPill, { backgroundColor: selected ? c.color : c.bg }]}>
+                <Pressable
+                  key={c.id}
+                  onPress={() => setCatId(c.id)}
+                  onLongPress={isCustom ? () => manageCat(c) : undefined}
+                  style={[styles.catPill, { backgroundColor: selected ? c.color : c.bg }]}
+                >
                   <Text style={[styles.catText, selected && styles.catTextSelected]}>{c.name}</Text>
                 </Pressable>
               );
             })}
             {/* create your own category */}
-            <Pressable onPress={() => setShowCatModal(true)} style={styles.addCatPill}>
+            <Pressable onPress={() => { setEditingCat(null); setShowCatModal(true); }} style={styles.addCatPill}>
               <Text style={styles.addCatText}>{L('+ apni category', '+ your own')}</Text>
             </Pressable>
           </View>
+          {customCats.length > 0 ? (
+            <Text style={styles.catHint}>{L('apni category ko edit/delete karne ke liye usse dabaye rakho 💡', 'long-press your own category to edit/delete 💡')}</Text>
+          ) : null}
 
           {/* mood */}
           <Text style={styles.label}>{L('kaisa mood tha? (optional)', "what's the mood? (optional)")}</Text>
@@ -393,13 +431,17 @@ export default function AddExpenseModal({
         )}
       </KeyboardAvoidingView>
 
-      {/* create-your-own-category sheet; auto-selects the new category */}
+      {/* create / edit category sheet; auto-selects a newly created category */}
       <AddCategoryModal
         visible={showCatModal}
-        onClose={() => setShowCatModal(false)}
+        editCat={editingCat}
+        onClose={() => { setShowCatModal(false); setEditingCat(null); }}
         onCreated={(cat) => {
           setGroup('Custom');
           setCatId(cat.id);
+        }}
+        onDeleted={(id) => {
+          if (catId === id) { setCatId(CATS[0].id); setGroup('All'); }
         }}
       />
     </Modal>
@@ -442,6 +484,7 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   catTextSelected: { color: colors.onAccent, fontWeight: '700' },
   addCatPill: { paddingVertical: spacing.sm, paddingHorizontal: spacing.md, borderRadius: radius.chips, borderWidth: 1.5, borderColor: colors.lavender, borderStyle: 'dashed' },
   addCatText: { fontSize: typography.small.fontSize, color: colors.textLight, fontWeight: '600' },
+  catHint: { fontSize: typography.tiny.fontSize, color: colors.textMuted, marginTop: spacing.sm },
 
   moodRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   moodPill: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.xs, paddingHorizontal: spacing.md, borderRadius: radius.chips, backgroundColor: colors.cream },

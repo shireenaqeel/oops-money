@@ -3,6 +3,18 @@
 
 ---
 
+## Fix — Custom categories: edit, delete + bigger emoji palette 🏷️ — 22 Jun 2026
+**What:** In Add-Expense, **long-press your own (custom) category pill** → a menu with **✏️ Edit / 🗑️ Delete**. Edit reopens the create-sheet pre-filled (now dual-mode) to change the name/emoji; Delete asks to confirm. The emoji palette grew from 30 to ~100 options. A little hint line tells you long-press works.
+**Why:** Custom categories could only be created, never fixed or removed — a typo meant living with it forever. Long-press keeps the picker uncluttered (her pick over an always-visible ✏️ or a Settings page). Edit keeps the same category `id` so past expenses stay linked; delete only removes it from the list (old entries keep their cached colour/name).
+**Files changed:**
+- `src/hooks/useAppContext.tsx` — new `updateCustomCat(id, name, emoji)` (delete already existed).
+- `src/screens/AddCategoryModal.tsx` — now create **or** edit (prefills from `editCat`, save vs add, a delete button); emoji palette expanded.
+- `src/screens/AddExpenseModal.tsx` — long-press custom pill → Alert menu (edit/delete) + confirm; passes `editCat` to the sheet; resets selection if the selected category is deleted.
+**How to test on phone:** Add-Expense → make a custom category (note the bigger emoji list) → **long-press** that category pill → **Edit** → change name/emoji → save → pill updates. Long-press again → **Delete** → confirm → it disappears; old expenses logged under it stay intact.
+**Next up:** next bug from the list.
+
+---
+
 ## Fix — Tap a calendar day → full-screen day detail 📅 — 22 Jun 2026
 **What:** Insights ✿ → CALENDAR card — tapping any day now opens a **full-screen page** (`DayDetailModal`) showing only that day's **total + the full list of expenses** (emoji, category, note, amount). A "← wapas/back" button closes it back to Insights; a no-spend day shows "no spend day 🍽️".
 **Why:** First did it inline below the grid, but she wanted a clean dedicated page (no other Insights cards/charts visible). The app has no stack navigator (bottom tabs only), so it's a full-screen RN `<Modal>` (opaque, slide) — same pattern the other modals use, just full-bleed instead of a bottom sheet.

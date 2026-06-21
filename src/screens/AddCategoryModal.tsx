@@ -1,7 +1,7 @@
 // AddCategoryModal.tsx — small sheet to create a custom category: pick an emoji + type a name (Feature 5).
 // Used inside the Add Expense modal. On create it returns the new category so the caller can select it.
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, Modal, ScrollView } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, Modal, ScrollView, Alert } from 'react-native';
 import { useAppContext } from '../hooks/useAppContext';
 import { Category } from '../types';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
@@ -9,41 +9,88 @@ import { useTheme } from '../hooks/useTheme';
 import { useLang } from '../hooks/useLang';
 import { L } from '../i18n';
 
-// Curated emoji palette to pick from (no extra library needed).
-const EMOJIS = ['🎨', '🧶', '🎸', '🎮', '🍿', '🌿', '🪴', '🐶', '🐱', '☕', '🍷', '🎂', '🎁', '✈️', '🏖️', '💅', '👗', '📚', '✏️', '🧘', '🚲', '🛍️', '🎧', '📷', '🪙', '🍩', '🌸', '✨', '💖', '🔮'];
+// Curated emoji palette to pick from (no extra library needed). Grouped loosely: hobbies,
+// food/drink, beauty/fashion, life/travel, animals/nature, money/celebration, cute extras.
+const EMOJIS = [
+  '🎨', '🧶', '🎸', '🎮', '🎲', '🎯', '🎬', '🎤', '🎧', '🎹', '🖌️', '📷', '📸', '🎻', '🪀',
+  '🍿', '☕', '🍷', '🍸', '🍹', '🍔', '🍕', '🍩', '🍪', '🍫', '🧁', '🍰', '🎂', '🍦', '🍜', '🍱', '🥗', '🍣', '🧋', '🥂',
+  '💅', '💄', '👗', '👠', '👜', '🛍️', '🧴', '💍', '👒', '🕶️', '🧖', '💆',
+  '✈️', '🏖️', '🏨', '🚗', '🚕', '🚲', '🛵', '⛽', '🏠', '💡', '🧾', '📱', '💻', '🪑', '🛋️',
+  '🐶', '🐱', '🐰', '🐼', '🦋', '🌿', '🪴', '🌸', '🌺', '🌻', '🌈', '🌙', '⭐', '🔥',
+  '🪙', '💰', '💸', '🏦', '🎁', '🎉', '🎈', '📚', '✏️', '📖', '🧘', '🏋️', '⚽', '🏸',
+  '✨', '💖', '💗', '💜', '🩷', '🦄', '🔮', '🎀', '👑', '🌷', '🍀', '🫧',
+];
 
 export default function AddCategoryModal({
   visible,
   onClose,
   onCreated,
+  editCat,
+  onSaved,
+  onDeleted,
 }: {
   visible: boolean;
   onClose: () => void;
   onCreated: (cat: Category) => void;
+  editCat?: Category | null; // when set, the sheet edits this category instead of creating one
+  onSaved?: (cat: Category) => void; // called after an edit is saved
+  onDeleted?: (id: string) => void; // called after the category is deleted
 }) {
-  const { addCustomCat } = useAppContext();
+  const { addCustomCat, updateCustomCat, deleteCustomCat } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
   useLang(); // subscribe so text re-renders when language toggles
+  const isEditing = !!editCat;
   const [emoji, setEmoji] = useState(EMOJIS[0]);
   const [name, setName] = useState('');
 
-  // Reset fields each time the sheet opens.
+  // Reset fields each time the sheet opens — prefill from editCat when editing.
   useEffect(() => {
-    if (visible) {
+    if (!visible) return;
+    if (editCat) {
+      const sp = editCat.name.indexOf(' '); // stored as "emoji name"
+      setEmoji(sp > 0 ? editCat.name.slice(0, sp) : EMOJIS[0]);
+      setName(sp > 0 ? editCat.name.slice(sp + 1) : editCat.name);
+    } else {
       setEmoji(EMOJIS[0]);
       setName('');
     }
-  }, [visible]);
+  }, [visible, editCat]);
 
   const canSave = name.trim().length > 0;
 
-  // Create the category, hand it back to the caller, and close.
-  async function onCreate() {
+  // Save: update the existing category when editing, otherwise create a new one.
+  async function onSave() {
     if (!canSave) return;
-    const cat = await addCustomCat(name.trim(), emoji);
-    onCreated(cat);
+    if (editCat) {
+      await updateCustomCat(editCat.id, name.trim(), emoji);
+      onSaved?.({ ...editCat, name: `${emoji} ${name.trim()}` });
+    } else {
+      const cat = await addCustomCat(name.trim(), emoji);
+      onCreated(cat);
+    }
     onClose();
+  }
+
+  // Confirm, then delete the category being edited.
+  function onDelete() {
+    if (!editCat) return;
+    Alert.alert(
+      L('category delete karein? 🗑️', 'delete this category? 🗑️'),
+      L('purani entries rahengi, bas yeh category list se hat jayegi.', 'past entries stay; this category just leaves the list.'),
+      [
+        { text: L('rehne do', 'cancel'), style: 'cancel' },
+        {
+          text: L('delete', 'delete'),
+          style: 'destructive',
+          onPress: async () => {
+            await deleteCustomCat(editCat.id);
+            onDeleted?.(editCat.id);
+            onClose();
+          },
+        },
+      ]
+    );
   }
 
   return (
@@ -51,7 +98,9 @@ export default function AddCategoryModal({
       <Pressable style={styles.overlay} onPress={onClose} />
       <View style={styles.centerWrap} pointerEvents="box-none">
         <View style={styles.sheet}>
-          <Text style={styles.title}>{L('apni category banao 🌷', 'make your own category 🌷')}</Text>
+          <Text style={styles.title}>
+            {isEditing ? L('category edit karo ✏️', 'edit category ✏️') : L('apni category banao 🌷', 'make your own category 🌷')}
+          </Text>
 
           {/* preview */}
           <View style={styles.preview}>
@@ -79,9 +128,16 @@ export default function AddCategoryModal({
             ))}
           </ScrollView>
 
-          <Pressable style={[styles.btn, !canSave && styles.btnDisabled]} onPress={onCreate} disabled={!canSave}>
-            <Text style={styles.btnText}>{L('add ✦', 'add ✦')}</Text>
+          <Pressable style={[styles.btn, !canSave && styles.btnDisabled]} onPress={onSave} disabled={!canSave}>
+            <Text style={styles.btnText}>{isEditing ? L('save ✦', 'save ✦') : L('add ✦', 'add ✦')}</Text>
           </Pressable>
+
+          {/* delete (edit mode only) */}
+          {isEditing ? (
+            <Pressable style={styles.deleteBtn} onPress={onDelete}>
+              <Text style={styles.deleteText}>{L('🗑️ ye category delete karo', '🗑️ delete this category')}</Text>
+            </Pressable>
+          ) : null}
         </View>
       </View>
     </Modal>
@@ -106,4 +162,6 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   btn: { backgroundColor: colors.rose, paddingVertical: spacing.md, borderRadius: radius.buttons, alignItems: 'center', marginTop: spacing.lg },
   btnDisabled: { backgroundColor: colors.textMuted, opacity: 0.5 },
   btnText: { color: colors.onAccent, fontSize: typography.body.fontSize, fontWeight: '700' },
+  deleteBtn: { alignItems: 'center', paddingVertical: spacing.md, marginTop: spacing.xs },
+  deleteText: { color: colors.dangerDeep, fontSize: typography.small.fontSize, fontWeight: '600' },
 });

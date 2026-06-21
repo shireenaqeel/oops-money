@@ -68,6 +68,7 @@ interface AppState {
   addEvent: (name: string, emoji: string, budget: number, startDate: string, endDate: string) => Promise<void>;
   deleteEvent: (id: string) => Promise<void>;
   addCustomCat: (name: string, emoji: string) => Promise<Category>;
+  updateCustomCat: (id: string, name: string, emoji: string) => Promise<void>;
   deleteCustomCat: (id: string) => Promise<void>;
   resetAll: () => Promise<void>;
   reload: () => Promise<void>;
@@ -568,6 +569,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [customCats]
   );
 
+  // Edit a custom category's name/emoji (keeps its id + colour so existing expenses stay linked).
+  const updateCustomCat = useCallback(
+    async (id: string, name: string, emoji: string) => {
+      const next = customCats.map((c) => (c.id === id ? { ...c, name: `${emoji} ${name}` } : c));
+      setCustomCats(next);
+      await saveJSON(KEYS.customCats, next);
+    },
+    [customCats]
+  );
+
   // Remove a custom category and persist.
   const deleteCustomCat = useCallback(
     async (id: string) => {
@@ -644,6 +655,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addEvent,
     deleteEvent,
     addCustomCat,
+    updateCustomCat,
     deleteCustomCat,
     resetAll,
     reload,
