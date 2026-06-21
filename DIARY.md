@@ -3,11 +3,11 @@
 
 ---
 
-## Fix — Tap a calendar day to see that day's spends 📅 — 22 Jun 2026
-**What:** Insights ✿ → CALENDAR card — tapping any day now opens a detail section below the grid with that day's **total + the full list of expenses** (emoji, category, note, amount). Tap the same day again to close; tapping a no-spend day shows "no spend day 🍽️".
-**Why:** The heatmap only showed *relative* colour — you couldn't see the actual amount for a day. This makes the calendar a real day-drilldown without a separate screen or popup.
-**Files changed:** `src/components/SpendCalendar.tsx` (tap state + detail list, now i18n-aware), `src/screens/InsightsScreen.tsx` (passes `customCats` so custom category names/emojis resolve).
-**How to test on phone:** Insights → scroll to CALENDAR → tap a coloured day → total + expense list appears below → tap it again to close → tap an empty (cream) day → "no spend day 🍽️".
+## Fix — Tap a calendar day → full-screen day detail 📅 — 22 Jun 2026
+**What:** Insights ✿ → CALENDAR card — tapping any day now opens a **full-screen page** (`DayDetailModal`) showing only that day's **total + the full list of expenses** (emoji, category, note, amount). A "← wapas/back" button closes it back to Insights; a no-spend day shows "no spend day 🍽️".
+**Why:** First did it inline below the grid, but she wanted a clean dedicated page (no other Insights cards/charts visible). The app has no stack navigator (bottom tabs only), so it's a full-screen RN `<Modal>` (opaque, slide) — same pattern the other modals use, just full-bleed instead of a bottom sheet.
+**Files changed:** `src/screens/DayDetailModal.tsx` (new full-screen day view), `src/components/SpendCalendar.tsx` (tap a day → opens the modal; inline detail removed), `src/screens/InsightsScreen.tsx` (passes `customCats` so custom category names/emojis resolve).
+**How to test on phone:** Insights → scroll to CALENDAR → tap a coloured day → a full page opens with that day's total + expense list → tap "← wapas/back" to return → tap an empty (cream) day → "no spend day 🍽️".
 **Next up:** next bug from the list.
 
 ---

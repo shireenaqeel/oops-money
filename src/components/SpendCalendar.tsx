@@ -8,23 +8,16 @@ import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { useLang } from '../hooks/useLang';
 import { L } from '../i18n';
-import { fmtINR, fmtINRShort } from '../utils';
-import { findCat } from '../constants/categories';
+import { fmtINRShort } from '../utils';
+import DayDetailModal from '../screens/DayDetailModal';
 
 const DAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 // Local yyyy-mm-dd for a Date.
 function iso(d: Date): string {
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${d.getFullYear()}-${m}-${day}`;
-}
-
-// Turn a yyyy-mm-dd into a friendly "12 Jun" label.
-function prettyDate(isoStr: string): string {
-  const [, mm, dd] = isoStr.split('-');
-  return `${Number(dd)} ${MONTHS[Number(mm) - 1]}`;
 }
 
 // Pick a heat colour for a day given its spend vs the month's busiest day.
@@ -75,12 +68,11 @@ export default function SpendCalendar({
     cells.push({ day, date, spent: byDay.get(date) || 0 });
   }
 
-  // Tap a day to open its detail; tap the same day again to close.
-  const onTapDay = (date: string) => setSelected((cur) => (cur === date ? null : date));
+  // Tap a day to open its full-screen detail.
+  const onTapDay = (date: string) => setSelected(date);
 
-  // Expenses logged on the selected day (newest first), for the detail list.
+  // Expenses logged on the selected day, passed to the detail screen.
   const dayExpenses = selected ? expenses.filter((e) => e.date === selected) : [];
-  const dayTotal = selected ? byDay.get(selected) || 0 : 0;
 
   return (
     <View>
@@ -126,38 +118,8 @@ export default function SpendCalendar({
         {max > 0 ? <Text style={styles.legendMax}>{L('busiest', 'busiest')}: {fmtINRShort(max)}</Text> : null}
       </View>
 
-      {/* tapped-day detail */}
-      {selected ? (
-        <View style={styles.detail}>
-          <View style={styles.detailHead}>
-            <Text style={styles.detailDate}>{prettyDate(selected)}</Text>
-            <Text style={styles.detailTotal}>
-              {fmtINR(dayTotal)}
-              {dayExpenses.length > 0 ? <Text style={styles.detailCount}>  ·  {dayExpenses.length} {L('items', 'items')}</Text> : null}
-            </Text>
-          </View>
-
-          {dayExpenses.length === 0 ? (
-            <Text style={styles.noSpend}>{L('no spend day! tune kuch kharch nahi kiya 🍽️', 'no spend day! you ate 🍽️')}</Text>
-          ) : (
-            dayExpenses.map((e) => {
-              const cat = findCat(e.catId, customCats);
-              const emoji = cat.name.split(' ')[0];
-              const label = cat.name.split(' ').slice(1).join(' ') || cat.name;
-              return (
-                <View key={e.id} style={styles.expRow}>
-                  <Text style={styles.expEmoji}>{emoji}</Text>
-                  <View style={styles.expMid}>
-                    <Text style={styles.expCat}>{label}</Text>
-                    {e.note ? <Text style={styles.expNote} numberOfLines={1}>{e.note}</Text> : null}
-                  </View>
-                  <Text style={styles.expAmt}>{fmtINR(e.amount)}</Text>
-                </View>
-              );
-            })
-          )}
-        </View>
-      ) : null}
+      {/* tapped-day detail opens as its own full screen */}
+      <DayDetailModal date={selected} expenses={dayExpenses} customCats={customCats} onClose={() => setSelected(null)} />
     </View>
   );
 }
@@ -176,18 +138,4 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   legendText: { fontSize: typography.tiny.fontSize, color: colors.textMuted },
   dot: { width: 14, height: 14, borderRadius: 4 },
   legendMax: { fontSize: typography.tiny.fontSize, color: colors.textLight, marginLeft: 'auto' },
-
-  detail: { marginTop: spacing.md, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.border },
-  detailHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: spacing.sm },
-  detailDate: { fontSize: typography.title.fontSize, fontWeight: '700', color: colors.text },
-  detailTotal: { fontSize: typography.body.fontSize, fontWeight: '700', color: colors.text },
-  detailCount: { fontSize: typography.small.fontSize, fontWeight: '400', color: colors.textLight },
-  noSpend: { fontSize: typography.small.fontSize, color: colors.textLight, paddingVertical: spacing.sm },
-
-  expRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm, gap: spacing.sm },
-  expEmoji: { fontSize: 20 },
-  expMid: { flex: 1 },
-  expCat: { fontSize: typography.body.fontSize, color: colors.text, fontWeight: '600' },
-  expNote: { fontSize: typography.small.fontSize, color: colors.textLight },
-  expAmt: { fontSize: typography.body.fontSize, color: colors.text, fontWeight: '700' },
 });
