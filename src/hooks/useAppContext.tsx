@@ -46,7 +46,7 @@ interface AppState {
   deleteImpulse: (id: string) => Promise<void>;
   addRecurring: (name: string, amount: number, catId: string, day: number) => Promise<void>;
   deleteRecurring: (id: string) => Promise<void>;
-  logRecurring: (id: string) => Promise<void>;
+  logRecurring: (id: string, dateISO?: string) => Promise<void>;
   resolveRecurring: (id: string, occISO: string, paid: boolean) => Promise<void>; // answer the due-day prompt
   addLetter: (text: string) => Promise<void>;
   deleteLetter: (id: string) => Promise<void>;
@@ -325,17 +325,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [recurring]
   );
 
-  // One-tap log a bill as today's expense (without deleting the bill). Also marks this month's
-  // due occurrence handled so the due-day prompt won't ask about it again.
+  // Log a bill as an expense on a chosen date (defaults to today), without deleting the bill.
+  // Also marks that date's due occurrence handled so the due-day prompt won't double-ask.
   const logRecurring = useCallback(
-    async (id: string) => {
+    async (id: string, dateISO?: string) => {
       const rec = recurring.find((r) => r.id === id);
       if (!rec) return;
-      const exp: Expense = { id: genId(), amount: rec.amount, catId: rec.catId, note: `${rec.name} (recurring)`, date: getToday(), color: rec.color };
+      const date = dateISO ?? getToday();
+      const exp: Expense = { id: genId(), amount: rec.amount, catId: rec.catId, note: `${rec.name} (recurring)`, date, color: rec.color };
       const nextExp = [exp, ...expenses];
       setExpenses(nextExp);
       await saveJSON(KEYS.expenses, nextExp);
-      const occ = dueOccurrenceISO(rec.day, new Date());
+      const occ = dueOccurrenceISO(rec.day, new Date(date + 'T00:00:00'));
       const nextRec = recurring.map((r) => (r.id === id ? { ...r, lastHandledDue: occ } : r));
       setRecurring(nextRec);
       await saveJSON(KEYS.recurring, nextRec);

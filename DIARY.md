@@ -3,6 +3,16 @@
 
 ---
 
+## Tweak — Bills "log" now lets you pick the date 📅 — 22 Jun 2026
+**What:** In the Bills tab, the per-bill **log** button no longer dumps the expense on today — it opens a date picker so you choose which day the bill was actually paid, then logs it there.
+**Why:** Bills often get paid a day or two off their due date; forcing "today" made the history wrong.
+**How:** `logRecurring(id, dateISO?)` now takes an optional date (defaults today) and marks that date's due occurrence handled. `RecurringScreen` shows a `DateTimePicker` (max = today) on tap, then logs on the picked date with a dated confirmation.
+**Files changed:** `src/hooks/useAppContext.tsx`, `src/screens/RecurringScreen.tsx`.
+**How to test on phone:** Bills tab → tap **log ✦** on a bill → date picker opens → pick a past day → it's logged on that day (check Insights/History). Default is today.
+**Next up:** next bug.
+
+---
+
 ## Feature — Bill due-day "did you pay?" prompt 🔔 — 22 Jun 2026
 **What:** When a recurring bill/subscription's due date arrives (today **or** already passed), a pop-up on Home asks **"paid this? log it?"** — Yes logs the expense **dated to the due day** (backdates past ones), No just marks it handled, "baad mein" hides till next open. Asks one bill at a time. Adding a bill whose due day already passed this month immediately asks "did you pay on the Xth?".
 **Why / how:** The notification reminder already existed (`scheduleBillReminders`, 10 AM on the due day) but couldn't actually log anything — this is the actionable in-app half. To avoid nagging/double-logging, added `lastHandledDue` (ISO of the due occurrence the user logged/skipped) to `Recurring`; a bill is "pending" only when its latest arrived due date ≠ `lastHandledDue`.

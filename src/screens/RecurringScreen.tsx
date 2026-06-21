@@ -1,6 +1,7 @@
 // RecurringScreen.tsx — recurring monthly bills with a due-date countdown + one-tap log (Feature 10).
 import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet, ScrollView, Alert } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Screen } from '../components/shared';
 import AddRecurringModal from './AddRecurringModal';
 import { useAppContext } from '../hooks/useAppContext';
@@ -8,8 +9,15 @@ import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { useLang } from '../hooks/useLang';
 import { L } from '../i18n';
-import { fmtINR } from '../utils';
+import { fmtINR, fmtDateLabel } from '../utils';
 import { findCat } from '../constants/categories';
+
+// Local yyyy-mm-dd for a picked Date (matches how expenses store dates).
+function isoOf(d: Date): string {
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${day}`;
+}
 
 // Days in the current month (for the due-date countdown).
 function daysInThisMonth(): number {
@@ -23,6 +31,7 @@ export default function RecurringScreen() {
   const styles = makeStyles(colors);
   useLang(); // subscribe so text re-renders when language toggles
   const [showAdd, setShowAdd] = useState(false);
+  const [pickingFor, setPickingFor] = useState<{ id: string; name: string } | null>(null); // bill awaiting a date
 
   const today = new Date().getDate();
   const monthLen = daysInThisMonth();
@@ -33,10 +42,20 @@ export default function RecurringScreen() {
     return day >= today ? day - today : monthLen - today + day;
   }
 
-  // Log the bill as today's expense, with a little confirmation.
+  // Tapping "log" opens a date picker so you can choose which day this bill was paid.
   function onLog(id: string, name: string) {
-    logRecurring(id);
-    Alert.alert('logged babe 🌸', L(`${name} aaj ke kharche mein add ho gaya`, `${name} added to today's expenses`));
+    setPickingFor({ id, name });
+  }
+
+  // After a date is chosen, log the bill on that date with a little confirmation.
+  function onDatePicked(eventType: string, selected?: Date) {
+    const picked = pickingFor;
+    setPickingFor(null);
+    if (eventType === 'set' && selected && picked) {
+      const iso = isoOf(selected);
+      logRecurring(picked.id, iso);
+      Alert.alert('logged babe 🌸', L(`${picked.name} ${fmtDateLabel(iso)} ke kharche mein add ho gaya`, `${picked.name} added to ${fmtDateLabel(iso)}'s expenses`));
+    }
   }
 
   // Confirm then delete a bill.
@@ -90,7 +109,7 @@ export default function RecurringScreen() {
                   <View style={styles.billRight}>
                     <Text style={styles.billAmt}>{fmtINR(rec.amount)}</Text>
                     <Pressable style={styles.logBtn} onPress={() => onLog(rec.id, rec.name)}>
-                      <Text style={styles.logText}>{L('log now', 'log now')}</Text>
+                      <Text style={styles.logText}>{L('log ✦', 'log ✦')}</Text>
                     </Pressable>
                   </View>
                   <Pressable onPress={() => onDelete(rec.id)} hitSlop={10} style={styles.delBtn}>
@@ -106,6 +125,14 @@ export default function RecurringScreen() {
         <Text style={styles.fabPlus}>+</Text>
       </Pressable>
       <AddRecurringModal visible={showAdd} onClose={() => setShowAdd(false)} />
+      {pickingFor ? (
+        <DateTimePicker
+          value={new Date()}
+          mode="date"
+          maximumDate={new Date()}
+          onChange={(event, selected) => onDatePicked(event.type, selected)}
+        />
+      ) : null}
     </Screen>
   );
 }
