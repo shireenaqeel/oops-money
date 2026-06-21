@@ -71,6 +71,7 @@ interface AppState {
   addCustomCat: (name: string, emoji: string) => Promise<Category>;
   editCategory: (id: string, name: string, emoji: string) => Promise<void>; // edits built-in OR custom
   deleteCategory: (id: string) => Promise<void>; // deletes custom, hides built-in
+  resetCategories: () => Promise<void>; // clear all built-in edits/deletes, restore defaults
   resetAll: () => Promise<void>;
   reload: () => Promise<void>;
 }
@@ -611,6 +612,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [customCats, catOverrides, persistOverrides]
   );
 
+  // Restore all built-in categories to default (drops every rename/hide). Custom categories untouched.
+  const resetCategories = useCallback(async () => {
+    await persistOverrides({});
+  }, [persistOverrides]);
+
   // Wipe everything and return to the onboarding screen (testing/reset helper).
   const resetAll = useCallback(async () => {
     await clearAll();
@@ -680,6 +686,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addCustomCat,
     editCategory,
     deleteCategory,
+    resetCategories,
     resetAll,
     reload,
   };

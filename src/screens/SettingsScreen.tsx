@@ -20,7 +20,7 @@ import { L } from '../i18n';
 import { fmtINR } from '../utils';
 
 export default function SettingsScreen() {
-  const { income, budget, splurgeFund, letters, addLetter, deleteLetter, resetAll, nightShield, setNightShield, billReminders, setBillReminders, recurring } = useAppContext();
+  const { income, budget, splurgeFund, letters, addLetter, deleteLetter, resetAll, resetCategories, catOverrides, nightShield, setNightShield, billReminders, setBillReminders, recurring } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
   const { themeId, setTheme, palettes } = useThemeMeta();
@@ -48,6 +48,18 @@ export default function SettingsScreen() {
     if (!text) return;
     addLetter(text);
     setDraft('');
+  }
+
+  // Restore the original built-in categories (undo any rename/delete). Custom categories stay.
+  function confirmResetCats() {
+    Alert.alert(
+      L('Categories default pe reset karein?', 'Reset categories to default?'),
+      L('Tumne built-in categories mein jo naam/emoji badle ya jo hataye, woh wapas original ho jayenge. Teri apni custom categories rahengi. 🌸', 'Any renames or deletes you made to built-in categories will be undone. Your own custom categories stay. 🌸'),
+      [
+        { text: L('rehne do', 'cancel'), style: 'cancel' },
+        { text: L('haan, reset', 'yes, reset'), style: 'destructive', onPress: () => resetCategories() },
+      ]
+    );
   }
 
   // Ask for confirmation, then wipe all data and return to onboarding.
@@ -189,6 +201,13 @@ export default function SettingsScreen() {
         {/* category budgets */}
         <CategoryBudgets />
 
+        {/* reset built-in categories — only shown once you've changed some */}
+        {Object.keys(catOverrides).length > 0 ? (
+          <Pressable style={styles.resetCatsBtn} onPress={confirmResetCats}>
+            <Text style={styles.resetCatsText}>{L('↺ categories default pe reset karo', '↺ reset categories to default')}</Text>
+          </Pressable>
+        ) : null}
+
         {/* accountability bestie */}
         <BestieMode />
 
@@ -296,5 +315,7 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
   },
   resetText: { color: colors.dangerDeep, fontSize: typography.body.fontSize, fontWeight: '700' },
+  resetCatsBtn: { paddingVertical: spacing.sm, alignItems: 'center', marginBottom: spacing.md },
+  resetCatsText: { color: colors.textLight, fontSize: typography.small.fontSize, fontWeight: '600' },
   note: { fontSize: typography.small.fontSize, color: colors.textMuted, textAlign: 'center', marginTop: spacing.sm },
 });

@@ -13,7 +13,7 @@
 - Editing keeps the category **id**, so all past expenses stay linked. Deleting a built-in only **hides** it (old entries still show its name). Overrides are part of the cloud snapshot, so they sync too.
 **Files changed:** `src/constants/categories.ts`, `src/storage/index.ts` (+`catOverrides` key), `src/hooks/useAppContext.tsx`, `src/screens/AddCategoryModal.tsx`, `src/screens/AddExpenseModal.tsx`, `src/components/CategoryBudgets.tsx`, `src/utils/index.ts`.
 **How to test on phone:** Add-Expense → long-press **Makeup** (a built-in) → Edit → change name/emoji → save → it updates everywhere (Insights, Home). Long-press it again → Delete → it leaves the picker but an old Makeup expense still shows "Makeup" in history. Khaana now shows as **🍽️ Khaana Peena**.
-**Note / next up:** no in-app "restore deleted built-in" yet — if she hides one and wants it back, that needs a reset option (tell me if needed).
+**Restore option:** Settings 🎀 → under CATEGORY BUDGETS, a **"↺ reset categories to default"** link appears once you've changed any built-in. It clears all overrides (`resetCategories()` → empty map) so every built-in comes back renamed/un-hidden to its original; custom categories are untouched. The link hides itself when there are no overrides.
 
 ---
 
