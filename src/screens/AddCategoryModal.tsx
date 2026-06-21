@@ -9,18 +9,13 @@ import { useTheme } from '../hooks/useTheme';
 import { useLang } from '../hooks/useLang';
 import { L } from '../i18n';
 
-// Curated emoji palette to pick from (no extra library needed). Grouped loosely: hobbies,
-// food/drink, beauty/fashion, life/travel, animals/nature, money/celebration, cute extras.
-// Deliberately EXCLUDES emojis already used by built-in categories (💄☕🍰👗💅🌸🚗🏠📱💡📚✈🏨🎀🎮💰✨…)
-// so the picker stays uncluttered; you can still type any of those via the custom emoji box.
+// A small handful of cute starter emojis (no extra library needed). Kept short on purpose —
+// for anything else, the type-your-own emoji box lets you enter any emoji from the keyboard.
+// Avoids emojis already used by built-in categories so there are no duplicates.
 const EMOJIS = [
-  '🎨', '🧶', '🎸', '🎲', '🎯', '🎬', '🎤', '🎧', '🎹', '🖌️', '📷', '📸', '🎻', '🪀',
-  '🍿', '🍷', '🍸', '🍹', '🍔', '🍕', '🍩', '🍪', '🍫', '🧁', '🎂', '🍦', '🍜', '🍱', '🥗', '🍣', '🧋', '🥂',
-  '👠', '🛍️', '💍', '👒', '🕶️', '🧖',
-  '🏖️', '🚕', '🚲', '🛵', '⛽', '🧾', '💻', '🪑', '🛋️',
-  '🐶', '🐱', '🐰', '🐼', '🦋', '🌿', '🪴', '🌺', '🌻', '🌈', '🌙', '⭐', '🔥',
-  '🪙', '💸', '🏦', '🎁', '🎉', '🎈', '✏️', '📖', '🧘', '⚽', '🏸',
-  '💖', '💗', '💜', '🩷', '🦄', '🔮', '👑', '🌷', '🍀', '🫧',
+  '🎨', '🎸', '🎧', '📷', '🍷', '🍕', '🍩', '🧁',
+  '🧋', '🛍️', '💍', '🕶️', '🚲', '💻', '🐶', '🐱',
+  '🦋', '🌿', '🌈', '🎁', '🦄', '🔮', '👑', '💖',
 ];
 
 export default function AddCategoryModal({

@@ -4,7 +4,7 @@
 ---
 
 ## Fix — Custom categories: edit, delete + bigger emoji palette 🏷️ — 22 Jun 2026
-**What:** In Add-Expense, **long-press your own (custom) category pill** → a menu with **✏️ Edit / 🗑️ Delete**. Edit reopens the create-sheet pre-filled (now dual-mode) to change the name/emoji; Delete asks to confirm. The emoji palette grew from 30 to ~80 options (the ones already used by built-in categories were removed so the picker isn't crowded), **plus a type-your-own emoji box** so you can use any emoji from the phone keyboard — including the excluded ones (syncs with the grid; falls back to 🏷️ if cleared). A little hint line tells you long-press works.
+**What:** In Add-Expense, **long-press your own (custom) category pill** → a menu with **✏️ Edit / 🗑️ Delete**. Edit reopens the create-sheet pre-filled (now dual-mode) to change the name/emoji; Delete asks to confirm. The emoji grid was kept to a small **24 cute starter emojis** (no built-in-category duplicates), since the **type-your-own emoji box** lets you enter any emoji from the phone keyboard (syncs with the grid; falls back to 🏷️ if cleared). A little hint line tells you long-press works.
 **Why:** Custom categories could only be created, never fixed or removed — a typo meant living with it forever. Long-press keeps the picker uncluttered (her pick over an always-visible ✏️ or a Settings page). Edit keeps the same category `id` so past expenses stay linked; delete only removes it from the list (old entries keep their cached colour/name).
 **Files changed:**
 - `src/hooks/useAppContext.tsx` — new `updateCustomCat(id, name, emoji)` (delete already existed).
