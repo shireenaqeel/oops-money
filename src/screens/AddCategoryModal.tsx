@@ -13,9 +13,11 @@ import { L } from '../i18n';
 // for anything else, the type-your-own emoji box lets you enter any emoji from the keyboard.
 // Avoids emojis already used by built-in categories so there are no duplicates.
 const EMOJIS = [
-  '🎨', '🎸', '🎧', '📷', '🍷', '🍕', '🍩', '🧁',
-  '🧋', '🛍️', '💍', '🕶️', '🚲', '💻', '🐶', '🐱',
-  '🦋', '🌿', '🌈', '🎁', '🦄', '🔮', '👑', '💖',
+  '🎨', '🎸', '🎧', '📷', '🍷',
+  '🍕', '🍩', '🧁', '🧋', '🛍️',
+  '💍', '🕶️', '🚲', '💻', '🐶',
+  '🐱', '🦋', '🌿', '🌈', '🎁',
+  '🦄', '🔮', '👑', '💖', '🌷',
 ];
 
 export default function AddCategoryModal({
