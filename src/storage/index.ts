@@ -39,9 +39,28 @@ export async function loadJSON<T>(key: string, fallback: T): Promise<T> {
   }
 }
 
+// ── Write notifications ───────────────────────────────────────────────────────
+// Anything that wants to react to local data changes (e.g. cloud auto-backup) can
+// subscribe here. Fired after every saveJSON/saveString. NOT fired by clearAll (so a
+// full reset doesn't auto-push an empty snapshot and wipe the cloud backup).
+type WriteListener = () => void;
+const writeListeners = new Set<WriteListener>();
+
+export function onStorageWrite(fn: WriteListener): () => void {
+  writeListeners.add(fn);
+  return () => {
+    writeListeners.delete(fn);
+  };
+}
+
+function notifyWrite(): void {
+  writeListeners.forEach((fn) => fn());
+}
+
 // JSON-stringify + save a value.
 export async function saveJSON(key: string, value: unknown): Promise<void> {
   await AsyncStorage.setItem(key, JSON.stringify(value));
+  notifyWrite();
 }
 
 // Read a plain string value (used for budget/income/flags).
@@ -57,6 +76,7 @@ export async function loadString(key: string, fallback = ''): Promise<string> {
 // Save a plain string value.
 export async function saveString(key: string, value: string): Promise<void> {
   await AsyncStorage.setItem(key, value);
+  notifyWrite();
 }
 
 // Wipe ALL app data (only our keys). Used by the Settings reset option.

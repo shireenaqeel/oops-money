@@ -39,6 +39,8 @@ export default function CloudBackup() {
             </View>
           </View>
 
+          <Text style={styles.autoNote}>{L('auto-backup on ☁️ — har change apne aap cloud pe save hota hai', 'auto-backup on ☁️ — every change saves to the cloud automatically')}</Text>
+
           <View style={styles.btnRow}>
             <Pressable style={[styles.halfBtn, busy && styles.btnDisabled]} onPress={backupNow} disabled={busy}>
               <Text style={styles.halfText}>Back up ⬆️</Text>
@@ -81,6 +83,7 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   signedEmoji: { fontSize: 22, marginRight: spacing.md },
   signedTitle: { fontSize: typography.body.fontSize, fontWeight: '700', color: colors.text },
   signedEmail: { fontSize: typography.small.fontSize, color: colors.textLight, marginTop: 1 },
+  autoNote: { fontSize: typography.small.fontSize, color: colors.textLight, marginBottom: spacing.md },
   btnRow: { flexDirection: 'row', gap: spacing.sm },
   halfBtn: { flex: 1, backgroundColor: colors.skyBlue, paddingVertical: spacing.sm, borderRadius: radius.buttons, alignItems: 'center' },
   halfBtnAlt: { backgroundColor: colors.powderBlue },

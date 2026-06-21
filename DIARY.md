@@ -3,6 +3,16 @@
 
 ---
 
+## Feature — Auto cloud backup on every change ☁️ — 22 Jun 2026
+**What:** When signed in, the app now backs up to the cloud **automatically** after any data change (add an expense, edit a category, etc.) — no need to tap "Back up" each time. Manual Back up / Restore buttons still exist for force-sync.
+**Why:** She wanted immediate sync so nothing is ever lost between manual backups.
+**How:** Added a tiny write-notifier in `storage/index.ts` (`onStorageWrite`) fired after every `saveJSON`/`saveString` — but **not** `clearAll`, so a full reset doesn't auto-push an empty snapshot and wipe the cloud. `useAuth` subscribes while signed in and, on each write, debounces ~2s then `pushSnapshot()` (so a burst of saves = one upload). Silent + non-blocking; failures show a soft note, no nagging. `restoreFromCloud` uses `multiSet` directly so restoring doesn't re-trigger a push.
+**Files changed:** `src/storage/index.ts` (write listeners), `src/hooks/useAuth.tsx` (debounced auto-push effect), `src/components/CloudBackup.tsx` (auto-backup note).
+**How to test on phone:** (needs a **built APK** — Google sign-in doesn't work in Expo Go.) Settings → CLOUD BACKUP → sign in → add an expense → within ~2s the status shows "auto-saved ☁️✓ (time)". Reinstall / new phone → sign in → Restore → everything's there without ever having tapped Back up.
+**Next up:** next bug.
+
+---
+
 ## Tweak — Bills "log" now lets you pick the date 📅 — 22 Jun 2026
 **What:** In the Bills tab, the per-bill **log** button no longer dumps the expense on today — it opens a date picker so you choose which day the bill was actually paid, then logs it there.
 **Why:** Bills often get paid a day or two off their due date; forcing "today" made the history wrong.

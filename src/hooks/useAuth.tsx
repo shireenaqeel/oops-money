@@ -1,12 +1,13 @@
 // useAuth.tsx — the optional cloud sign-in + backup brain (V2 cloud sync).
 // Sign-in is OPTIONAL: the app is fully usable signed-out. This just adds a "back up to the
 // cloud / restore on a new phone" layer on top of the local-first AsyncStorage data.
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import { makeRedirectUri } from 'expo-auth-session';
 import type { Session } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { pushSnapshot, pullSnapshot, restoreFromCloud } from '../lib/sync';
+import { onStorageWrite } from '../storage';
 import { useAppContext } from './useAppContext';
 
 // Lets the browser hand control back to the app after the Google login finishes.
@@ -43,6 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('');
+  const autoTimer = useRef<ReturnType<typeof setTimeout> | null>(null); // debounce for auto-backup
 
   // Restore any saved session on launch + keep state in sync with sign-in/out events.
   useEffect(() => {
@@ -51,6 +53,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  // Auto-backup: while signed in, every local data change schedules a cloud push (debounced
+  // ~2s so a burst of saves becomes one upload). Silent + non-blocking; failures don't nag.
+  useEffect(() => {
+    if (!isSupabaseConfigured || !session) return;
+    const userId = session.user.id;
+    const unsub = onStorageWrite(() => {
+      if (autoTimer.current) clearTimeout(autoTimer.current);
+      autoTimer.current = setTimeout(async () => {
+        try {
+          await pushSnapshot(userId);
+          setStatus(`auto-saved ☁️✓ (${new Date().toLocaleTimeString()})`);
+        } catch {
+          setStatus('auto-save fail 😬 — net check karo');
+        }
+      }, 2000);
+    });
+    return () => {
+      unsub();
+      if (autoTimer.current) clearTimeout(autoTimer.current);
+    };
+  }, [session]);
 
   // Open Google login in the browser, set the session, and do a safe first backup.
   const signInWithGoogle = useCallback(async () => {
