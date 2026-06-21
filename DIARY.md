@@ -3,6 +3,15 @@
 
 ---
 
+## Fix — Tap a calendar day to see that day's spends 📅 — 22 Jun 2026
+**What:** Insights ✿ → CALENDAR card — tapping any day now opens a detail section below the grid with that day's **total + the full list of expenses** (emoji, category, note, amount). Tap the same day again to close; tapping a no-spend day shows "no spend day 🍽️".
+**Why:** The heatmap only showed *relative* colour — you couldn't see the actual amount for a day. This makes the calendar a real day-drilldown without a separate screen or popup.
+**Files changed:** `src/components/SpendCalendar.tsx` (tap state + detail list, now i18n-aware), `src/screens/InsightsScreen.tsx` (passes `customCats` so custom category names/emojis resolve).
+**How to test on phone:** Insights → scroll to CALENDAR → tap a coloured day → total + expense list appears below → tap it again to close → tap an empty (cream) day → "no spend day 🍽️".
+**Next up:** next bug from the list.
+
+---
+
 ## V3 — Language toggle 🗣️ (Hinglish / English) — 16 Jun 2026
 **What:** Settings 🎀 → **BHASHA / LANGUAGE 🗣️** card to switch the whole app between **🇮🇳 Hinglish** (default) and **🔤 English**. The choice applies instantly everywhere and is remembered.
 **Why / how (IMPORTANT for future me):** all microcopy was hardcoded Hinglish across 31 files. Rather than a keyed dictionary, added a tiny helper **`L(hinglish, english)`** in `src/i18n/index.ts` that returns the right string for the active language, backed by a **module-level** current language so even pure util functions (alerts, personality, salary curve, challenges, benchmark, broke-math, confession, notifications) translate — not just components.

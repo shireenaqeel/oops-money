@@ -175,7 +175,7 @@ export default function InsightsScreen() {
         {/* spend calendar heatmap */}
         <View style={styles.card}>
           <Text style={styles.sectionLabel}>{MONTHS_SHORT[month].toUpperCase()} CALENDAR ✦</Text>
-          <SpendCalendar expenses={expenses} month={month} year={year} />
+          <SpendCalendar expenses={expenses} month={month} year={year} customCats={customCats} />
         </View>
 
         {/* category breakdown */}
