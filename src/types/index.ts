@@ -95,4 +95,6 @@ export interface Recurring {
   catId: string;
   color: string;
   day: number; // day of month it's due (1-31)
+  lastHandledDue?: string; // ISO yyyy-mm-dd of the due occurrence the user last logged/skipped (so the
+  // due-day prompt doesn't ask twice for the same month). Undefined = never handled.
 }

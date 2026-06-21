@@ -3,6 +3,18 @@
 
 ---
 
+## Feature — Bill due-day "did you pay?" prompt 🔔 — 22 Jun 2026
+**What:** When a recurring bill/subscription's due date arrives (today **or** already passed), a pop-up on Home asks **"paid this? log it?"** — Yes logs the expense **dated to the due day** (backdates past ones), No just marks it handled, "baad mein" hides till next open. Asks one bill at a time. Adding a bill whose due day already passed this month immediately asks "did you pay on the Xth?".
+**Why / how:** The notification reminder already existed (`scheduleBillReminders`, 10 AM on the due day) but couldn't actually log anything — this is the actionable in-app half. To avoid nagging/double-logging, added `lastHandledDue` (ISO of the due occurrence the user logged/skipped) to `Recurring`; a bill is "pending" only when its latest arrived due date ≠ `lastHandledDue`.
+- `src/utils/recurring.ts` (new) — `dueOccurrenceISO(day, ref)` (most recent due date ≤ ref, clamps short months) + `pendingBills(recurring, ref)`.
+- `useAppContext` — `addRecurring` seeds `lastHandledDue` (upcoming due → mark last month handled; already-passed → leave pending). `logRecurring` now also marks this month handled. New `resolveRecurring(id, occ, paid)` logs-on-due-day-or-not and marks handled.
+- `src/screens/BillDuePrompt.tsx` (new) — the pop-up, mounted on Home; reads pending bills, resolves them one by one.
+**Files changed:** `src/types/index.ts` (+`lastHandledDue`), `src/utils/recurring.ts` (new), `src/hooks/useAppContext.tsx`, `src/screens/BillDuePrompt.tsx` (new), `src/screens/HomeScreen.tsx` (mounts it).
+**How to test on phone:** Bills tab → add a bill with a due day **earlier than today** (e.g. if today's the 22nd, set day 5) → go to Home → pop-up asks "X was due on 5 Jun — did you pay?" → tap "haan, 5 Jun pe log karo" → Insights/History shows that expense dated **5 Jun**. Add another due **today** → Home asks "due today, log it?". Tap "baad mein" → it hides until you reopen the app. Logging never asks twice for the same month.
+**Next up:** next bug from the list.
+
+---
+
 ## Feature — Edit/delete ANY category, built-in too 🏷️ — 22 Jun 2026
 **What:** Long-press **any** category pill in Add-Expense (built-in *and* custom) → ✏️ Edit / 🗑️ Delete. Built-ins like "Khaana Peena", "Rent", "Makeup" can now be renamed/re-emoji'd or removed from the picker, all from inside the app. Also renamed the built-in **Khaana → Khaana Peena** with a 🍽️ emoji.
 **Why / how (IMPORTANT for future me):** built-in categories live in code (`CATS`), so to make them user-editable without a 19-file refactor, added a **built-in override layer** — same module-level mirror trick as the i18n `L()` helper:

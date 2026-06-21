@@ -4,6 +4,7 @@ import { View, Text, Pressable, StyleSheet, ScrollView, Alert as RNAlert } from 
 import { Screen } from '../components/shared';
 import AddExpenseModal from './AddExpenseModal';
 import RegretAuditModal from './RegretAuditModal';
+import BillDuePrompt from './BillDuePrompt';
 import AlertList from '../components/AlertList';
 import { useAppContext } from '../hooks/useAppContext';
 import { Expense } from '../types';
@@ -196,6 +197,7 @@ export default function HomeScreen() {
         }}
       />
       <RegretAuditModal visible={showRegret} onClose={() => setShowRegret(false)} />
+      <BillDuePrompt />
     </Screen>
   );
 }

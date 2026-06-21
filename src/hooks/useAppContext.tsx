@@ -5,6 +5,7 @@ import { Category, Expense, Goal, CatBudgets, ImpulseItem, Letter, Recurring, Wi
 import { KEYS, clearAll, loadJSON, loadString, saveJSON, saveString } from '../storage';
 import { PASTEL_COLORS, CATS, findCat, installCatOverrides, CatOverride } from '../constants/categories';
 import { genId, getToday } from '../utils';
+import { dueOccurrenceISO } from '../utils/recurring';
 import { ensureNotifPermission, scheduleBillReminders, cancelBillReminders } from '../utils/notifications';
 
 // Everything the app shares. Actions persist to storage AND update state so the UI refreshes.
@@ -46,6 +47,7 @@ interface AppState {
   addRecurring: (name: string, amount: number, catId: string, day: number) => Promise<void>;
   deleteRecurring: (id: string) => Promise<void>;
   logRecurring: (id: string) => Promise<void>;
+  resolveRecurring: (id: string, occISO: string, paid: boolean) => Promise<void>; // answer the due-day prompt
   addLetter: (text: string) => Promise<void>;
   deleteLetter: (id: string) => Promise<void>;
   setBudgetValue: (v: string) => Promise<void>;
@@ -300,7 +302,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const addRecurring = useCallback(
     async (name: string, amount: number, catId: string, day: number) => {
       const cat = findCat(catId, customCats);
-      const item: Recurring = { id: genId(), name, amount, catId, color: cat.color, day };
+      // If the due day already passed THIS month, leave it unhandled so the prompt asks
+      // "did you pay on the Xth?". If it's still upcoming, mark last month's occurrence handled
+      // so we don't ask about a date from before the bill even existed.
+      const now = new Date();
+      const lastHandledDue = day > now.getDate() ? dueOccurrenceISO(day, now) : undefined;
+      const item: Recurring = { id: genId(), name, amount, catId, color: cat.color, day, lastHandledDue };
       const next = [...recurring, item];
       setRecurring(next);
       await saveJSON(KEYS.recurring, next);
@@ -318,15 +325,39 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [recurring]
   );
 
-  // One-tap log a bill as today's expense (without deleting the bill).
+  // One-tap log a bill as today's expense (without deleting the bill). Also marks this month's
+  // due occurrence handled so the due-day prompt won't ask about it again.
   const logRecurring = useCallback(
     async (id: string) => {
       const rec = recurring.find((r) => r.id === id);
       if (!rec) return;
       const exp: Expense = { id: genId(), amount: rec.amount, catId: rec.catId, note: `${rec.name} (recurring)`, date: getToday(), color: rec.color };
-      const next = [exp, ...expenses];
-      setExpenses(next);
-      await saveJSON(KEYS.expenses, next);
+      const nextExp = [exp, ...expenses];
+      setExpenses(nextExp);
+      await saveJSON(KEYS.expenses, nextExp);
+      const occ = dueOccurrenceISO(rec.day, new Date());
+      const nextRec = recurring.map((r) => (r.id === id ? { ...r, lastHandledDue: occ } : r));
+      setRecurring(nextRec);
+      await saveJSON(KEYS.recurring, nextRec);
+    },
+    [recurring, expenses]
+  );
+
+  // Answer the due-day prompt for a bill: if paid, log it dated to the due day; either way mark
+  // that occurrence handled so we don't ask again.
+  const resolveRecurring = useCallback(
+    async (id: string, occISO: string, paid: boolean) => {
+      const rec = recurring.find((r) => r.id === id);
+      if (!rec) return;
+      if (paid) {
+        const exp: Expense = { id: genId(), amount: rec.amount, catId: rec.catId, note: `${rec.name} (recurring)`, date: occISO, color: rec.color };
+        const nextExp = [exp, ...expenses];
+        setExpenses(nextExp);
+        await saveJSON(KEYS.expenses, nextExp);
+      }
+      const nextRec = recurring.map((r) => (r.id === id ? { ...r, lastHandledDue: occISO } : r));
+      setRecurring(nextRec);
+      await saveJSON(KEYS.recurring, nextRec);
     },
     [recurring, expenses]
   );
@@ -661,6 +692,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addRecurring,
     deleteRecurring,
     logRecurring,
+    resolveRecurring,
     addLetter,
     deleteLetter,
     setBudgetValue,
