@@ -3,7 +3,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { Category, Expense, Goal, CatBudgets, ImpulseItem, Letter, Recurring, WishItem, Challenge, EventBudget } from '../types';
 import { KEYS, clearAll, loadJSON, loadString, saveJSON, saveString } from '../storage';
-import { PASTEL_COLORS, findCat } from '../constants/categories';
+import { PASTEL_COLORS, CATS, findCat, installCatOverrides, CatOverride } from '../constants/categories';
 import { genId, getToday } from '../utils';
 import { ensureNotifPermission, scheduleBillReminders, cancelBillReminders } from '../utils/notifications';
 
@@ -16,6 +16,7 @@ interface AppState {
   impulse: ImpulseItem[];
   letters: Letter[];
   customCats: Category[];
+  catOverrides: Record<string, CatOverride>; // edits/deletes to built-in categories
   budget: string;
   income: string;
   splurgeFund: string;
@@ -68,8 +69,8 @@ interface AppState {
   addEvent: (name: string, emoji: string, budget: number, startDate: string, endDate: string) => Promise<void>;
   deleteEvent: (id: string) => Promise<void>;
   addCustomCat: (name: string, emoji: string) => Promise<Category>;
-  updateCustomCat: (id: string, name: string, emoji: string) => Promise<void>;
-  deleteCustomCat: (id: string) => Promise<void>;
+  editCategory: (id: string, name: string, emoji: string) => Promise<void>; // edits built-in OR custom
+  deleteCategory: (id: string) => Promise<void>; // deletes custom, hides built-in
   resetAll: () => Promise<void>;
   reload: () => Promise<void>;
 }
@@ -85,6 +86,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [impulse, setImpulse] = useState<ImpulseItem[]>([]);
   const [letters, setLetters] = useState<Letter[]>([]);
   const [customCats, setCustomCats] = useState<Category[]>([]);
+  const [catOverrides, setCatOverrides] = useState<Record<string, CatOverride>>({});
   const [budget, setBudget] = useState('');
   const [income, setIncome] = useState('');
   const [splurgeFund, setSplurgeFund] = useState('');
@@ -102,12 +104,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Pull all persisted data from storage into state.
   const reload = useCallback(async () => {
-    const [exp, rec, imp, ltrs, cc, bud, inc, spl, onb, shield, pStarts, cLen, cBudgets, gls, billRem, bName, bPhone, wish, chals, evts] = await Promise.all([
+    const [exp, rec, imp, ltrs, cc, catOv, bud, inc, spl, onb, shield, pStarts, cLen, cBudgets, gls, billRem, bName, bPhone, wish, chals, evts] = await Promise.all([
       loadJSON<Expense[]>(KEYS.expenses, []),
       loadJSON<Recurring[]>(KEYS.recurring, []),
       loadJSON<ImpulseItem[]>(KEYS.impulse, []),
       loadJSON<Letter[]>(KEYS.letters, []),
       loadJSON<Category[]>(KEYS.customCats, []),
+      loadJSON<Record<string, CatOverride>>(KEYS.catOverrides, {}),
       loadString(KEYS.budget),
       loadString(KEYS.income),
       loadString(KEYS.splurgeFund),
@@ -129,6 +132,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setImpulse(imp);
     setLetters(ltrs);
     setCustomCats(cc);
+    installCatOverrides(catOv); // mirror into categories.ts so findCat() sees built-in edits
+    setCatOverrides(catOv);
     setBudget(bud);
     setIncome(inc);
     setSplurgeFund(spl);
@@ -569,24 +574,41 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [customCats]
   );
 
-  // Edit a custom category's name/emoji (keeps its id + colour so existing expenses stay linked).
-  const updateCustomCat = useCallback(
+  // Save a new built-in override map to state + module mirror + storage.
+  const persistOverrides = useCallback(async (next: Record<string, CatOverride>) => {
+    installCatOverrides(next); // so findCat()/effectiveBuiltins() see it immediately
+    setCatOverrides(next);
+    await saveJSON(KEYS.catOverrides, next);
+  }, []);
+
+  // Edit ANY category's name/emoji. Custom ones change in place; built-ins get a stored
+  // override (their id stays the same either way, so existing expenses stay linked).
+  const editCategory = useCallback(
     async (id: string, name: string, emoji: string) => {
-      const next = customCats.map((c) => (c.id === id ? { ...c, name: `${emoji} ${name}` } : c));
-      setCustomCats(next);
-      await saveJSON(KEYS.customCats, next);
+      if (CATS.some((c) => c.id === id)) {
+        await persistOverrides({ ...catOverrides, [id]: { ...catOverrides[id], name: `${emoji} ${name}` } });
+      } else {
+        const next = customCats.map((c) => (c.id === id ? { ...c, name: `${emoji} ${name}` } : c));
+        setCustomCats(next);
+        await saveJSON(KEYS.customCats, next);
+      }
     },
-    [customCats]
+    [customCats, catOverrides, persistOverrides]
   );
 
-  // Remove a custom category and persist.
-  const deleteCustomCat = useCallback(
+  // Delete ANY category. Custom ones are removed; built-ins are hidden from pickers
+  // (kept resolvable so old expenses logged under them still show their name).
+  const deleteCategory = useCallback(
     async (id: string) => {
-      const next = customCats.filter((c) => c.id !== id);
-      setCustomCats(next);
-      await saveJSON(KEYS.customCats, next);
+      if (CATS.some((c) => c.id === id)) {
+        await persistOverrides({ ...catOverrides, [id]: { ...catOverrides[id], hidden: true } });
+      } else {
+        const next = customCats.filter((c) => c.id !== id);
+        setCustomCats(next);
+        await saveJSON(KEYS.customCats, next);
+      }
     },
-    [customCats]
+    [customCats, catOverrides, persistOverrides]
   );
 
   // Wipe everything and return to the onboarding screen (testing/reset helper).
@@ -603,6 +625,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     impulse,
     letters,
     customCats,
+    catOverrides,
     budget,
     income,
     splurgeFund,
@@ -655,8 +678,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addEvent,
     deleteEvent,
     addCustomCat,
-    updateCustomCat,
-    deleteCustomCat,
+    editCategory,
+    deleteCategory,
     resetAll,
     reload,
   };

@@ -35,7 +35,7 @@ export default function AddCategoryModal({
   onSaved?: (cat: Category) => void; // called after an edit is saved
   onDeleted?: (id: string) => void; // called after the category is deleted
 }) {
-  const { addCustomCat, updateCustomCat, deleteCustomCat } = useAppContext();
+  const { addCustomCat, editCategory, deleteCategory } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
   useLang(); // subscribe so text re-renders when language toggles
@@ -63,7 +63,7 @@ export default function AddCategoryModal({
     if (!canSave) return;
     const finalEmoji = emoji.trim() || '🏷️'; // fall back if the emoji box was cleared
     if (editCat) {
-      await updateCustomCat(editCat.id, name.trim(), finalEmoji);
+      await editCategory(editCat.id, name.trim(), finalEmoji);
       onSaved?.({ ...editCat, name: `${finalEmoji} ${name.trim()}` });
     } else {
       const cat = await addCustomCat(name.trim(), finalEmoji);
@@ -84,7 +84,7 @@ export default function AddCategoryModal({
           text: L('delete', 'delete'),
           style: 'destructive',
           onPress: async () => {
-            await deleteCustomCat(editCat.id);
+            await deleteCategory(editCat.id);
             onDeleted?.(editCat.id);
             onClose();
           },

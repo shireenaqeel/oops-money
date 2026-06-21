@@ -3,6 +3,20 @@
 
 ---
 
+## Feature — Edit/delete ANY category, built-in too 🏷️ — 22 Jun 2026
+**What:** Long-press **any** category pill in Add-Expense (built-in *and* custom) → ✏️ Edit / 🗑️ Delete. Built-ins like "Khaana Peena", "Rent", "Makeup" can now be renamed/re-emoji'd or removed from the picker, all from inside the app. Also renamed the built-in **Khaana → Khaana Peena** with a 🍽️ emoji.
+**Why / how (IMPORTANT for future me):** built-in categories live in code (`CATS`), so to make them user-editable without a 19-file refactor, added a **built-in override layer** — same module-level mirror trick as the i18n `L()` helper:
+- New storage key `om_cat_overrides` = `{ [catId]: { name?, hidden? } }`.
+- `categories.ts` keeps a module-level `CAT_OVERRIDES`, set via `installCatOverrides()`. `findCat()` applies the rename (and still resolves **hidden** built-ins so old expenses keep their name); `effectiveBuiltins()` returns the picker list (renamed, hidden dropped).
+- `useAppContext` loads the map → `installCatOverrides()` + state; exposes unified `editCategory(id,name,emoji)` and `deleteCategory(id)` that route built-ins to the override map and customs to the old in-place edit/remove. (Replaces the old `updateCustomCat`/`deleteCustomCat`.)
+- Pickers (`AddExpenseModal`, `CategoryBudgets`) and voice-match now build from `effectiveBuiltins()` instead of raw `CATS`; default category falls back safely if the first one is hidden.
+- Editing keeps the category **id**, so all past expenses stay linked. Deleting a built-in only **hides** it (old entries still show its name). Overrides are part of the cloud snapshot, so they sync too.
+**Files changed:** `src/constants/categories.ts`, `src/storage/index.ts` (+`catOverrides` key), `src/hooks/useAppContext.tsx`, `src/screens/AddCategoryModal.tsx`, `src/screens/AddExpenseModal.tsx`, `src/components/CategoryBudgets.tsx`, `src/utils/index.ts`.
+**How to test on phone:** Add-Expense → long-press **Makeup** (a built-in) → Edit → change name/emoji → save → it updates everywhere (Insights, Home). Long-press it again → Delete → it leaves the picker but an old Makeup expense still shows "Makeup" in history. Khaana now shows as **🍽️ Khaana Peena**.
+**Note / next up:** no in-app "restore deleted built-in" yet — if she hides one and wants it back, that needs a reset option (tell me if needed).
+
+---
+
 ## Fix — Custom categories: edit, delete + bigger emoji palette 🏷️ — 22 Jun 2026
 **What:** In Add-Expense, **long-press your own (custom) category pill** → a menu with **✏️ Edit / 🗑️ Delete**. Edit reopens the create-sheet pre-filled (now dual-mode) to change the name/emoji; Delete asks to confirm. The emoji grid was kept to a small **25 cute starter emojis** (5×5, no built-in-category duplicates), since the **type-your-own emoji box** lets you enter any emoji from the phone keyboard (syncs with the grid; falls back to 🏷️ if cleared). A little hint line tells you long-press works.
 **Why:** Custom categories could only be created, never fixed or removed — a typo meant living with it forever. Long-press keeps the picker uncluttered (her pick over an always-visible ✏️ or a Settings page). Edit keeps the same category `id` so past expenses stay linked; delete only removes it from the list (old entries keep their cached colour/name).

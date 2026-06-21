@@ -1,6 +1,6 @@
 // utils/index.ts — pure formatting / calculation / id helpers. No UI, no state, no storage.
 import { Category } from '../types';
-import { CATS, MERCHANT_MAP } from '../constants/categories';
+import { MERCHANT_MAP, effectiveBuiltins } from '../constants/categories';
 import { L } from '../i18n';
 
 const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -153,7 +153,7 @@ export function parseSpokenAmount(text: string): number {
 export function parseSpokenCategory(text: string, customCats: Category[] = []): string | null {
   const t = text.toLowerCase();
   for (const m of MERCHANT_MAP) if (m.test.test(t)) return m.catId;
-  for (const c of [...CATS, ...customCats]) {
+  for (const c of [...effectiveBuiltins(), ...customCats]) {
     // strip the emoji + punctuation off the label, keep words longer than 2 chars
     const words = c.name.replace(/[^\p{L}\s]/gu, ' ').toLowerCase().split(/\s+/).filter((w) => w.length > 2);
     if (words.some((w) => t.includes(w))) return c.id;

@@ -13,7 +13,7 @@ export const CATS: Category[] = [
   { id: 'fashion', name: '👗 Fashion', color: '#A8D8EA', bg: '#EEF8FC', group: 'Fashion' },
   { id: 'accessories', name: '👜 Accessories', color: '#F7C5A0', bg: '#FEF5EF', group: 'Fashion' },
   { id: 'shoes', name: '👟 Shoes', color: '#B8D4A8', bg: '#EEF6EA', group: 'Fashion' },
-  { id: 'food', name: '🍰 Khaana Peena', color: '#F4A7C3', bg: '#FEF0F6', group: 'Food' },
+  { id: 'food', name: '🍽️ Khaana Peena', color: '#F4A7C3', bg: '#FEF0F6', group: 'Food' },
   { id: 'cafe', name: '☕ Cafe dates', color: '#C9A98B', bg: '#F9F3EE', group: 'Food' },
   { id: 'parties', name: '🍺 Parties', color: '#FFB347', bg: '#FFF5E6', group: 'Food' },
   { id: 'groceries', name: '🛒 Groceries', color: '#B8E8C8', bg: '#EEF9F2', group: 'Food' },
@@ -58,7 +58,37 @@ export const MERCHANT_MAP: { test: RegExp; catId: string }[] = [
   { test: /grocery|bigbasket|blinkit|zepto|instamart|dmart/, catId: 'groceries' },
 ];
 
-// Find a category by id, searching built-in + the given custom list. Falls back to "Other".
+// ── Built-in category overrides ───────────────────────────────────────────────
+// Built-in categories live in code, but users can rename or hide them. We store those
+// tweaks as a per-id override map (in AsyncStorage) and mirror it here at module level
+// so pure helpers like findCat() see the edits too — same pattern as the i18n L() helper.
+export interface CatOverride {
+  name?: string; // replacement "emoji name" string
+  hidden?: boolean; // true = removed from the picker (old expenses still resolve by id)
+}
+
+let CAT_OVERRIDES: Record<string, CatOverride> = {};
+
+// Called by the app on load and whenever a built-in category is edited/deleted.
+export function installCatOverrides(map: Record<string, CatOverride>): void {
+  CAT_OVERRIDES = map || {};
+}
+
+// Apply a built-in's rename override, if one exists.
+function withOverride(c: Category): Category {
+  const ov = CAT_OVERRIDES[c.id];
+  return ov?.name ? { ...c, name: ov.name } : c;
+}
+
+// Built-in categories to show in pickers: renamed where edited, hidden ones dropped.
+export function effectiveBuiltins(): Category[] {
+  return CATS.filter((c) => !CAT_OVERRIDES[c.id]?.hidden).map(withOverride);
+}
+
+// Find a category by id (built-in or custom). Built-ins resolve even if hidden, so a
+// deleted built-in still shows its name on old expenses. Falls back to "Other".
 export function findCat(id: string, customCats: Category[] = []): Category {
-  return [...CATS, ...customCats].find((c) => c.id === id) ?? CATS[CATS.length - 1];
+  const builtin = CATS.find((c) => c.id === id);
+  if (builtin) return withOverride(builtin);
+  return customCats.find((c) => c.id === id) ?? CATS[CATS.length - 1];
 }

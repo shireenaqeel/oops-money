@@ -27,7 +27,7 @@ import { spacing, radius, typography, ThemeColors } from '../constants/theme';
 import { useTheme } from '../hooks/useTheme';
 import { useLang } from '../hooks/useLang';
 import { L } from '../i18n';
-import { CATS, CAT_GROUPS, findCat } from '../constants/categories';
+import { CATS, CAT_GROUPS, findCat, effectiveBuiltins } from '../constants/categories';
 import { MOODS } from '../constants/moods';
 import { COPY } from '../constants/copy';
 import { fmtDateLabel, fmtINR, getToday, getYesterday, isLateNight, parseSpokenExpense } from '../utils';
@@ -55,11 +55,15 @@ export default function AddExpenseModal({
   onClose: () => void;
   editing?: Expense | null;
 }) {
-  const { addExpense, updateExpense, customCats, deleteCustomCat, nightShield, events } = useAppContext();
+  const { addExpense, updateExpense, customCats, catOverrides, deleteCategory, nightShield, events } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
   useLang(); // subscribe so text re-renders when language toggles
-  const allCats = [...CATS, ...customCats];
+  // Read catOverrides so this recomputes when a built-in is edited/hidden (effectiveBuiltins reads the mirror).
+  void catOverrides;
+  const builtins = effectiveBuiltins();
+  const allCats = [...builtins, ...customCats];
+  const firstCatId = builtins[0]?.id ?? customCats[0]?.id ?? CATS[CATS.length - 1].id;
   const groups = ['All', ...CAT_GROUPS, ...(customCats.length > 0 ? ['Custom'] : [])];
   const isEditing = !!editing;
   const [showCatModal, setShowCatModal] = useState(false);
@@ -68,7 +72,7 @@ export default function AddExpenseModal({
 
   const [amount, setAmount] = useState('');
   const [group, setGroup] = useState('All');
-  const [catId, setCatId] = useState(CATS[0].id);
+  const [catId, setCatId] = useState(firstCatId);
   const [mood, setMood] = useState('');
   const [note, setNote] = useState('');
   const [date, setDate] = useState(getToday());
@@ -104,7 +108,7 @@ export default function AddExpenseModal({
       setEventId(editing.eventId ?? '');
     } else {
       setAmount('');
-      setCatId(CATS[0].id);
+      setCatId(firstCatId);
       setMood('');
       setNote('');
       setDate(getToday());
@@ -129,7 +133,7 @@ export default function AddExpenseModal({
     setAmount(text.replace(/[^0-9]/g, ''));
   }
 
-  // Long-press on a custom category pill → choose to edit or delete it.
+  // Long-press any category pill → choose to edit or delete it (built-in or custom).
   function manageCat(cat: Category) {
     Alert.alert(cat.name, undefined, [
       { text: L('✏️ edit', '✏️ edit'), onPress: () => { setEditingCat(cat); setShowCatModal(true); } },
@@ -138,7 +142,7 @@ export default function AddExpenseModal({
     ]);
   }
 
-  // Confirm, then delete a custom category; if it was selected, fall back to the first built-in.
+  // Confirm, then delete/hide a category; if it was selected, fall back to the first remaining one.
   function confirmDeleteCat(cat: Category) {
     Alert.alert(
       L('category delete karein? 🗑️', 'delete this category? 🗑️'),
@@ -149,8 +153,8 @@ export default function AddExpenseModal({
           text: L('delete', 'delete'),
           style: 'destructive',
           onPress: async () => {
-            await deleteCustomCat(cat.id);
-            if (catId === cat.id) { setCatId(CATS[0].id); setGroup('All'); }
+            await deleteCategory(cat.id);
+            if (catId === cat.id) { setCatId(effectiveBuiltins()[0]?.id ?? 'other'); setGroup('All'); }
           },
         },
       ]
@@ -290,16 +294,15 @@ export default function AddExpenseModal({
             ))}
           </ScrollView>
 
-          {/* category pills — long-press your own ones to edit/delete */}
+          {/* category pills — long-press any to edit/delete */}
           <View style={styles.catWrap}>
             {visibleCats.map((c) => {
               const selected = c.id === catId;
-              const isCustom = customCats.some((cc) => cc.id === c.id);
               return (
                 <Pressable
                   key={c.id}
                   onPress={() => setCatId(c.id)}
-                  onLongPress={isCustom ? () => manageCat(c) : undefined}
+                  onLongPress={() => manageCat(c)}
                   style={[styles.catPill, { backgroundColor: selected ? c.color : c.bg }]}
                 >
                   <Text style={[styles.catText, selected && styles.catTextSelected]}>{c.name}</Text>
@@ -311,9 +314,7 @@ export default function AddExpenseModal({
               <Text style={styles.addCatText}>{L('+ apni category', '+ your own')}</Text>
             </Pressable>
           </View>
-          {customCats.length > 0 ? (
-            <Text style={styles.catHint}>{L('apni category ko edit/delete karne ke liye usse dabaye rakho 💡', 'long-press your own category to edit/delete 💡')}</Text>
-          ) : null}
+          <Text style={styles.catHint}>{L('kisi bhi category ko edit/delete karne ke liye usse dabaye rakho 💡', 'long-press any category to edit/delete 💡')}</Text>
 
           {/* mood */}
           <Text style={styles.label}>{L('kaisa mood tha? (optional)', "what's the mood? (optional)")}</Text>
@@ -441,7 +442,7 @@ export default function AddExpenseModal({
           setCatId(cat.id);
         }}
         onDeleted={(id) => {
-          if (catId === id) { setCatId(CATS[0].id); setGroup('All'); }
+          if (catId === id) { setCatId(effectiveBuiltins()[0]?.id ?? 'other'); setGroup('All'); }
         }}
       />
     </Modal>

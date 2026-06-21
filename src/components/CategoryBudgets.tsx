@@ -9,15 +9,16 @@ import { useLang } from '../hooks/useLang';
 import { L } from '../i18n';
 import { fmtINR } from '../utils';
 import { monthExpenses, sumExpenses } from '../utils/calculations';
-import { CATS, findCat } from '../constants/categories';
+import { CATS, findCat, effectiveBuiltins } from '../constants/categories';
 
 export default function CategoryBudgets() {
-  const { expenses, customCats, catBudgets, setCatBudget, removeCatBudget } = useAppContext();
+  const { expenses, customCats, catOverrides, catBudgets, setCatBudget, removeCatBudget } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
   useLang(); // subscribe so text re-renders when language toggles
-  const allCats = [...CATS, ...customCats];
-  const [pickedCat, setPickedCat] = useState(CATS[0].id);
+  void catOverrides; // read so the list recomputes when a built-in is edited/hidden
+  const allCats = [...effectiveBuiltins(), ...customCats];
+  const [pickedCat, setPickedCat] = useState(allCats[0]?.id ?? CATS[0].id);
   const [amount, setAmount] = useState('');
 
   const now = new Date();

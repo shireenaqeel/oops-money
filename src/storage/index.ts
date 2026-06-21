@@ -9,6 +9,7 @@ export const KEYS = {
   impulse: 'om_impulse',
   letters: 'om_letters',
   customCats: 'om_custom_cats',
+  catOverrides: 'om_cat_overrides', // edits/deletes to BUILT-IN categories { catId: {name?, hidden?} } (V3)
   budget: 'om_budget',
   income: 'om_income',
   splurgeFund: 'om_splurge_fund',
