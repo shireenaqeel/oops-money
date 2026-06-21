@@ -13,7 +13,7 @@ export const CATS: Category[] = [
   { id: 'fashion', name: '👗 Fashion', color: '#A8D8EA', bg: '#EEF8FC', group: 'Fashion' },
   { id: 'accessories', name: '👜 Accessories', color: '#F7C5A0', bg: '#FEF5EF', group: 'Fashion' },
   { id: 'shoes', name: '👟 Shoes', color: '#B8D4A8', bg: '#EEF6EA', group: 'Fashion' },
-  { id: 'food', name: '🍰 Khaana', color: '#F4A7C3', bg: '#FEF0F6', group: 'Food' },
+  { id: 'food', name: '🍰 Khaana Peena', color: '#F4A7C3', bg: '#FEF0F6', group: 'Food' },
   { id: 'cafe', name: '☕ Cafe dates', color: '#C9A98B', bg: '#F9F3EE', group: 'Food' },
   { id: 'parties', name: '🍺 Parties', color: '#FFB347', bg: '#FFF5E6', group: 'Food' },
   { id: 'groceries', name: '🛒 Groceries', color: '#B8E8C8', bg: '#EEF9F2', group: 'Food' },
