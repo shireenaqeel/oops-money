@@ -62,11 +62,12 @@ export default function AddCategoryModal({
   // Save: update the existing category when editing, otherwise create a new one.
   async function onSave() {
     if (!canSave) return;
+    const finalEmoji = emoji.trim() || '🏷️'; // fall back if the emoji box was cleared
     if (editCat) {
-      await updateCustomCat(editCat.id, name.trim(), emoji);
-      onSaved?.({ ...editCat, name: `${emoji} ${name.trim()}` });
+      await updateCustomCat(editCat.id, name.trim(), finalEmoji);
+      onSaved?.({ ...editCat, name: `${finalEmoji} ${name.trim()}` });
     } else {
-      const cat = await addCustomCat(name.trim(), emoji);
+      const cat = await addCustomCat(name.trim(), finalEmoji);
       onCreated(cat);
     }
     onClose();
@@ -118,8 +119,22 @@ export default function AddCategoryModal({
             autoFocus
           />
 
+          {/* type your own emoji from the keyboard (syncs with the grid below) */}
+          <Text style={styles.label}>{L('emoji chuno (ya keyboard se apna daalo)', 'pick an emoji (or type your own)')}</Text>
+          <View style={styles.customEmojiRow}>
+            <TextInput
+              style={styles.customEmojiInput}
+              value={emoji}
+              onChangeText={(t) => setEmoji(t.trim())}
+              placeholder="🙂"
+              placeholderTextColor={colors.textMuted}
+              maxLength={8}
+              textAlign="center"
+            />
+            <Text style={styles.customHint}>{L('apne keyboard 😀 se koi bhi emoji type karo', 'type any emoji from your 😀 keyboard')}</Text>
+          </View>
+
           {/* emoji grid */}
-          <Text style={styles.label}>{L('emoji chuno', 'pick an emoji')}</Text>
           <ScrollView style={styles.emojiScroll} contentContainerStyle={styles.emojiGrid} showsVerticalScrollIndicator={false}>
             {EMOJIS.map((e) => (
               <Pressable key={e} onPress={() => setEmoji(e)} style={[styles.emojiCell, emoji === e && styles.emojiCellActive]}>
@@ -154,6 +169,9 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   previewName: { fontSize: typography.body.fontSize, color: colors.text, fontWeight: '600' },
   input: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.inputs, padding: spacing.md, fontSize: typography.body.fontSize, color: colors.text },
   label: { fontSize: typography.small.fontSize, color: colors.textLight, marginTop: spacing.md, marginBottom: spacing.sm },
+  customEmojiRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.md },
+  customEmojiInput: { width: 56, height: 56, borderWidth: 1, borderColor: colors.border, borderRadius: radius.inputs, fontSize: 26, color: colors.text, padding: 0 },
+  customHint: { flex: 1, fontSize: typography.tiny.fontSize, color: colors.textMuted },
   emojiScroll: { maxHeight: 180 },
   emojiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   emojiCell: { width: 44, height: 44, borderRadius: radius.small, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.cream },
