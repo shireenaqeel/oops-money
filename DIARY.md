@@ -3,6 +3,14 @@
 
 ---
 
+## Feature — Cycle 🌸 gets its own page — 23 Jun 2026
+**What:** Period/cycle tracking is no longer a small card buried inside Settings. It now has its own **Cycle 🌸 tab** in the bottom bar (between Insights and Bills) where everything lives in one place — log a period, see your current phase, next-period prediction + countdown, your logged history, AND the "Cycle vs Money" insight (does PMS week make you spend more?).
+**Why:** Real period apps (Flo, Clue) keep all cycle stuff on one dedicated screen, not scattered. Before, logging was in Settings and the money-comparison was over in Insights — two different places. Bringing them together makes it feel like a proper feature and is easier to find.
+**How:** New `src/screens/CycleScreen.tsx` reuses the existing `CycleTracker` component (logging/phase/prediction/history) and adds the "Cycle vs Money" card (moved out of Insights). Added a 5th— now 6th —tab in `App.tsx` with a 🌸 icon. Removed `<CycleTracker />` + its import from `SettingsScreen`. Removed the cycle section, its two helper functions, and the now-unused `cycle` import/variables from `InsightsScreen`. No data/logic changed — same storage, same maths.
+**Files changed:** `src/screens/CycleScreen.tsx` (new), `App.tsx`, `src/screens/SettingsScreen.tsx`, `src/screens/InsightsScreen.tsx`, `src/components/CycleTracker.tsx` (hint text now says "below" not "Insights").
+**How to test on phone:** Open the app → bottom bar pe naya **🌸 Cycle** tab dikhega. Tap karo → "period shuru hua aaj 🌸" ya "📅 koi aur din" se period log karo → upar phase banner + agla period prediction aata hai, neeche logged dates ki list. Thodi spends hone ke baad **CYCLE vs MONEY** card PMS week vs baaki din ka daily kharcha compare karega. Check karo Settings 🎀 aur Insights ✿ se period-wala hissa hat gaya hai.
+**Next up:** (optional) a visual cycle ring/calendar on the Cycle page like Flo.
+
 ## Feature — Add income, not just expenses 💰 — 22 Jun 2026
 **What:** You can now log **income** (money IN) — salary, freelance, gift, refund, returns, pocket money, etc. A green **💰 button** on Home (above the pink expense +) opens an add-income form (amount, source, note, date). Home shows a new **aaya / gaya / bacha** card (income / spent / net this month), and income entries appear in the RECENT diary in green with a `+₹`. Tap to edit, ✕ to delete.
 **Why:** App only tracked spending; she wanted the other side of the money picture.

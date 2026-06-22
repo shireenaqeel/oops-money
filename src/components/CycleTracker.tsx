@@ -1,4 +1,4 @@
-// CycleTracker.tsx — period/cycle logging UI (V2), lives in Settings.
+// CycleTracker.tsx — period/cycle logging UI (V2), lives on the Cycle screen.
 // Log a period start, set your cycle length, see the next predicted date. Supportive, never clinical.
 import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
@@ -45,7 +45,7 @@ export default function CycleTracker() {
   return (
     <View style={styles.card}>
       <Text style={styles.cardLabel}>{L('CYCLE TRACKING 🌸', 'CYCLE TRACKING 🌸')}</Text>
-      <Text style={styles.hint}>{L('period log karo — Insights mein dikhega ki PMS week mein kharcha badhta hai ya nahi. (sab kuch tumhare phone pe, private)', 'log your period — Insights shows whether PMS-week spending rises or not. (all on your phone, private)')}</Text>
+      <Text style={styles.hint}>{L('period log karo — neeche dikhega ki PMS week mein kharcha badhta hai ya nahi. (sab kuch tumhare phone pe, private)', 'log your period — below shows whether PMS-week spending rises or not. (all on your phone, private)')}</Text>
 
       {/* current phase banner */}
       <View style={[styles.phase, { backgroundColor: PHASE_BG[info.phase] }]}>

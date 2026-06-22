@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Alert, ScrollView, TextInput, Switch } from 'react-native';
 import { Screen } from '../components/shared';
 import CSVImportModal from './CSVImportModal';
-import CycleTracker from '../components/CycleTracker';
 import CategoryBudgets from '../components/CategoryBudgets';
 import BestieMode from '../components/BestieMode';
 import CloudBackup from '../components/CloudBackup';
@@ -210,9 +209,6 @@ export default function SettingsScreen() {
 
         {/* accountability bestie */}
         <BestieMode />
-
-        {/* period / cycle tracking */}
-        <CycleTracker />
 
         {/* future-me letters */}
         <View style={styles.card}>

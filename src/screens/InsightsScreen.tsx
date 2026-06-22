@@ -16,7 +16,6 @@ import { L } from '../i18n';
 import { fmtINR, getToday } from '../utils';
 import { monthExpenses, sumExpenses, getAlerts } from '../utils/calculations';
 import { getSalaryCurve } from '../utils/salaryCurve';
-import { getCycleInfo, getCycleSpendInsight } from '../utils/cycle';
 import { findCat } from '../constants/categories';
 import { findSource, sumIncomes, monthIncomes } from '../constants/incomes';
 import { MOODS } from '../constants/moods';
@@ -34,15 +33,11 @@ function toISO(d: Date): string {
 }
 
 export default function InsightsScreen() {
-  const { expenses, incomes, budget, splurgeFund, customCats, catBudgets, periodStarts, cycleLength } = useAppContext();
+  const { expenses, incomes, budget, splurgeFund, customCats, catBudgets } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
   useLang(); // subscribe so text re-renders when language toggles
   const [showWrapped, setShowWrapped] = useState(false);
-
-  // Cycle insights (V2): current phase + whether PMS-week spending runs higher.
-  const cycleInfo = getCycleInfo(periodStarts, cycleLength, getToday());
-  const cycleSpend = getCycleSpendInsight(expenses, periodStarts, cycleLength, getToday());
 
   const now = new Date();
   const month = now.getMonth();
@@ -299,36 +294,6 @@ export default function InsightsScreen() {
           )}
         </View>
 
-        {/* cycle vs money (V2) */}
-        <View style={styles.card}>
-          <Text style={styles.sectionLabel}>CYCLE vs MONEY ✦</Text>
-          {!cycleSpend.hasData ? (
-            <Text style={styles.muted}>{L('Settings 🎀 mein period log karo — phir yahan dikhega ki PMS week mein kharcha badhta hai ya nahi 🌸', 'log your period in Settings 🎀 — then see whether PMS-week spending goes up or not 🌸')}</Text>
-          ) : (
-            <>
-              <Text style={styles.moodHeadline}>{buildCycleLine(cycleSpend.higherPct, cycleInfo.phase)}</Text>
-              <View style={styles.breakRow}>
-                <View style={styles.breakTop}>
-                  <Text style={styles.breakName}>{L('🩸 PMS week (daily avg)', '🩸 PMS week (daily avg)')}</Text>
-                  <Text style={styles.breakAmt}>{fmtINR(cycleSpend.pmsDailyAvg)}</Text>
-                </View>
-                <View style={styles.breakTrack}>
-                  <View style={[styles.breakFill, { width: `${cyclePct(cycleSpend.pmsDailyAvg, cycleSpend.otherDailyAvg)}%`, backgroundColor: colors.coral }]} />
-                </View>
-              </View>
-              <View style={styles.breakRow}>
-                <View style={styles.breakTop}>
-                  <Text style={styles.breakName}>{L('🌙 baaki din (daily avg)', '🌙 other days (daily avg)')}</Text>
-                  <Text style={styles.breakAmt}>{fmtINR(cycleSpend.otherDailyAvg)}</Text>
-                </View>
-                <View style={styles.breakTrack}>
-                  <View style={[styles.breakFill, { width: `${cyclePct(cycleSpend.otherDailyAvg, cycleSpend.pmsDailyAvg)}%`, backgroundColor: colors.sage }]} />
-                </View>
-              </View>
-            </>
-          )}
-        </View>
-
         {/* anonymous bestie benchmark (needs sign-in) */}
         <BestieBenchmark />
 
@@ -347,21 +312,6 @@ export default function InsightsScreen() {
       <MonthlyWrappedModal visible={showWrapped} onClose={() => setShowWrapped(false)} />
     </Screen>
   );
-}
-
-// Bar width (0–100) for one daily-avg value relative to the larger of the two.
-function cyclePct(value: number, other: number): number {
-  const max = Math.max(value, other, 1);
-  return Math.round((value / max) * 100);
-}
-
-// A supportive one-liner about PMS-week spending. `higherPct` = how much higher PMS daily spend is.
-function buildCycleLine(higherPct: number | null, phase: string): string {
-  const phasePrefix = phase === 'pms' ? L('PMS week chal raha hai abhi — ', 'PMS week right now — ') : phase === 'period' ? L('period time — ', 'period time — ') : '';
-  if (higherPct == null) return `${phasePrefix}${L('thoda aur data aane do, pattern banta jayega 🌸', 'give it a bit more data, the pattern will build 🌸')}`;
-  if (higherPct >= 15) return `${phasePrefix}${L(`PMS week mein daily kharcha ~${higherPct}% zyada hota hai — cravings real hain babe 💕 thoda heads-up rakho`, `daily spending is ~${higherPct}% higher in PMS week — cravings are real babe 💕 stay a little aware`)}`;
-  if (higherPct <= -15) return `${phasePrefix}${L('PMS week mein actually kam kharcha — proud of you 💅', 'you actually spend less in PMS week — proud of you 💅')}`;
-  return `${phasePrefix}${L('PMS aur baaki dino mein kharcha lagbhag barabar — balanced queen ✨', 'PMS and other days spend about the same — balanced queen ✨')}`;
 }
 
 // A sassy one-liner about the mood you spend most in.

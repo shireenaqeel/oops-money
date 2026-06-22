@@ -12,6 +12,7 @@ import { ThemeProvider, useTheme, useThemeMeta } from './src/hooks/useTheme';
 import { LangProvider } from './src/hooks/useLang';
 import HomeScreen from './src/screens/HomeScreen';
 import InsightsScreen from './src/screens/InsightsScreen';
+import CycleScreen from './src/screens/CycleScreen';
 import RecurringScreen from './src/screens/RecurringScreen';
 import ImpulseJailScreen from './src/screens/ImpulseJailScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
@@ -41,6 +42,7 @@ function MainTabs() {
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarIcon: tabIcon('🏠') }} />
       <Tab.Screen name="Insights" component={InsightsScreen} options={{ tabBarIcon: tabIcon('✿') }} />
+      <Tab.Screen name="Cycle" component={CycleScreen} options={{ tabBarIcon: tabIcon('🌸') }} />
       <Tab.Screen name="Bills" component={RecurringScreen} options={{ tabBarIcon: tabIcon('🔁') }} />
       <Tab.Screen name="Jail" component={ImpulseJailScreen} options={{ tabBarIcon: tabIcon('🔒') }} />
       <Tab.Screen name="Settings" component={SettingsScreen} options={{ tabBarIcon: tabIcon('🎀') }} />
