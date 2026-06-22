@@ -40,10 +40,12 @@ export default function AddIncomeModal({
   const [note, setNote] = useState('');
   const [date, setDate] = useState(getToday());
   const [showPicker, setShowPicker] = useState(false);
+  const [saved, setSaved] = useState(false); // brief "aa gaya babe" confirmation
 
   // Reset / prefill each time the sheet opens.
   useEffect(() => {
     if (!visible) return;
+    setSaved(false);
     if (editing) {
       setAmount(String(editing.amount));
       setSource(editing.source);
@@ -63,13 +65,18 @@ export default function AddIncomeModal({
   const isYesterday = date === getYesterday();
   const isOtherDate = !isToday && !isYesterday;
 
-  // Save the income (add or update) and close.
+  // Save the income (add or update). New entries flash a confirmation, then close.
   async function onSave() {
-    if (!canSave) return;
+    if (!canSave || saved) return;
     const payload = { amount: num, source, note: note.trim(), date, color: findSource(source).color };
-    if (editing) await updateIncome(editing.id, payload);
-    else await addIncome(payload);
-    onClose();
+    if (editing) {
+      await updateIncome(editing.id, payload);
+      onClose();
+    } else {
+      await addIncome(payload);
+      setSaved(true);
+      setTimeout(onClose, 800);
+    }
   }
 
   // Confirm then delete (edit mode only).
@@ -155,8 +162,8 @@ export default function AddIncomeModal({
           />
 
           {/* save */}
-          <Pressable style={[styles.saveBtn, !canSave && styles.saveBtnDisabled]} onPress={onSave} disabled={!canSave}>
-            <Text style={styles.saveText}>{isEditing ? L('save changes ✦', 'save changes ✦') : L('add income 💰', 'add income 💰')}</Text>
+          <Pressable style={[styles.saveBtn, (!canSave || saved) && styles.saveBtnDisabled]} onPress={onSave} disabled={!canSave || saved}>
+            <Text style={styles.saveText}>{saved ? L('aa gaya babe 💰', 'got it babe 💰') : isEditing ? L('save changes ✦', 'save changes ✦') : L('add income 💰', 'add income 💰')}</Text>
           </Pressable>
 
           {isEditing ? (

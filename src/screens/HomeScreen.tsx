@@ -4,6 +4,7 @@ import { View, Text, Pressable, StyleSheet, ScrollView, Alert as RNAlert } from 
 import { Screen } from '../components/shared';
 import AddExpenseModal from './AddExpenseModal';
 import AddIncomeModal from './AddIncomeModal';
+import IncomeHistoryModal from './IncomeHistoryModal';
 import RegretAuditModal from './RegretAuditModal';
 import BillDuePrompt from './BillDuePrompt';
 import AlertList from '../components/AlertList';
@@ -35,6 +36,7 @@ export default function HomeScreen() {
   const [editing, setEditing] = useState<Expense | null>(null);
   const [showIncome, setShowIncome] = useState(false);
   const [editingIncome, setEditingIncome] = useState<Income | null>(null);
+  const [showIncomeHistory, setShowIncomeHistory] = useState(false);
   const [showRegret, setShowRegret] = useState(false);
 
   // Purchases that are 7+ days old and not yet rated — ready for a "was it worth it?" check.
@@ -130,24 +132,38 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* ── money in / out / net (only once income is logged) ── */}
+        {/* ── money in / out / net (only once income is logged) — tap for full history ── */}
         {hasMoneyFlow ? (
-          <View style={styles.flowCard}>
-            <View style={styles.flowItem}>
-              <Text style={styles.flowLabel}>💰 {L('aaya', 'in')}</Text>
-              <Text style={[styles.flowAmt, { color: INCOME_GREEN }]}>{fmtINR(earned)}</Text>
+          <Pressable style={styles.flowCard} onPress={() => setShowIncomeHistory(true)}>
+            <View style={styles.flowRow}>
+              <View style={styles.flowItem}>
+                <Text style={styles.flowLabel}>💰 {L('aaya', 'in')}</Text>
+                <Text style={[styles.flowAmt, { color: INCOME_GREEN }]}>{fmtINR(earned)}</Text>
+              </View>
+              <View style={styles.flowDivider} />
+              <View style={styles.flowItem}>
+                <Text style={styles.flowLabel}>💸 {L('gaya', 'out')}</Text>
+                <Text style={[styles.flowAmt, { color: colors.dangerDeep }]}>{fmtINR(spent)}</Text>
+              </View>
+              <View style={styles.flowDivider} />
+              <View style={styles.flowItem}>
+                <Text style={styles.flowLabel}>✨ {L('bacha', 'net')}</Text>
+                <Text style={[styles.flowAmt, { color: net < 0 ? colors.dangerDeep : INCOME_GREEN }]}>{fmtINR(net)}</Text>
+              </View>
             </View>
-            <View style={styles.flowDivider} />
-            <View style={styles.flowItem}>
-              <Text style={styles.flowLabel}>💸 {L('gaya', 'out')}</Text>
-              <Text style={styles.flowAmt}>{fmtINR(spent)}</Text>
+
+            {/* proportion bar: how much of income is still left vs spent */}
+            <View style={styles.flowBarTrack}>
+              <View style={[styles.flowBarFill, { width: `${Math.min(100, earned > 0 ? (spent / earned) * 100 : 0)}%` }]} />
             </View>
-            <View style={styles.flowDivider} />
-            <View style={styles.flowItem}>
-              <Text style={styles.flowLabel}>✨ {L('bacha', 'net')}</Text>
-              <Text style={[styles.flowAmt, { color: net < 0 ? colors.dangerDeep : INCOME_GREEN }]}>{fmtINR(net)}</Text>
-            </View>
-          </View>
+            <Text style={styles.flowCaption}>
+              {net < 0
+                ? L('income se zyada kharch ho gaya 💀', 'spent more than you earned 💀')
+                : L(`income ka ${Math.round((net / earned) * 100)}% bacha liya 💚`, `saved ${Math.round((net / earned) * 100)}% of income 💚`)}
+              {'  ·  '}
+              {L('tap → saara income', 'tap → all income')}
+            </Text>
+          </Pressable>
         ) : null}
 
         {/* ── streaks ── */}
@@ -258,13 +274,17 @@ export default function HomeScreen() {
         )}
       </ScrollView>
 
-      {/* floating buttons: green 💰 to add income, pink + to add an expense */}
-      <Pressable style={styles.fabIncome} onPress={openAddIncome}>
-        <Text style={styles.fabIncomeText}>💰</Text>
-      </Pressable>
-      <Pressable style={styles.fab} onPress={openAdd}>
-        <Text style={styles.fabPlus}>+</Text>
-      </Pressable>
+      {/* floating action pills: green income (top), pink expense (bottom) */}
+      <View style={styles.fabStack}>
+        <Pressable style={[styles.fabPill, styles.fabPillIncome]} onPress={openAddIncome}>
+          <Text style={styles.fabPillIcon}>💰</Text>
+          <Text style={styles.fabPillText}>{L('income', 'income')}</Text>
+        </Pressable>
+        <Pressable style={[styles.fabPill, styles.fabPillExpense]} onPress={openAdd}>
+          <Text style={styles.fabPillPlus}>＋</Text>
+          <Text style={styles.fabPillText}>{L('kharcha', 'expense')}</Text>
+        </Pressable>
+      </View>
 
       <AddExpenseModal
         visible={showAdd}
@@ -280,6 +300,14 @@ export default function HomeScreen() {
         onClose={() => {
           setShowIncome(false);
           setEditingIncome(null);
+        }}
+      />
+      <IncomeHistoryModal
+        visible={showIncomeHistory}
+        onClose={() => setShowIncomeHistory(false)}
+        onEdit={(i) => {
+          setShowIncomeHistory(false);
+          openEditIncome(i);
         }}
       />
       <RegretAuditModal visible={showRegret} onClose={() => setShowRegret(false)} />
@@ -398,27 +426,22 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
     elevation: 6,
   },
   fabPlus: { color: colors.onAccent, fontSize: 30, fontWeight: '400', marginTop: -2 },
-  fabIncome: {
-    position: 'absolute',
-    right: spacing.lg,
-    bottom: spacing.lg + 58 + spacing.sm, // sits just above the expense FAB
-    width: 58,
-    height: 58,
-    borderRadius: 999,
-    backgroundColor: INCOME_GREEN,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: INCOME_GREEN,
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
-  },
-  fabIncomeText: { fontSize: 26 },
 
-  flowCard: { flexDirection: 'row', backgroundColor: colors.cardBg, borderRadius: radius.cards, padding: spacing.md, marginTop: spacing.md, alignItems: 'center', shadowColor: colors.cardShadow, shadowOpacity: 1, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
+  fabStack: { position: 'absolute', right: spacing.lg, bottom: spacing.lg, gap: spacing.sm, alignItems: 'flex-end' },
+  fabPill: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.sm + 2, paddingHorizontal: spacing.md, borderRadius: radius.buttons, shadowOpacity: 0.4, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 5 },
+  fabPillIncome: { backgroundColor: INCOME_GREEN, shadowColor: INCOME_GREEN },
+  fabPillExpense: { backgroundColor: colors.rose, shadowColor: colors.rose },
+  fabPillIcon: { fontSize: 16 },
+  fabPillPlus: { fontSize: 16, color: '#FFFFFF', fontWeight: '700' },
+  fabPillText: { fontSize: typography.small.fontSize, color: '#FFFFFF', fontWeight: '700' },
+
+  flowCard: { backgroundColor: colors.cardBg, borderRadius: radius.cards, padding: spacing.md, marginTop: spacing.md, shadowColor: colors.cardShadow, shadowOpacity: 1, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
+  flowRow: { flexDirection: 'row', alignItems: 'center' },
   flowItem: { flex: 1, alignItems: 'center' },
   flowDivider: { width: 1, alignSelf: 'stretch', backgroundColor: colors.border },
   flowLabel: { fontSize: typography.tiny.fontSize, color: colors.textLight, marginBottom: 2 },
   flowAmt: { fontSize: typography.title.fontSize, fontWeight: '700', color: colors.text },
+  flowBarTrack: { height: 8, borderRadius: 999, backgroundColor: colors.mint, overflow: 'hidden', marginTop: spacing.md },
+  flowBarFill: { height: '100%', borderRadius: 999, backgroundColor: colors.coral },
+  flowCaption: { fontSize: typography.tiny.fontSize, color: colors.textLight, marginTop: spacing.sm, textAlign: 'center' },
 });

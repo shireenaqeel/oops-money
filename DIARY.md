@@ -9,6 +9,7 @@
 **How:** New `Income` type + `INCOME_SOURCES` (fixed greenish pastels, like categories) + `om_incomes` storage key. Context gains `incomes` + `addIncome/updateIncome/deleteIncome` (mirrors expenses; auto-backup picks it up free since it's a KEYS entry). `AddIncomeModal` mirrors AddExpenseModal but simpler. Home merges expenses+incomes into one date-sorted RECENT list; the in/out/net card only shows once income exists. Income is kept fully separate from expenses, so budget/insights math is unchanged.
 **Files changed:** `src/types/index.ts`, `src/constants/incomes.ts` (new), `src/storage/index.ts` (+`incomes` key), `src/hooks/useAppContext.tsx`, `src/screens/AddIncomeModal.tsx` (new), `src/screens/HomeScreen.tsx`.
 **How to test on phone:** Home → tap the green **💰** → enter amount, pick a source (Salary, Gift, etc.), note + date → add. The aaya/gaya/bacha card appears, the income shows green in RECENT, and "bacha" = income − spent. Tap an income to edit/delete.
+**Polish (same day):** FABs became labeled pills (💰 income / ＋ kharcha) instead of plain circles; the in/out/net card got a proportion bar + "saved X%" caption and is now **tappable → full income history** (`IncomeHistoryModal`, tap an entry to edit); add-income form flashes "aa gaya babe 💰" on save.
 **Next up:** (optional later) income in Insights, recurring monthly salary auto-prompt.
 
 ---
