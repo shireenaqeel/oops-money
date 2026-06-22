@@ -3,6 +3,16 @@
 
 ---
 
+## Feature — Add income, not just expenses 💰 — 22 Jun 2026
+**What:** You can now log **income** (money IN) — salary, freelance, gift, refund, returns, pocket money, etc. A green **💰 button** on Home (above the pink expense +) opens an add-income form (amount, source, note, date). Home shows a new **aaya / gaya / bacha** card (income / spent / net this month), and income entries appear in the RECENT diary in green with a `+₹`. Tap to edit, ✕ to delete.
+**Why:** App only tracked spending; she wanted the other side of the money picture.
+**How:** New `Income` type + `INCOME_SOURCES` (fixed greenish pastels, like categories) + `om_incomes` storage key. Context gains `incomes` + `addIncome/updateIncome/deleteIncome` (mirrors expenses; auto-backup picks it up free since it's a KEYS entry). `AddIncomeModal` mirrors AddExpenseModal but simpler. Home merges expenses+incomes into one date-sorted RECENT list; the in/out/net card only shows once income exists. Income is kept fully separate from expenses, so budget/insights math is unchanged.
+**Files changed:** `src/types/index.ts`, `src/constants/incomes.ts` (new), `src/storage/index.ts` (+`incomes` key), `src/hooks/useAppContext.tsx`, `src/screens/AddIncomeModal.tsx` (new), `src/screens/HomeScreen.tsx`.
+**How to test on phone:** Home → tap the green **💰** → enter amount, pick a source (Salary, Gift, etc.), note + date → add. The aaya/gaya/bacha card appears, the income shows green in RECENT, and "bacha" = income − spent. Tap an income to edit/delete.
+**Next up:** (optional later) income in Insights, recurring monthly salary auto-prompt.
+
+---
+
 ## Feature — Auto cloud backup on every change ☁️ — 22 Jun 2026
 **What:** When signed in, the app now backs up to the cloud **automatically** after any data change (add an expense, edit a category, etc.) — no need to tap "Back up" each time. Manual Back up / Restore buttons still exist for force-sync.
 **Why:** She wanted immediate sync so nothing is ever lost between manual backups.

@@ -1,6 +1,16 @@
 // types/index.ts — all shared TypeScript interfaces for the app.
 // Every other file imports its data shapes from here, so types stay consistent.
 
+// A logged income entry (salary, freelance, gift, etc.) — money IN, kept separate from expenses.
+export interface Income {
+  id: string;
+  amount: number;
+  source: string; // links to an INCOME_SOURCES id
+  note: string;
+  date: string; // ISO yyyy-mm-dd
+  color: string; // cached source colour for quick rendering
+}
+
 // A spending category (built-in or custom). Emoji is the first token of `name`.
 export interface Category {
   id: string;

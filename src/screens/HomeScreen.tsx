@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet, ScrollView, Alert as RNAlert } from 'react-native';
 import { Screen } from '../components/shared';
 import AddExpenseModal from './AddExpenseModal';
+import AddIncomeModal from './AddIncomeModal';
 import RegretAuditModal from './RegretAuditModal';
 import BillDuePrompt from './BillDuePrompt';
 import AlertList from '../components/AlertList';
@@ -16,7 +17,11 @@ import { fmtINR, fmtDateLabel, getToday, daysSince } from '../utils';
 import { monthExpenses, sumExpenses, getBudgetState, getAlerts, getStreaks } from '../utils/calculations';
 import { buildConfession, confessToBestie } from '../utils/bestie';
 import { findCat } from '../constants/categories';
+import { findSource, sumIncomes, monthIncomes } from '../constants/incomes';
+import { Income } from '../types';
 import { COPY } from '../constants/copy';
+
+const INCOME_GREEN = '#5FBF93';
 
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const REGRET_EMOJI: Record<string, string> = { worth: '😍', meh: '😐', regret: '😭' };
@@ -25,9 +30,11 @@ export default function HomeScreen() {
   const colors = useTheme();
   const styles = makeStyles(colors);
   useLang(); // subscribe so text re-renders when language toggles
-  const { expenses, budget, splurgeFund, customCats, catBudgets, bestieName, bestiePhone, deleteExpense } = useAppContext();
+  const { expenses, incomes, budget, splurgeFund, customCats, catBudgets, bestieName, bestiePhone, deleteExpense, deleteIncome } = useAppContext();
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
+  const [showIncome, setShowIncome] = useState(false);
+  const [editingIncome, setEditingIncome] = useState<Income | null>(null);
   const [showRegret, setShowRegret] = useState(false);
 
   // Purchases that are 7+ days old and not yet rated — ready for a "was it worth it?" check.
@@ -54,7 +61,20 @@ export default function HomeScreen() {
   const bs = getBudgetState(spent, budget, colors);
   const alerts = getAlerts(expenses, budget, splurgeFund, customCats, month, year, getToday(), catBudgets);
   const streaks = getStreaks(expenses, budget);
-  const recent = thisMonth.slice(0, 8); // newest first (expenses are stored newest-first)
+
+  // Income this month + net (money in − money out).
+  const thisMonthIncome = monthIncomes(incomes, month, year);
+  const earned = sumIncomes(thisMonthIncome);
+  const net = earned - spent;
+  const hasMoneyFlow = earned > 0; // only show the in/out/net card once there's income logged
+
+  // Merge expenses + incomes into one recent "money diary", newest date first.
+  const recent = [
+    ...thisMonth.map((e) => ({ kind: 'expense' as const, date: e.date, exp: e })),
+    ...thisMonthIncome.map((i) => ({ kind: 'income' as const, date: i.date, inc: i })),
+  ]
+    .sort((a, b) => (a.date < b.date ? 1 : -1))
+    .slice(0, 10);
 
   // Open WhatsApp/share with a sassy confession to the bestie (over-budget nudge).
   function confessToFriend() {
@@ -67,6 +87,18 @@ export default function HomeScreen() {
       { text: L('rehne do', 'cancel'), style: 'cancel' },
       { text: L('haan, delete', 'yes, delete'), style: 'destructive', onPress: () => deleteExpense(id) },
     ]);
+  }
+
+  // Open the modal to add a new income.
+  function openAddIncome() {
+    setEditingIncome(null);
+    setShowIncome(true);
+  }
+
+  // Open the modal pre-filled to edit an income.
+  function openEditIncome(i: Income) {
+    setEditingIncome(i);
+    setShowIncome(true);
   }
 
   return (
@@ -97,6 +129,26 @@ export default function HomeScreen() {
             <Text style={styles.noBudget}>{L('Settings mein budget set karo taaki track kar sako 🎯', 'Set a budget in Settings so you can track it 🎯')}</Text>
           )}
         </View>
+
+        {/* ── money in / out / net (only once income is logged) ── */}
+        {hasMoneyFlow ? (
+          <View style={styles.flowCard}>
+            <View style={styles.flowItem}>
+              <Text style={styles.flowLabel}>💰 {L('aaya', 'in')}</Text>
+              <Text style={[styles.flowAmt, { color: INCOME_GREEN }]}>{fmtINR(earned)}</Text>
+            </View>
+            <View style={styles.flowDivider} />
+            <View style={styles.flowItem}>
+              <Text style={styles.flowLabel}>💸 {L('gaya', 'out')}</Text>
+              <Text style={styles.flowAmt}>{fmtINR(spent)}</Text>
+            </View>
+            <View style={styles.flowDivider} />
+            <View style={styles.flowItem}>
+              <Text style={styles.flowLabel}>✨ {L('bacha', 'net')}</Text>
+              <Text style={[styles.flowAmt, { color: net < 0 ? colors.dangerDeep : INCOME_GREEN }]}>{fmtINR(net)}</Text>
+            </View>
+          </View>
+        ) : null}
 
         {/* ── streaks ── */}
         <View style={styles.streakCard}>
@@ -149,7 +201,30 @@ export default function HomeScreen() {
             <Text style={styles.emptyHint}>{L('neeche pink "+" dabake apna pehla kharcha add karo ✨', 'tap the pink "+" below to add your first expense ✨')}</Text>
           </View>
         ) : (
-          recent.map((e) => {
+          recent.map((row) => {
+            if (row.kind === 'income') {
+              const i = row.inc;
+              const src = findSource(i.source);
+              const emoji = src.name.split(' ')[0];
+              const label = src.name.slice(src.name.indexOf(' ') + 1);
+              return (
+                <Pressable key={`inc-${i.id}`} style={styles.histItem} onPress={() => openEditIncome(i)}>
+                  <View style={[styles.histIcon, { backgroundColor: src.bg }]}>
+                    <Text style={styles.histEmoji}>{emoji}</Text>
+                  </View>
+                  <View style={styles.flex1}>
+                    <Text style={styles.histName}>{label}</Text>
+                    {i.note ? <Text style={styles.histNote} numberOfLines={1}>{i.note}</Text> : null}
+                    <Text style={styles.histDate}>{fmtDateLabel(i.date)} · {L('income', 'income')} 💰</Text>
+                  </View>
+                  <Text style={[styles.histAmount, { color: INCOME_GREEN }]}>+{fmtINR(i.amount)}</Text>
+                  <Pressable onPress={() => deleteIncome(i.id)} hitSlop={10} style={styles.delBtn}>
+                    <Text style={styles.delText}>✕</Text>
+                  </Pressable>
+                </Pressable>
+              );
+            }
+            const e = row.exp;
             const cat = findCat(e.catId, customCats);
             const emoji = cat.name.split(' ')[0];
             const label = cat.name.slice(cat.name.indexOf(' ') + 1);
@@ -183,7 +258,10 @@ export default function HomeScreen() {
         )}
       </ScrollView>
 
-      {/* floating + button to log a new expense */}
+      {/* floating buttons: green 💰 to add income, pink + to add an expense */}
+      <Pressable style={styles.fabIncome} onPress={openAddIncome}>
+        <Text style={styles.fabIncomeText}>💰</Text>
+      </Pressable>
       <Pressable style={styles.fab} onPress={openAdd}>
         <Text style={styles.fabPlus}>+</Text>
       </Pressable>
@@ -194,6 +272,14 @@ export default function HomeScreen() {
         onClose={() => {
           setShowAdd(false);
           setEditing(null);
+        }}
+      />
+      <AddIncomeModal
+        visible={showIncome}
+        editing={editingIncome}
+        onClose={() => {
+          setShowIncome(false);
+          setEditingIncome(null);
         }}
       />
       <RegretAuditModal visible={showRegret} onClose={() => setShowRegret(false)} />
@@ -312,4 +398,27 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
     elevation: 6,
   },
   fabPlus: { color: colors.onAccent, fontSize: 30, fontWeight: '400', marginTop: -2 },
+  fabIncome: {
+    position: 'absolute',
+    right: spacing.lg,
+    bottom: spacing.lg + 58 + spacing.sm, // sits just above the expense FAB
+    width: 58,
+    height: 58,
+    borderRadius: 999,
+    backgroundColor: INCOME_GREEN,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: INCOME_GREEN,
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  fabIncomeText: { fontSize: 26 },
+
+  flowCard: { flexDirection: 'row', backgroundColor: colors.cardBg, borderRadius: radius.cards, padding: spacing.md, marginTop: spacing.md, alignItems: 'center', shadowColor: colors.cardShadow, shadowOpacity: 1, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
+  flowItem: { flex: 1, alignItems: 'center' },
+  flowDivider: { width: 1, alignSelf: 'stretch', backgroundColor: colors.border },
+  flowLabel: { fontSize: typography.tiny.fontSize, color: colors.textLight, marginBottom: 2 },
+  flowAmt: { fontSize: typography.title.fontSize, fontWeight: '700', color: colors.text },
 });

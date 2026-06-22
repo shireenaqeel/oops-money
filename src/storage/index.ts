@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // All storage keys. Prefix "om_" = oops money, so we never clash with other apps.
 export const KEYS = {
   expenses: 'om_expenses',
+  incomes: 'om_incomes', // logged income entries (salary, gifts, etc.) — money IN
   recurring: 'om_recurring',
   impulse: 'om_impulse',
   letters: 'om_letters',

@@ -1,7 +1,7 @@
 // useAppContext.tsx — MAIN STATE MANAGEMENT. The single source of truth for app data.
 // Loads everything from storage once on launch, then every screen reads/writes through this hook.
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { Category, Expense, Goal, CatBudgets, ImpulseItem, Letter, Recurring, WishItem, Challenge, EventBudget } from '../types';
+import { Category, Expense, Income, Goal, CatBudgets, ImpulseItem, Letter, Recurring, WishItem, Challenge, EventBudget } from '../types';
 import { KEYS, clearAll, loadJSON, loadString, saveJSON, saveString } from '../storage';
 import { PASTEL_COLORS, CATS, findCat, installCatOverrides, CatOverride } from '../constants/categories';
 import { genId, getToday } from '../utils';
@@ -13,6 +13,7 @@ interface AppState {
   loading: boolean; // true until the first load from storage finishes
   onboarded: boolean; // false on first ever launch
   expenses: Expense[];
+  incomes: Income[];
   recurring: Recurring[];
   impulse: ImpulseItem[];
   letters: Letter[];
@@ -35,6 +36,9 @@ interface AppState {
   completeOnboarding: () => Promise<void>;
   saveOnboarding: (data: { income: string; budget: string; splurgeFund: string }) => Promise<void>;
   addExpense: (e: Omit<Expense, 'id'>) => Promise<void>;
+  addIncome: (i: Omit<Income, 'id'>) => Promise<void>;
+  updateIncome: (id: string, changes: Omit<Income, 'id'>) => Promise<void>;
+  deleteIncome: (id: string) => Promise<void>;
   updateExpense: (id: string, changes: Omit<Expense, 'id'>) => Promise<void>;
   rateExpense: (id: string, regret: 'worth' | 'meh' | 'regret') => Promise<void>;
   bulkAddExpenses: (items: Omit<Expense, 'id'>[]) => Promise<void>;
@@ -85,6 +89,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [onboarded, setOnboarded] = useState(false);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [incomes, setIncomes] = useState<Income[]>([]);
   const [recurring, setRecurring] = useState<Recurring[]>([]);
   const [impulse, setImpulse] = useState<ImpulseItem[]>([]);
   const [letters, setLetters] = useState<Letter[]>([]);
@@ -107,8 +112,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Pull all persisted data from storage into state.
   const reload = useCallback(async () => {
-    const [exp, rec, imp, ltrs, cc, catOv, bud, inc, spl, onb, shield, pStarts, cLen, cBudgets, gls, billRem, bName, bPhone, wish, chals, evts] = await Promise.all([
+    const [exp, incs, rec, imp, ltrs, cc, catOv, bud, inc, spl, onb, shield, pStarts, cLen, cBudgets, gls, billRem, bName, bPhone, wish, chals, evts] = await Promise.all([
       loadJSON<Expense[]>(KEYS.expenses, []),
+      loadJSON<Income[]>(KEYS.incomes, []),
       loadJSON<Recurring[]>(KEYS.recurring, []),
       loadJSON<ImpulseItem[]>(KEYS.impulse, []),
       loadJSON<Letter[]>(KEYS.letters, []),
@@ -131,6 +137,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       loadJSON<EventBudget[]>(KEYS.events, []),
     ]);
     setExpenses(exp);
+    setIncomes(incs);
     setRecurring(rec);
     setImpulse(imp);
     setLetters(ltrs);
@@ -234,6 +241,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       await saveJSON(KEYS.expenses, next);
     },
     [expenses]
+  );
+
+  // Add a new income entry (money IN) to the top of the list and persist.
+  const addIncome = useCallback(
+    async (i: Omit<Income, 'id'>) => {
+      const next = [{ ...i, id: genId() }, ...incomes];
+      setIncomes(next);
+      await saveJSON(KEYS.incomes, next);
+    },
+    [incomes]
+  );
+
+  // Edit an existing income (keeps its id) and persist.
+  const updateIncome = useCallback(
+    async (id: string, changes: Omit<Income, 'id'>) => {
+      const next = incomes.map((i) => (i.id === id ? { ...changes, id } : i));
+      setIncomes(next);
+      await saveJSON(KEYS.incomes, next);
+    },
+    [incomes]
+  );
+
+  // Remove an income by id and persist.
+  const deleteIncome = useCallback(
+    async (id: string) => {
+      const next = incomes.filter((x) => x.id !== id);
+      setIncomes(next);
+      await saveJSON(KEYS.incomes, next);
+    },
+    [incomes]
   );
 
   // Put a new tempting item into impulse jail (status "jailed", 24h clock starts now).
@@ -659,6 +696,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     loading,
     onboarded,
     expenses,
+    incomes,
     recurring,
     impulse,
     letters,
@@ -681,6 +719,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     completeOnboarding,
     saveOnboarding,
     addExpense,
+    addIncome,
+    updateIncome,
+    deleteIncome,
     updateExpense,
     rateExpense,
     bulkAddExpenses,
