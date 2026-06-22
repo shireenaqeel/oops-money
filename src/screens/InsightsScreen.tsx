@@ -18,7 +18,10 @@ import { monthExpenses, sumExpenses, getAlerts } from '../utils/calculations';
 import { getSalaryCurve } from '../utils/salaryCurve';
 import { getCycleInfo, getCycleSpendInsight } from '../utils/cycle';
 import { findCat } from '../constants/categories';
+import { findSource, sumIncomes, monthIncomes } from '../constants/incomes';
 import { MOODS } from '../constants/moods';
+
+const INCOME_GREEN = '#5FBF93';
 
 const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -31,7 +34,7 @@ function toISO(d: Date): string {
 }
 
 export default function InsightsScreen() {
-  const { expenses, budget, splurgeFund, customCats, catBudgets, periodStarts, cycleLength } = useAppContext();
+  const { expenses, incomes, budget, splurgeFund, customCats, catBudgets, periodStarts, cycleLength } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
   useLang(); // subscribe so text re-renders when language toggles
@@ -48,6 +51,14 @@ export default function InsightsScreen() {
   const thisMonth = monthExpenses(expenses, month, year);
   const total = sumExpenses(thisMonth);
   const dayAvg = Math.round(total / Math.max(now.getDate(), 1));
+
+  // Income this month: total, net, and a by-source breakdown (biggest first).
+  const thisMonthIncome = monthIncomes(incomes, month, year);
+  const earned = sumIncomes(thisMonthIncome);
+  const netSaved = earned - total;
+  const bySource = [...new Set(thisMonthIncome.map((i) => i.source))]
+    .map((src) => ({ source: findSource(src), amount: sumIncomes(thisMonthIncome.filter((i) => i.source === src)) }))
+    .sort((a, b) => b.amount - a.amount);
 
   // Spend per category this month, biggest first.
   const byCat = [...new Set(thisMonth.map((e) => e.catId))]
@@ -150,6 +161,39 @@ export default function InsightsScreen() {
             </View>
           ))}
         </View>
+
+        {/* income this month (only if any logged) */}
+        {earned > 0 ? (
+          <View style={styles.card}>
+            <Text style={styles.sectionLabel}>{L('INCOME IS MAHINE 💰', 'INCOME THIS MONTH 💰')}</Text>
+            <View style={styles.incomeTopRow}>
+              <View>
+                <Text style={styles.incomeBig}>{fmtINR(earned)}</Text>
+                <Text style={styles.incomeSub}>{L('total aaya', 'total in')}</Text>
+              </View>
+              <View style={styles.incomeNetBox}>
+                <Text style={[styles.incomeNet, { color: netSaved < 0 ? colors.dangerDeep : INCOME_GREEN }]}>{netSaved < 0 ? '' : '+'}{fmtINR(netSaved)}</Text>
+                <Text style={styles.incomeSub}>{netSaved < 0 ? L('income se zyada kharch', 'over-spent') : L('bacha', 'net saved')}</Text>
+              </View>
+            </View>
+
+            {/* by source breakdown */}
+            {bySource.map((s) => {
+              const pct = earned > 0 ? Math.round((s.amount / earned) * 100) : 0;
+              return (
+                <View key={s.source.id} style={styles.breakRow}>
+                  <View style={styles.breakTop}>
+                    <Text style={styles.breakName}>{s.source.name}</Text>
+                    <Text style={styles.breakAmt}>{fmtINR(s.amount)} <Text style={styles.breakPct}>{pct}%</Text></Text>
+                  </View>
+                  <View style={styles.breakTrack}>
+                    <View style={[styles.breakFill, { width: `${pct}%`, backgroundColor: INCOME_GREEN }]} />
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        ) : null}
 
         {/* weekly chart */}
         <View style={styles.card}>
@@ -396,6 +440,12 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   regretRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: spacing.sm },
   regretStat: { fontSize: typography.title.fontSize, fontWeight: '700', color: colors.text },
   regretLine: { fontSize: typography.small.fontSize, color: colors.text, marginTop: spacing.xs },
+
+  incomeTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.lg },
+  incomeBig: { fontSize: typography.display.fontSize, fontWeight: '800', color: INCOME_GREEN },
+  incomeNetBox: { alignItems: 'flex-end' },
+  incomeNet: { fontSize: typography.title.fontSize, fontWeight: '800' },
+  incomeSub: { fontSize: typography.small.fontSize, color: colors.textLight, marginTop: 2 },
 
   breakRow: { marginBottom: spacing.md },
   breakTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.xs },

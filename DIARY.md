@@ -10,7 +10,8 @@
 **Files changed:** `src/types/index.ts`, `src/constants/incomes.ts` (new), `src/storage/index.ts` (+`incomes` key), `src/hooks/useAppContext.tsx`, `src/screens/AddIncomeModal.tsx` (new), `src/screens/HomeScreen.tsx`.
 **How to test on phone:** Home → tap the green **💰** → enter amount, pick a source (Salary, Gift, etc.), note + date → add. The aaya/gaya/bacha card appears, the income shows green in RECENT, and "bacha" = income − spent. Tap an income to edit/delete.
 **Polish (same day):** FABs became labeled pills (💰 income / ＋ kharcha) instead of plain circles; the in/out/net card got a proportion bar + "saved X%" caption and is now **tappable → full income history** (`IncomeHistoryModal`, tap an entry to edit); add-income form flashes "aa gaya babe 💰" on save.
-**Next up:** (optional later) income in Insights, recurring monthly salary auto-prompt.
+**Income in Insights (same day):** Insights ✿ now has an **INCOME THIS MONTH 💰** card — total earned, net saved (in − out), and a by-source breakdown bar (reuses the category-breakdown styling, green bars). Only shows when income exists this month.
+**Next up:** (optional later) recurring monthly salary auto-prompt.
 
 ---
 
