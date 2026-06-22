@@ -6,6 +6,8 @@ import { sumExpenses } from './calculations';
 const DAY = 86400000;
 const PMS_WINDOW = 5; // days before a period start we treat as the "PMS week"
 const PERIOD_DAYS = 5; // days from a start date we treat as "on period"
+const OVULATION_BEFORE = 14; // ovulation lands ~14 days before the next period
+const FERTILE_WINDOW = 6; // fertile window = the 5 days before ovulation + ovulation day
 
 // yyyy-mm-dd for a Date (local).
 function iso(d: Date): string {
@@ -28,11 +30,14 @@ function shift(isoStr: string, n: number): string {
   return iso(d);
 }
 
-export type Phase = 'period' | 'pms' | 'normal' | 'unknown';
+export type Phase = 'period' | 'fertile' | 'pms' | 'normal' | 'unknown';
 
 export interface CycleInfo {
   lastStart: string | null; // most recent logged start
   nextPredicted: string | null; // lastStart + cycleLength
+  ovulation: string | null; // predicted ovulation day (~14 days before next period)
+  fertileStart: string | null; // start of the fertile window
+  fertileEnd: string | null; // end of the fertile window
   dayOfCycle: number | null; // 1-based day within the current cycle
   daysToNext: number | null; // days until the next predicted period
   phase: Phase;
@@ -43,23 +48,28 @@ function cleanStarts(starts: string[]): string[] {
   return [...new Set(starts.filter(Boolean))].sort((a, b) => (a < b ? 1 : -1));
 }
 
-// Work out where today sits in the cycle and predict the next period.
+// Work out where today sits in the cycle and predict the next period, ovulation and fertile window.
 export function getCycleInfo(starts: string[], cycleLength: number, todayIso: string): CycleInfo {
   const sorted = cleanStarts(starts);
   const len = cycleLength > 0 ? cycleLength : 28;
   if (sorted.length === 0) {
-    return { lastStart: null, nextPredicted: null, dayOfCycle: null, daysToNext: null, phase: 'unknown' };
+    return { lastStart: null, nextPredicted: null, ovulation: null, fertileStart: null, fertileEnd: null, dayOfCycle: null, daysToNext: null, phase: 'unknown' };
   }
   const lastStart = sorted[0];
   const nextPredicted = shift(lastStart, len);
+  // Ovulation is ~14 days before the next period; the fertile window is the 5 days before it plus ovulation day.
+  const ovulation = shift(nextPredicted, -OVULATION_BEFORE);
+  const fertileStart = shift(ovulation, -(FERTILE_WINDOW - 1));
+  const fertileEnd = ovulation;
   const dayOfCycle = diffDays(lastStart, todayIso) + 1; // day 1 = the start date itself
   const daysToNext = diffDays(todayIso, nextPredicted);
 
   let phase: Phase = 'normal';
   if (dayOfCycle >= 1 && dayOfCycle <= PERIOD_DAYS) phase = 'period';
   else if (daysToNext >= 0 && daysToNext <= PMS_WINDOW) phase = 'pms';
+  else if (todayIso >= fertileStart && todayIso <= fertileEnd) phase = 'fertile';
 
-  return { lastStart, nextPredicted, dayOfCycle, daysToNext, phase };
+  return { lastStart, nextPredicted, ovulation, fertileStart, fertileEnd, dayOfCycle, daysToNext, phase };
 }
 
 export interface CycleSpendInsight {

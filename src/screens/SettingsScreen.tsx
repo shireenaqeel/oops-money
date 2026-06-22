@@ -8,6 +8,7 @@ import CategoryBudgets from '../components/CategoryBudgets';
 import BestieMode from '../components/BestieMode';
 import CloudBackup from '../components/CloudBackup';
 import GoalsModal from './GoalsModal';
+import CycleModal from './CycleModal';
 import WishlistModal from './WishlistModal';
 import ChallengesModal from './ChallengesModal';
 import EventsModal from './EventsModal';
@@ -27,6 +28,7 @@ export default function SettingsScreen() {
   const [draft, setDraft] = useState('');
   const [showImport, setShowImport] = useState(false);
   const [showGoals, setShowGoals] = useState(false);
+  const [showCycle, setShowCycle] = useState(false);
   const [showWishlist, setShowWishlist] = useState(false);
   const [showChallenges, setShowChallenges] = useState(false);
   const [showEvents, setShowEvents] = useState(false);
@@ -210,6 +212,16 @@ export default function SettingsScreen() {
         {/* accountability bestie */}
         <BestieMode />
 
+        {/* period / cycle tracking — opens its own full-screen space */}
+        <Pressable style={styles.cycleBtn} onPress={() => setShowCycle(true)}>
+          <Text style={styles.goalsEmoji}>🌸</Text>
+          <View style={styles.flex1}>
+            <Text style={styles.goalsTitle}>{L('Cycle Tracking', 'Cycle Tracking')}</Text>
+            <Text style={styles.goalsSub}>{L('period log karo, phase + agla period dekho, aur PMS week ka kharcha samjho 🩸', 'log your period, see your phase + next period, and your PMS-week spending 🩸')}</Text>
+          </View>
+          <Text style={styles.goalsArrow}>›</Text>
+        </Pressable>
+
         {/* future-me letters */}
         <View style={styles.card}>
           <Text style={styles.cardLabel}>{L('FUTURE-ME LETTERS 💌', 'FUTURE-ME LETTERS 💌')}</Text>
@@ -243,6 +255,7 @@ export default function SettingsScreen() {
       </ScrollView>
       <CSVImportModal visible={showImport} onClose={() => setShowImport(false)} />
       <GoalsModal visible={showGoals} onClose={() => setShowGoals(false)} />
+      <CycleModal visible={showCycle} onClose={() => setShowCycle(false)} />
       <WishlistModal visible={showWishlist} onClose={() => setShowWishlist(false)} />
       <ChallengesModal visible={showChallenges} onClose={() => setShowChallenges(false)} />
       <EventsModal visible={showEvents} onClose={() => setShowEvents(false)} />
@@ -266,6 +279,7 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   themeName: { fontSize: typography.small.fontSize, color: colors.textLight, fontWeight: '600' },
   themeNameActive: { color: colors.onAccent, fontWeight: '700' },
   goalsBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.sage, borderRadius: radius.cards, padding: spacing.md, marginBottom: spacing.md },
+  cycleBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.blush, borderRadius: radius.cards, padding: spacing.md, marginBottom: spacing.md },
   wishBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.babyBlue, borderRadius: radius.cards, padding: spacing.md, marginBottom: spacing.md },
   challengeBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.periwinkle, borderRadius: radius.cards, padding: spacing.md, marginBottom: spacing.md },
   eventBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.coral, borderRadius: radius.cards, padding: spacing.md, marginBottom: spacing.md },
