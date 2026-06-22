@@ -43,6 +43,20 @@ export interface CycleInfo {
   phase: Phase;
 }
 
+// Which phase a given 1-based day-of-cycle falls in. Mirrors getCycleInfo's logic so the
+// ring and the hero card always agree. Days outside 1..len are treated as 'normal'.
+export function phaseForCycleDay(day: number, cycleLength: number): Phase {
+  const len = cycleLength > 0 ? cycleLength : 28;
+  if (day < 1 || day > len) return 'normal';
+  const daysToNext = len - day + 1; // days until the next period start (day len+1)
+  const ovulationDay = len - OVULATION_BEFORE; // day-of-cycle of ovulation
+  const fertileStartDay = ovulationDay - (FERTILE_WINDOW - 1);
+  if (day <= PERIOD_DAYS) return 'period';
+  if (daysToNext >= 0 && daysToNext <= PMS_WINDOW) return 'pms';
+  if (day >= fertileStartDay && day <= ovulationDay) return 'fertile';
+  return 'normal';
+}
+
 // Sort logged starts newest-first and drop blanks/dupes.
 function cleanStarts(starts: string[]): string[] {
   return [...new Set(starts.filter(Boolean))].sort((a, b) => (a < b ? 1 : -1));

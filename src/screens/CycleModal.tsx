@@ -12,6 +12,7 @@ import { useLang } from '../hooks/useLang';
 import { L } from '../i18n';
 import { fmtINR, fmtDateLabel, getToday } from '../utils';
 import { getCycleInfo, getCycleSpendInsight, Phase } from '../utils/cycle';
+import CycleRing from '../components/CycleRing';
 
 // A short label for each phase (shown big on the hero card).
 const PHASE_TITLE: Record<Phase, [string, string]> = {
@@ -59,19 +60,22 @@ export default function CycleModal({ visible, onClose }: { visible: boolean; onC
           <Text style={styles.title}>{L('Cycle 🌸', 'Cycle 🌸')}</Text>
           <Text style={styles.sub}>{L('period log karo, phase + agla period dekho, aur jaano PMS week mein kharcha badhta hai ya nahi. sab tumhare phone pe, private 🤍', 'log your period, see your phase + next period, and learn if PMS week bumps your spending. all on your phone, private 🤍')}</Text>
 
-          {/* hero phase card */}
-          <View style={[styles.hero, { backgroundColor: PHASE_BG[info.phase] }]}>
-            <Text style={styles.heroPhase}>{L(PHASE_TITLE[info.phase][0], PHASE_TITLE[info.phase][1])}</Text>
-            {info.dayOfCycle && info.dayOfCycle > 0 && info.phase !== 'unknown' ? (
-              <Text style={styles.heroDay}>{L(`cycle day ${info.dayOfCycle}`, `cycle day ${info.dayOfCycle}`)}</Text>
-            ) : null}
-            <Text style={styles.heroMsg}>{L(PHASE_MSG[info.phase][0], PHASE_MSG[info.phase][1])}</Text>
-            {info.nextPredicted && info.daysToNext != null && info.daysToNext >= 0 ? (
-              <View style={styles.heroNext}>
-                <Text style={styles.heroNextBig}>{info.daysToNext === 0 ? L('aaj', 'today') : L(`${info.daysToNext} din`, `${info.daysToNext} days`)}</Text>
-                <Text style={styles.heroNextSmall}>{L(`🔮 agla period · ${fmtDateLabel(info.nextPredicted)}`, `🔮 next period · ${fmtDateLabel(info.nextPredicted)}`)}</Text>
-              </View>
-            ) : null}
+          {/* cycle ring + current-phase banner */}
+          <View style={styles.ringCard}>
+            <CycleRing dayOfCycle={info.dayOfCycle} cycleLength={cycleLength} phase={info.phase} daysToNext={info.daysToNext} />
+
+            {/* legend */}
+            <View style={styles.legend}>
+              <View style={styles.legendItem}><View style={[styles.dot, { backgroundColor: colors.rose }]} /><Text style={styles.legendText}>{L('period', 'period')}</Text></View>
+              <View style={styles.legendItem}><View style={[styles.dot, { backgroundColor: colors.babyBlue }]} /><Text style={styles.legendText}>{L('fertile', 'fertile')}</Text></View>
+              <View style={styles.legendItem}><View style={[styles.dot, { backgroundColor: colors.coral }]} /><Text style={styles.legendText}>PMS</Text></View>
+            </View>
+
+            {/* current-phase line */}
+            <View style={[styles.phaseBanner, { backgroundColor: PHASE_BG[info.phase] }]}>
+              <Text style={styles.phaseTitle}>{L(PHASE_TITLE[info.phase][0], PHASE_TITLE[info.phase][1])}</Text>
+              <Text style={styles.phaseMsg}>{L(PHASE_MSG[info.phase][0], PHASE_MSG[info.phase][1])}</Text>
+            </View>
           </View>
 
           {/* prediction strip: next period / ovulation / fertile window */}
@@ -211,14 +215,15 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   title: { fontSize: typography.title.fontSize, fontWeight: '700', color: colors.text },
   sub: { fontSize: typography.small.fontSize, color: colors.textLight, marginTop: 2, marginBottom: spacing.lg, lineHeight: 19 },
 
-  // hero
-  hero: { borderRadius: radius.cards, padding: spacing.lg, marginBottom: spacing.md },
-  heroPhase: { fontSize: typography.title.fontSize, fontWeight: '800', color: colors.text },
-  heroDay: { fontSize: typography.tiny.fontSize, color: colors.text, opacity: 0.7, marginTop: 2, letterSpacing: 1 },
-  heroMsg: { fontSize: typography.small.fontSize, color: colors.text, fontWeight: '600', lineHeight: 19, marginTop: spacing.sm },
-  heroNext: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.sm, marginTop: spacing.md, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: 'rgba(74,63,74,0.12)' },
-  heroNextBig: { fontSize: typography.heading.fontSize, fontWeight: '800', color: colors.text },
-  heroNextSmall: { fontSize: typography.small.fontSize, color: colors.text, opacity: 0.8 },
+  // ring card
+  ringCard: { backgroundColor: colors.cardBg, borderRadius: radius.cards, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border, alignItems: 'center' },
+  legend: { flexDirection: 'row', justifyContent: 'center', gap: spacing.md, marginTop: spacing.md },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  dot: { width: 9, height: 9, borderRadius: 999 },
+  legendText: { fontSize: typography.tiny.fontSize, color: colors.textLight },
+  phaseBanner: { alignSelf: 'stretch', borderRadius: radius.inputs, padding: spacing.md, marginTop: spacing.md },
+  phaseTitle: { fontSize: typography.body.fontSize, fontWeight: '800', color: colors.text },
+  phaseMsg: { fontSize: typography.small.fontSize, color: colors.text, fontWeight: '600', lineHeight: 19, marginTop: 2 },
 
   // prediction strip
   predRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
