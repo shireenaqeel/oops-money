@@ -7,6 +7,7 @@ import CSVImportModal from './CSVImportModal';
 import CategoryBudgets from '../components/CategoryBudgets';
 import BestieMode from '../components/BestieMode';
 import CloudBackup from '../components/CloudBackup';
+import AICoachSettings from '../components/AICoachSettings';
 import GoalsModal from './GoalsModal';
 import CycleModal from './CycleModal';
 import WishlistModal from './WishlistModal';
@@ -127,6 +128,9 @@ export default function SettingsScreen() {
 
         {/* cloud backup — optional Google sign-in + sync */}
         <CloudBackup />
+
+        {/* AI coach — optional real AI via your own free Gemini key */}
+        <AICoachSettings />
 
         {/* theme picker */}
         <View style={styles.card}>

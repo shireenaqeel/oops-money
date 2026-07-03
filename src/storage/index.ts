@@ -31,6 +31,7 @@ export const KEYS = {
   challenges: 'om_challenges', // money challenges taken on (V3)
   events: 'om_events', // festival/shaadi season event budgets (V3)
   lang: 'om_lang', // selected language: 'hinglish' | 'english' (V3)
+  geminiKey: 'om_gemini_key', // user's own free Google Gemini API key for the optional AI coach (V3)
 } as const;
 
 // Read + JSON-parse a value, returning the fallback if it's missing or corrupted.

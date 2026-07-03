@@ -36,6 +36,7 @@ interface AppState {
   wishlist: WishItem[]; // manifest board / wishlist (V3)
   challenges: Challenge[]; // money challenges taken on (V3)
   events: EventBudget[]; // festival/shaadi season budgets (V3)
+  geminiKey: string; // user's own free Gemini API key for the optional AI coach (V3)
   completeOnboarding: () => Promise<void>;
   saveOnboarding: (data: { income: string; budget: string; splurgeFund: string }) => Promise<void>;
   addExpense: (e: Omit<Expense, 'id'>) => Promise<void>;
@@ -64,6 +65,7 @@ interface AppState {
   setPeriodEnd: (startIso: string, endIso: string | null) => Promise<void>; // mark/clear when a period ended
   logCycleDay: (dateIso: string, patch: CycleDayLog) => Promise<void>; // save that day's flow/symptoms/mood
   setCycleIrregular: (on: boolean) => Promise<void>; // toggle irregular / PCOS mode
+  setGeminiKey: (key: string) => Promise<void>; // save/clear the AI-coach API key
   setCycleLength: (days: number) => Promise<void>;
   setCatBudget: (catId: string, amount: number) => Promise<void>;
   removeCatBudget: (catId: string) => Promise<void>;
@@ -118,10 +120,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [wishlist, setWishlist] = useState<WishItem[]>([]);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [events, setEvents] = useState<EventBudget[]>([]);
+  const [geminiKey, setGeminiKeyState] = useState('');
 
   // Pull all persisted data from storage into state.
   const reload = useCallback(async () => {
-    const [exp, incs, rec, imp, ltrs, cc, catOv, bud, inc, spl, onb, shield, pStarts, pEnds, cDayLogs, cIrreg, cLen, cBudgets, gls, billRem, bName, bPhone, wish, chals, evts] = await Promise.all([
+    const [exp, incs, rec, imp, ltrs, cc, catOv, bud, inc, spl, onb, shield, pStarts, pEnds, cDayLogs, cIrreg, cLen, cBudgets, gls, billRem, bName, bPhone, wish, chals, evts, gKey] = await Promise.all([
       loadJSON<Expense[]>(KEYS.expenses, []),
       loadJSON<Income[]>(KEYS.incomes, []),
       loadJSON<Recurring[]>(KEYS.recurring, []),
@@ -147,6 +150,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       loadJSON<WishItem[]>(KEYS.wishlist, []),
       loadJSON<Challenge[]>(KEYS.challenges, []),
       loadJSON<EventBudget[]>(KEYS.events, []),
+      loadString(KEYS.geminiKey),
     ]);
     setExpenses(exp);
     setIncomes(incs);
@@ -174,6 +178,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setWishlist(wish);
     setChallenges(chals);
     setEvents(evts);
+    setGeminiKeyState(gKey);
   }, []);
 
   // On first mount, load everything, then drop the loading flag.
@@ -513,6 +518,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await saveString(KEYS.cycleIrregular, on ? 'true' : 'false');
   }, []);
 
+  // Save (or clear) the user's free Gemini API key for the optional AI coach.
+  const setGeminiKey = useCallback(async (key: string) => {
+    const trimmed = key.trim();
+    setGeminiKeyState(trimmed);
+    await saveString(KEYS.geminiKey, trimmed);
+  }, []);
+
   // Save the average cycle length (days) used for predictions.
   const setCycleLength = useCallback(async (days: number) => {
     const safe = Math.max(20, Math.min(45, Math.round(days) || 28)); // keep it sane
@@ -779,6 +791,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     wishlist,
     challenges,
     events,
+    geminiKey,
     completeOnboarding,
     saveOnboarding,
     addExpense,
@@ -807,6 +820,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setPeriodEnd,
     logCycleDay,
     setCycleIrregular,
+    setGeminiKey,
     setCycleLength,
     setCatBudget,
     removeCatBudget,
