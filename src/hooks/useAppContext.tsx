@@ -26,6 +26,7 @@ interface AppState {
   periodStarts: string[]; // logged period start dates, ISO (V2 cycle tracking)
   periodEnds: Record<string, string>; // { startISO: endISO } actual period lengths (V3)
   cycleDayLogs: Record<string, CycleDayLog>; // { dateISO: log } daily flow/symptoms/mood (V3)
+  cycleIrregular: boolean; // irregular / PCOS mode — softens unreliable ovulation/fertile predictions (V3)
   cycleLength: number; // average cycle length in days (V2), default 28
   catBudgets: CatBudgets; // per-category monthly limits (V2)
   goals: Goal[]; // savings goals / sapna jar (V2)
@@ -62,6 +63,7 @@ interface AppState {
   removePeriodStart: (dateIso: string) => Promise<void>;
   setPeriodEnd: (startIso: string, endIso: string | null) => Promise<void>; // mark/clear when a period ended
   logCycleDay: (dateIso: string, patch: CycleDayLog) => Promise<void>; // save that day's flow/symptoms/mood
+  setCycleIrregular: (on: boolean) => Promise<void>; // toggle irregular / PCOS mode
   setCycleLength: (days: number) => Promise<void>;
   setCatBudget: (catId: string, amount: number) => Promise<void>;
   removeCatBudget: (catId: string) => Promise<void>;
@@ -106,6 +108,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [periodStarts, setPeriodStarts] = useState<string[]>([]);
   const [periodEnds, setPeriodEnds] = useState<Record<string, string>>({});
   const [cycleDayLogs, setCycleDayLogs] = useState<Record<string, CycleDayLog>>({});
+  const [cycleIrregular, setCycleIrregularState] = useState(false);
   const [cycleLength, setCycleLengthState] = useState(28);
   const [catBudgets, setCatBudgets] = useState<CatBudgets>({});
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -118,7 +121,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Pull all persisted data from storage into state.
   const reload = useCallback(async () => {
-    const [exp, incs, rec, imp, ltrs, cc, catOv, bud, inc, spl, onb, shield, pStarts, pEnds, cDayLogs, cLen, cBudgets, gls, billRem, bName, bPhone, wish, chals, evts] = await Promise.all([
+    const [exp, incs, rec, imp, ltrs, cc, catOv, bud, inc, spl, onb, shield, pStarts, pEnds, cDayLogs, cIrreg, cLen, cBudgets, gls, billRem, bName, bPhone, wish, chals, evts] = await Promise.all([
       loadJSON<Expense[]>(KEYS.expenses, []),
       loadJSON<Income[]>(KEYS.incomes, []),
       loadJSON<Recurring[]>(KEYS.recurring, []),
@@ -134,6 +137,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       loadJSON<string[]>(KEYS.periodStarts, []),
       loadJSON<Record<string, string>>(KEYS.periodEnds, {}),
       loadJSON<Record<string, CycleDayLog>>(KEYS.cycleDayLogs, {}),
+      loadString(KEYS.cycleIrregular),
       loadString(KEYS.cycleLength),
       loadJSON<CatBudgets>(KEYS.catBudgets, {}),
       loadJSON<Goal[]>(KEYS.goals, []),
@@ -160,6 +164,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setPeriodStarts(pStarts);
     setPeriodEnds(pEnds);
     setCycleDayLogs(cDayLogs);
+    setCycleIrregularState(cIrreg === 'true');
     setCycleLengthState(parseInt(cLen, 10) || 28); // default 28-day cycle
     setCatBudgets(cBudgets);
     setGoals(gls);
@@ -502,6 +507,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [cycleDayLogs]
   );
 
+  // Toggle irregular / PCOS mode and remember it.
+  const setCycleIrregular = useCallback(async (on: boolean) => {
+    setCycleIrregularState(on);
+    await saveString(KEYS.cycleIrregular, on ? 'true' : 'false');
+  }, []);
+
   // Save the average cycle length (days) used for predictions.
   const setCycleLength = useCallback(async (days: number) => {
     const safe = Math.max(20, Math.min(45, Math.round(days) || 28)); // keep it sane
@@ -758,6 +769,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     periodStarts,
     periodEnds,
     cycleDayLogs,
+    cycleIrregular,
     cycleLength,
     catBudgets,
     goals,
@@ -794,6 +806,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     removePeriodStart,
     setPeriodEnd,
     logCycleDay,
+    setCycleIrregular,
     setCycleLength,
     setCatBudget,
     removeCatBudget,

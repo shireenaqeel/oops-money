@@ -1,9 +1,10 @@
-// CycleModal.tsx — the dedicated period/cycle space (V2), opened from Settings.
-// Everything cycle lives here: log a period, see your current phase + cycle day, next-period
-// countdown, predicted ovulation / fertile window, history, and the "cycle vs money" insight.
-// Supportive, never clinical. Fully on-device + private.
+// CycleModal.tsx — the dedicated period/cycle space (V2/V3), opened from Settings.
+// Everything cycle lives here: month calendar + per-day logging, current phase + cycle day,
+// next-period countdown, predicted ovulation / fertile window, learned stats, an irregular/PCOS
+// mode (softens unreliable ovulation predictions), a doctor-shareable summary, and "cycle vs money".
+// Supportive, never clinical, no diagnosis. Fully on-device + private.
 import React, { useState } from 'react';
-import { View, Text, Pressable, StyleSheet, Modal, ScrollView } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Modal, ScrollView, Share, Switch } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAppContext } from '../hooks/useAppContext';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
@@ -11,7 +12,8 @@ import { useTheme } from '../hooks/useTheme';
 import { useLang } from '../hooks/useLang';
 import { L } from '../i18n';
 import { fmtINR, fmtDateLabel, getToday } from '../utils';
-import { getCycleInfo, getCycleSpendInsight, getCycleStats, effectiveCycleLength, effectivePeriodLength, nextPeriods, Phase } from '../utils/cycle';
+import { getCycleInfo, getCycleSpendInsight, getCycleStats, effectiveCycleLength, effectivePeriodLength, nextPeriods, topSymptoms, Phase } from '../utils/cycle';
+import { CYCLE_SYMPTOMS, findChip } from '../constants/cycleLog';
 import CycleRing from '../components/CycleRing';
 import CycleCalendar from '../components/CycleCalendar';
 import DayLogSheet from '../components/DayLogSheet';
@@ -41,7 +43,7 @@ function isoOf(d: Date): string {
 }
 
 export default function CycleModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const { expenses, periodStarts, periodEnds, cycleDayLogs, cycleLength, logPeriodStart, removePeriodStart, setCycleLength } = useAppContext();
+  const { expenses, periodStarts, periodEnds, cycleDayLogs, cycleIrregular, cycleLength, logPeriodStart, removePeriodStart, setCycleIrregular, setCycleLength } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
   useLang(); // subscribe so text re-renders when language toggles
@@ -56,6 +58,38 @@ export default function CycleModal({ visible, onClose }: { visible: boolean; onC
   const info = getCycleInfo(periodStarts, effLen, today, effPeriod);
   const cycleSpend = getCycleSpendInsight(expenses, periodStarts, effLen, today);
   const upcoming = nextPeriods(periodStarts, effLen, 3);
+  const symptomStats = topSymptoms(cycleDayLogs);
+  // Nudge to turn on irregular mode if cycles vary a lot and it isn't on yet.
+  const suggestIrregular = !cycleIrregular && stats.variation != null && stats.variation > 9;
+
+  // Build a plain-text cycle summary to share with a doctor (PCOS check-ups, etc.).
+  const shareDoctorSummary = () => {
+    const lines: string[] = [];
+    lines.push(L('Mera cycle summary 🌸', 'My cycle summary 🌸'));
+    lines.push('');
+    if (stats.avgCycle) lines.push(L(`Average cycle: ${stats.avgCycle} din`, `Average cycle: ${stats.avgCycle} days`));
+    if (stats.shortest && stats.longest) lines.push(L(`Range: ${stats.shortest}–${stats.longest} din`, `Range: ${stats.shortest}–${stats.longest} days`));
+    if (stats.avgPeriod) lines.push(L(`Average period length: ${stats.avgPeriod} din`, `Average period length: ${stats.avgPeriod} days`));
+    if (stats.regular != null) lines.push(L(`Rhythm: ${stats.regular ? 'regular' : 'irregular'}`, `Rhythm: ${stats.regular ? 'regular' : 'irregular'}`));
+    if (cycleIrregular) lines.push(L('(irregular / PCOS mode on)', '(irregular / PCOS mode on)'));
+    const recent = [...periodStarts].sort((a, b) => (a < b ? 1 : -1)).slice(0, 6);
+    if (recent.length) {
+      lines.push('');
+      lines.push(L('Pichhle periods:', 'Recent periods:'));
+      recent.forEach((d) => lines.push(`• ${fmtDateLabel(d)}${periodEnds[d] ? ` → ${fmtDateLabel(periodEnds[d])}` : ''}`));
+    }
+    if (symptomStats.counts.length) {
+      lines.push('');
+      lines.push(L(`Common symptoms (${symptomStats.days} din logged):`, `Common symptoms (${symptomStats.days} days logged):`));
+      symptomStats.counts.slice(0, 5).forEach((c) => {
+        const chip = findChip(CYCLE_SYMPTOMS, c.id);
+        if (chip) lines.push(`• ${chip.emoji} ${L(chip.label[0], chip.label[1])} ×${c.count}`);
+      });
+    }
+    lines.push('');
+    lines.push(L('— Oops Money app se', '— from Oops Money app'));
+    Share.share({ message: lines.join('\n') });
+  };
 
   // hero card colour per phase
   const PHASE_BG: Record<Phase, string> = { period: colors.blush, fertile: colors.babyBlue, pms: colors.coral, normal: colors.sage, unknown: colors.periwinkle };
@@ -87,25 +121,62 @@ export default function CycleModal({ visible, onClose }: { visible: boolean; onC
             </View>
           </View>
 
-          {/* prediction strip: next period / ovulation / fertile window */}
+          {/* prediction strip: next period / ovulation / fertile window.
+              In irregular/PCOS mode ovulation & fertile are unreliable, so we soften them. */}
           {info.nextPredicted ? (
-            <View style={styles.predRow}>
-              <View style={styles.predCell}>
-                <Text style={styles.predEmoji}>🩸</Text>
-                <Text style={styles.predLabel}>{L('agla period', 'next period')}</Text>
-                <Text style={styles.predVal}>{fmtDateLabel(info.nextPredicted)}</Text>
+            cycleIrregular ? (
+              <View style={styles.predRow}>
+                <View style={styles.predCell}>
+                  <Text style={styles.predEmoji}>🩸</Text>
+                  <Text style={styles.predLabel}>{L('agla period (~estimate)', 'next period (~estimate)')}</Text>
+                  <Text style={styles.predVal}>~{fmtDateLabel(info.nextPredicted)}</Text>
+                </View>
+                <View style={[styles.predCell, { flex: 1.4 }]}>
+                  <Text style={styles.predEmoji}>🌸</Text>
+                  <Text style={styles.predLabel}>{L('irregular mode', 'irregular mode')}</Text>
+                  <Text style={styles.predValSmall}>{L('ovulation/fertile guess reliable nahi — isliye chhupa diya', 'ovulation/fertile guesses aren’t reliable, so hidden')}</Text>
+                </View>
               </View>
-              <View style={styles.predCell}>
-                <Text style={styles.predEmoji}>🥚</Text>
-                <Text style={styles.predLabel}>{L('ovulation', 'ovulation')}</Text>
-                <Text style={styles.predVal}>{info.ovulation ? fmtDateLabel(info.ovulation) : '—'}</Text>
+            ) : (
+              <View style={styles.predRow}>
+                <View style={styles.predCell}>
+                  <Text style={styles.predEmoji}>🩸</Text>
+                  <Text style={styles.predLabel}>{L('agla period', 'next period')}</Text>
+                  <Text style={styles.predVal}>{fmtDateLabel(info.nextPredicted)}</Text>
+                </View>
+                <View style={styles.predCell}>
+                  <Text style={styles.predEmoji}>🥚</Text>
+                  <Text style={styles.predLabel}>{L('ovulation', 'ovulation')}</Text>
+                  <Text style={styles.predVal}>{info.ovulation ? fmtDateLabel(info.ovulation) : '—'}</Text>
+                </View>
+                <View style={styles.predCell}>
+                  <Text style={styles.predEmoji}>💕</Text>
+                  <Text style={styles.predLabel}>{L('fertile', 'fertile')}</Text>
+                  <Text style={styles.predVal}>{info.fertileStart && info.fertileEnd ? `${fmtDateLabel(info.fertileStart)}–${fmtDateLabel(info.fertileEnd)}` : '—'}</Text>
+                </View>
               </View>
-              <View style={styles.predCell}>
-                <Text style={styles.predEmoji}>💕</Text>
-                <Text style={styles.predLabel}>{L('fertile', 'fertile')}</Text>
-                <Text style={styles.predVal}>{info.fertileStart && info.fertileEnd ? `${fmtDateLabel(info.fertileStart)}–${fmtDateLabel(info.fertileEnd)}` : '—'}</Text>
-              </View>
+            )
+          ) : null}
+
+          {/* irregular / PCOS mode toggle */}
+          <View style={styles.toggleCard}>
+            <View style={{ flex: 1, paddingRight: spacing.md }}>
+              <Text style={styles.toggleLabel}>{L('irregular / PCOS cycles?', 'irregular / PCOS cycles?')}</Text>
+              <Text style={styles.toggleHint}>
+                {L('on karo → predictions gentle estimate ban jaati hain, ovulation/fertile guess (jo irregular cycles mein reliable nahi) chhup jaate hain 🤍', 'turn on → predictions become gentle estimates, and the ovulation/fertile guesses (unreliable for irregular cycles) get hidden 🤍')}
+              </Text>
             </View>
+            <Switch
+              value={cycleIrregular}
+              onValueChange={setCycleIrregular}
+              trackColor={{ false: colors.border, true: colors.rose }}
+              thumbColor={colors.cardBg}
+            />
+          </View>
+          {suggestIrregular ? (
+            <Pressable style={styles.suggestChip} onPress={() => setCycleIrregular(true)}>
+              <Text style={styles.suggestText}>{L('tumhare cycles kaafi vary kar rahe — irregular / PCOS mode on karun? tap 🌸', 'your cycles vary a lot — turn on irregular / PCOS mode? tap 🌸')}</Text>
+            </Pressable>
           ) : null}
 
           {/* month calendar — tap any day to log it */}
@@ -117,6 +188,7 @@ export default function CycleModal({ visible, onClose }: { visible: boolean; onC
             effLen={effLen}
             effPeriod={effPeriod}
             todayIso={today}
+            hideFertile={cycleIrregular}
             onSelectDay={setSelectedDay}
           />
 
@@ -139,11 +211,26 @@ export default function CycleModal({ visible, onClose }: { visible: boolean; onC
                 </View>
               </View>
               {stats.regular === false && stats.shortest && stats.longest ? (
-                <Text style={styles.statsNote}>{L(`tumhare cycle ${stats.shortest}–${stats.longest} din ke beech ghumte hain — prediction thodi aage-peeche ho sakti hai, normal hai 🤍`, `your cycles range ${stats.shortest}–${stats.longest} days — predictions may shift a little, totally normal 🤍`)}</Text>
+                <Text style={styles.statsNote}>
+                  {cycleIrregular
+                    ? L(`tumhare cycle ${stats.shortest}–${stats.longest} din ke beech ghumte hain — PCOS/irregular cycles mein ye common hai, tum akeli nahi ho 🤍 tracking se pattern samajhna aur doctor ko dikhana easy ho jaata hai`, `your cycles range ${stats.shortest}–${stats.longest} days — this is common with PCOS/irregular cycles, you're not alone 🤍 tracking helps you spot patterns and share them with a doctor`)
+                    : L(`tumhare cycle ${stats.shortest}–${stats.longest} din ke beech ghumte hain — prediction thodi aage-peeche ho sakti hai, normal hai 🤍`, `your cycles range ${stats.shortest}–${stats.longest} days — predictions may shift a little, totally normal 🤍`)}
+                </Text>
               ) : null}
               {upcoming.length > 0 ? (
-                <Text style={styles.statsNote}>{L('agle periods: ', 'next periods: ')}{upcoming.map((d) => fmtDateLabel(d)).join(' • ')}</Text>
+                <Text style={styles.statsNote}>{cycleIrregular ? L('agle periods (~estimate): ', 'next periods (~estimate): ') : L('agle periods: ', 'next periods: ')}{upcoming.map((d) => fmtDateLabel(d)).join(' • ')}</Text>
               ) : null}
+            </View>
+          ) : null}
+
+          {/* doctor summary — share cycle history for a PCOS / gynae check-up */}
+          {periodStarts.length > 0 || symptomStats.counts.length > 0 ? (
+            <View style={styles.doctorCard}>
+              <Text style={styles.sectionLabel}>{L('DOCTOR KE LIYE 🩺', 'FOR YOUR DOCTOR 🩺')}</Text>
+              <Text style={styles.doctorText}>{L('apna cycle summary (average, range, periods, symptoms) ek message mein share karo — gynae/PCOS check-up ke liye handy 🤍', 'share your cycle summary (average, range, periods, symptoms) as one message — handy for a gynae / PCOS check-up 🤍')}</Text>
+              <Pressable style={styles.doctorBtn} onPress={shareDoctorSummary}>
+                <Text style={styles.doctorBtnText}>{L('📤 summary share karo', '📤 share summary')}</Text>
+              </Pressable>
             </View>
           ) : null}
 
@@ -286,6 +373,20 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   predEmoji: { fontSize: 18 },
   predLabel: { fontSize: typography.tiny.fontSize, color: colors.textLight, marginTop: spacing.xs },
   predVal: { fontSize: typography.small.fontSize, color: colors.text, fontWeight: '700', marginTop: 2, textAlign: 'center' },
+  predValSmall: { fontSize: typography.tiny.fontSize, color: colors.textLight, marginTop: 2, textAlign: 'center', lineHeight: 15 },
+
+  // irregular / PCOS mode
+  toggleCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.cream, borderRadius: radius.inputs, padding: spacing.md, marginBottom: spacing.md },
+  toggleLabel: { fontSize: typography.body.fontSize, color: colors.text, fontWeight: '700' },
+  toggleHint: { fontSize: typography.tiny.fontSize, color: colors.textLight, marginTop: 2, lineHeight: 15 },
+  suggestChip: { backgroundColor: colors.blush, borderRadius: radius.inputs, padding: spacing.md, marginBottom: spacing.md },
+  suggestText: { fontSize: typography.small.fontSize, color: colors.text, fontWeight: '600', lineHeight: 18 },
+
+  // doctor summary
+  doctorCard: { backgroundColor: colors.cardBg, borderRadius: radius.cards, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border },
+  doctorText: { fontSize: typography.small.fontSize, color: colors.textLight, lineHeight: 18, marginBottom: spacing.md },
+  doctorBtn: { backgroundColor: colors.skyBlue, paddingVertical: spacing.md, borderRadius: radius.buttons, alignItems: 'center' },
+  doctorBtnText: { color: colors.onAccent, fontSize: typography.small.fontSize, fontWeight: '700' },
 
   // calendar + stats
   calHint: { fontSize: typography.tiny.fontSize, color: colors.textLight, textAlign: 'center', marginBottom: spacing.sm },

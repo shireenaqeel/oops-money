@@ -36,6 +36,10 @@ export const CYCLE_SYMPTOMS: ChipOption[] = [
   { id: 'moodswings', label: ['mood swings', 'mood swings'], emoji: '🎭' },
   { id: 'energetic', label: ['energy high', 'energetic'], emoji: '⚡' },
   { id: 'discharge', label: ['discharge', 'discharge'], emoji: '💦' },
+  // PCOS / hormonal-friendly symptoms
+  { id: 'hairfall', label: ['baal jhadna', 'hair fall'], emoji: '💇‍♀️' },
+  { id: 'extrahair', label: ['extra hair', 'extra hair'], emoji: '🧴' },
+  { id: 'weight', label: ['weight change', 'weight change'], emoji: '⚖️' },
 ];
 
 // How she's feeling emotionally (single-select).

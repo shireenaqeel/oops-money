@@ -2,7 +2,7 @@
 // Goals: (a) predict the next period, ovulation and fertile window; (b) learn the user's own
 // average cycle + period length from her logged history; (c) power a month calendar; and
 // (d) gently show whether spending creeps up in the PMS window (the ~5 days before a period).
-import { Expense } from '../types';
+import { Expense, CycleDayLog } from '../types';
 
 const DAY = 86400000;
 const PMS_WINDOW = 5; // days before a period start we treat as the "PMS week"
@@ -96,7 +96,8 @@ export function getCycleStats(starts: string[], periodEnds: Record<string, strin
   const gaps: number[] = [];
   for (let i = 0; i < sorted.length - 1; i++) {
     const g = diffDays(sorted[i + 1], sorted[i]);
-    if (g >= 15 && g <= 60) gaps.push(g);
+    // Accept long cycles too (up to ~90 days) — common with PCOS / irregular cycles.
+    if (g >= 15 && g <= 90) gaps.push(g);
   }
   // Period lengths from any start that has an end logged.
   const lengths: number[] = [];
@@ -164,6 +165,23 @@ export function nextPeriods(starts: string[], effLen: number, count: number): st
   const out: string[] = [];
   for (let k = 1; k <= count; k++) out.push(shift(sorted[0], k * effLen));
   return out;
+}
+
+// Count how often each symptom was logged, most-frequent first (for the doctor summary
+// and any symptom-pattern insight). `days` = how many distinct days had any log.
+export function topSymptoms(logs: Record<string, CycleDayLog>): { counts: { id: string; count: number }[]; days: number } {
+  const tally: Record<string, number> = {};
+  let days = 0;
+  Object.keys(logs).forEach((date) => {
+    const log = logs[date];
+    const has = !!log.flow || (log.symptoms && log.symptoms.length > 0) || !!log.mood;
+    if (has) days++;
+    (log.symptoms ?? []).forEach((s) => (tally[s] = (tally[s] ?? 0) + 1));
+  });
+  const counts = Object.keys(tally)
+    .map((id) => ({ id, count: tally[id] }))
+    .sort((a, b) => b.count - a.count);
+  return { counts, days };
 }
 
 // ── Calendar markers ─────────────────────────────────────────────────────────

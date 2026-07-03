@@ -27,6 +27,7 @@ export default function CycleCalendar({
   effLen,
   effPeriod,
   todayIso,
+  hideFertile = false,
   onSelectDay,
 }: {
   periodStarts: string[];
@@ -35,6 +36,7 @@ export default function CycleCalendar({
   effLen: number;
   effPeriod: number;
   todayIso: string;
+  hideFertile?: boolean; // irregular / PCOS mode — don't shade unreliable fertile/ovulation days
   onSelectDay: (dateIso: string) => void;
 }) {
   const colors = useTheme();
@@ -55,6 +57,12 @@ export default function CycleCalendar({
   const fromIso = iso(new Date(year, month, 1));
   const toIso = iso(new Date(year, month, daysInMonth));
   const marks = cycleMarksForRange(periodStarts, periodEnds, effLen, effPeriod, fromIso, toIso);
+  // In irregular/PCOS mode, calendar-method ovulation & fertile days aren't reliable — hide them.
+  if (hideFertile) {
+    Object.keys(marks).forEach((d) => {
+      if (marks[d] === 'fertile' || marks[d] === 'ovulation') delete marks[d];
+    });
+  }
 
   // Fill grid: leading blanks for the first week, then each day.
   const cells: (number | null)[] = [];
@@ -133,8 +141,8 @@ export default function CycleCalendar({
       <View style={styles.legend}>
         <Legend colors={colors} color={colors.rose} text={L('period', 'period')} />
         <Legend colors={colors} color={colors.blush} text={L('predicted', 'predicted')} />
-        <Legend colors={colors} color={colors.powderBlue} text={L('fertile', 'fertile')} />
-        <Legend colors={colors} color={colors.babyBlue} text={L('ovulation', 'ovulation')} />
+        {!hideFertile ? <Legend colors={colors} color={colors.powderBlue} text={L('fertile', 'fertile')} /> : null}
+        {!hideFertile ? <Legend colors={colors} color={colors.babyBlue} text={L('ovulation', 'ovulation')} /> : null}
         <Legend colors={colors} color={colors.coral} text="PMS" />
       </View>
     </View>
