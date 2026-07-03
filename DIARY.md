@@ -3,6 +3,14 @@
 
 ---
 
+## Feature — Paisa AI ✨ (smart-local, no LLM) — 3 Jul 2026
+**What:** A "Paisa AI" card at the top of Insights that reads your spending and writes short, natural-language observations — e.g. *"is rate se budget 24 tarikh ko khatam ho jayega 💀"*, *"Tuesday tumhara sabse mehenga din"*, *"Food Delivery pe is mahine 40% zyada"*, *"is mahine kamai ka 30% bachaya 🐷"*, *"PMS week mein ~25% zyada"*. Shows 3 at a time; **"🔄 aur batao"** cycles through the rest. An "on-device" badge makes clear it's private.
+**Why:** She wanted the app to feel "AI-powered" but has no budget for a paid API key. So step 1 is the **smart-local** half of a planned hybrid: pure on-device pattern-detection that *feels* intelligent — free forever, offline, private, on-brand. (Step 2 later: an optional real AI coach powered by a **free** Gemini/Groq key she pastes in, only if she wants it.)
+**How:** New pure engine `src/utils/paisaAI.ts` — a set of small generators (budget-burn forecast, busiest weekday over 8 weeks, category spike vs last month, top-category share, no-spend days, biggest single day, regret pattern, splurge pace, savings rate, PMS-week spend) each returning a scored `PaisaInsight` or null; results are ranked by `score` so the most useful surface first. Strings are localized inline via `L()` (same pattern as `calculations.ts`). `src/components/PaisaAIFeed.tsx` renders them as tone-tinted rows (good=mint, warn=coral, info=blue) and stays silent when there's nothing worth saying. Mounted at the top of `InsightsScreen`.
+**Files changed:** `src/utils/paisaAI.ts` (new), `src/components/PaisaAIFeed.tsx` (new), `src/screens/InsightsScreen.tsx` (mounts it).
+**How to test on phone:** Insights ✿ tab → the **Paisa AI ✨** card sits at the very top. Log a handful of expenses across different days/categories (and a budget in onboarding/settings) → you'll see forecast + pattern lines. Tap **🔄 aur batao** to rotate through more. Add income → a savings-rate line appears. Log a period + spends → a PMS line can show. Toggle language (Settings) → all lines flip Hinglish/English.
+**Next up:** (optional, still smart-local) natural-language quick-add ("chai 40" → ₹40 Food) and a tiny offline "pucho" chat that answers questions from your data. Later (optional): real Claude/Gemini coach via a free key.
+
 ## Feature — Proper period tracking 🌸 (Flo/Clue-style) — 3 Jul 2026
 **What:** The Cycle space is now a real period tracker, not just a start-date logger. New:
 - **📅 Month calendar** (Flo/Clue-style grid) — every day colour-coded: logged period (rose), predicted period (blush), fertile window (powder), ovulation (baby-blue), PMS (coral); today gets a ring; days you've logged get a little dot. **Tap any day** to log it.

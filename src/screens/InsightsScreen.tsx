@@ -6,6 +6,7 @@ import BarChart, { BarDatum } from '../components/BarChart';
 import AlertList from '../components/AlertList';
 import SpendCalendar from '../components/SpendCalendar';
 import PaisaPersonality from '../components/PaisaPersonality';
+import PaisaAIFeed from '../components/PaisaAIFeed';
 import BestieBenchmark from '../components/BestieBenchmark';
 import MonthlyWrappedModal from './MonthlyWrappedModal';
 import { useAppContext } from '../hooks/useAppContext';
@@ -133,6 +134,9 @@ export default function InsightsScreen() {
     <Screen>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.heading}>Insights ✿</Text>
+
+        {/* Paisa AI — smart on-device observations about your spending */}
+        <PaisaAIFeed />
 
         {/* monthly wrapped */}
         <Pressable style={styles.wrappedBtn} onPress={() => setShowWrapped(true)}>
