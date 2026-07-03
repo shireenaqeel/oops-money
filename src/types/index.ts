@@ -11,6 +11,18 @@ export interface Income {
   color: string; // cached source colour for quick rendering
 }
 
+// How heavy the bleeding was on a given day (cycle tracking, Clue/Flo-style).
+export type FlowLevel = 'spotting' | 'light' | 'medium' | 'heavy';
+
+// What she logged for one calendar day of cycle tracking — flow, symptoms, mood, a note.
+// Stored in a map keyed by date ISO, so most days have no entry at all.
+export interface CycleDayLog {
+  flow?: FlowLevel; // bleeding intensity that day
+  symptoms?: string[]; // ids from CYCLE_SYMPTOMS (cramps, bloating, etc.)
+  mood?: string; // id from CYCLE_MOODS
+  note?: string; // optional free text
+}
+
 // A spending category (built-in or custom). Emoji is the first token of `name`.
 export interface Category {
   id: string;

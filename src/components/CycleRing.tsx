@@ -21,12 +21,14 @@ export default function CycleRing({
   cycleLength,
   phase,
   daysToNext,
+  periodLen = 5,
   size = 230,
 }: {
   dayOfCycle: number | null;
   cycleLength: number;
   phase: Phase;
   daysToNext: number | null;
+  periodLen?: number; // learned period length, so the ring shades the right number of period days
   size?: number;
 }) {
   const colors = useTheme();
@@ -62,7 +64,7 @@ export default function CycleRing({
     const [x1, y1] = polar(cx, cy, R, startDeg);
     const [x2, y2] = polar(cx, cy, R, endDeg);
     const large = endDeg - startDeg > 180 ? 1 : 0;
-    const dayPhase: Phase = phase === 'unknown' ? 'unknown' : phaseForCycleDay(i + 1, len);
+    const dayPhase: Phase = phase === 'unknown' ? 'unknown' : phaseForCycleDay(i + 1, len, periodLen);
     arcs.push(
       <Path
         key={i}

@@ -17,6 +17,8 @@ export const KEYS = {
   onboarded: 'om_onboarded',
   nightShield: 'om_night_shield', // late-night shopping shield on/off (V2)
   periodStarts: 'om_period_starts', // logged period start dates (V2 cycle tracking)
+  periodEnds: 'om_period_ends', // { periodStartISO: periodEndISO } — actual period lengths (V3)
+  cycleDayLogs: 'om_cycle_day_logs', // { dateISO: CycleDayLog } — daily flow/symptoms/mood (V3)
   cycleLength: 'om_cycle_length', // average cycle length in days (V2)
   catBudgets: 'om_cat_budgets', // per-category monthly limits { catId: amount } (V2)
   goals: 'om_goals', // savings goals / sapna jar (V2)

@@ -1,7 +1,7 @@
 // useAppContext.tsx — MAIN STATE MANAGEMENT. The single source of truth for app data.
 // Loads everything from storage once on launch, then every screen reads/writes through this hook.
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { Category, Expense, Income, Goal, CatBudgets, ImpulseItem, Letter, Recurring, WishItem, Challenge, EventBudget } from '../types';
+import { Category, Expense, Income, Goal, CatBudgets, ImpulseItem, Letter, Recurring, WishItem, Challenge, EventBudget, CycleDayLog } from '../types';
 import { KEYS, clearAll, loadJSON, loadString, saveJSON, saveString } from '../storage';
 import { PASTEL_COLORS, CATS, findCat, installCatOverrides, CatOverride } from '../constants/categories';
 import { genId, getToday } from '../utils';
@@ -24,6 +24,8 @@ interface AppState {
   splurgeFund: string;
   nightShield: boolean; // late-night shopping shield on/off (V2), default on
   periodStarts: string[]; // logged period start dates, ISO (V2 cycle tracking)
+  periodEnds: Record<string, string>; // { startISO: endISO } actual period lengths (V3)
+  cycleDayLogs: Record<string, CycleDayLog>; // { dateISO: log } daily flow/symptoms/mood (V3)
   cycleLength: number; // average cycle length in days (V2), default 28
   catBudgets: CatBudgets; // per-category monthly limits (V2)
   goals: Goal[]; // savings goals / sapna jar (V2)
@@ -58,6 +60,8 @@ interface AppState {
   setNightShield: (on: boolean) => Promise<void>;
   logPeriodStart: (dateIso: string) => Promise<void>;
   removePeriodStart: (dateIso: string) => Promise<void>;
+  setPeriodEnd: (startIso: string, endIso: string | null) => Promise<void>; // mark/clear when a period ended
+  logCycleDay: (dateIso: string, patch: CycleDayLog) => Promise<void>; // save that day's flow/symptoms/mood
   setCycleLength: (days: number) => Promise<void>;
   setCatBudget: (catId: string, amount: number) => Promise<void>;
   removeCatBudget: (catId: string) => Promise<void>;
@@ -100,6 +104,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [splurgeFund, setSplurgeFund] = useState('');
   const [nightShield, setNightShieldState] = useState(true);
   const [periodStarts, setPeriodStarts] = useState<string[]>([]);
+  const [periodEnds, setPeriodEnds] = useState<Record<string, string>>({});
+  const [cycleDayLogs, setCycleDayLogs] = useState<Record<string, CycleDayLog>>({});
   const [cycleLength, setCycleLengthState] = useState(28);
   const [catBudgets, setCatBudgets] = useState<CatBudgets>({});
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -112,7 +118,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Pull all persisted data from storage into state.
   const reload = useCallback(async () => {
-    const [exp, incs, rec, imp, ltrs, cc, catOv, bud, inc, spl, onb, shield, pStarts, cLen, cBudgets, gls, billRem, bName, bPhone, wish, chals, evts] = await Promise.all([
+    const [exp, incs, rec, imp, ltrs, cc, catOv, bud, inc, spl, onb, shield, pStarts, pEnds, cDayLogs, cLen, cBudgets, gls, billRem, bName, bPhone, wish, chals, evts] = await Promise.all([
       loadJSON<Expense[]>(KEYS.expenses, []),
       loadJSON<Income[]>(KEYS.incomes, []),
       loadJSON<Recurring[]>(KEYS.recurring, []),
@@ -126,6 +132,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       loadString(KEYS.onboarded),
       loadString(KEYS.nightShield),
       loadJSON<string[]>(KEYS.periodStarts, []),
+      loadJSON<Record<string, string>>(KEYS.periodEnds, {}),
+      loadJSON<Record<string, CycleDayLog>>(KEYS.cycleDayLogs, {}),
       loadString(KEYS.cycleLength),
       loadJSON<CatBudgets>(KEYS.catBudgets, {}),
       loadJSON<Goal[]>(KEYS.goals, []),
@@ -150,6 +158,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setOnboarded(onb === 'true');
     setNightShieldState(shield !== 'false'); // default ON unless explicitly turned off
     setPeriodStarts(pStarts);
+    setPeriodEnds(pEnds);
+    setCycleDayLogs(cDayLogs);
     setCycleLengthState(parseInt(cLen, 10) || 28); // default 28-day cycle
     setCatBudgets(cBudgets);
     setGoals(gls);
@@ -443,14 +453,53 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [periodStarts]
   );
 
-  // Remove a logged period start date.
+  // Remove a logged period start date (and forget its end date, if any).
   const removePeriodStart = useCallback(
     async (dateIso: string) => {
       const next = periodStarts.filter((d) => d !== dateIso);
       setPeriodStarts(next);
       await saveJSON(KEYS.periodStarts, next);
+      if (periodEnds[dateIso]) {
+        const { [dateIso]: _drop, ...rest } = periodEnds;
+        setPeriodEnds(rest);
+        await saveJSON(KEYS.periodEnds, rest);
+      }
     },
-    [periodStarts]
+    [periodStarts, periodEnds]
+  );
+
+  // Mark (or clear, with null) the day a given period ended — this is how the app learns real
+  // period length. Ignores an end before its start.
+  const setPeriodEnd = useCallback(
+    async (startIso: string, endIso: string | null) => {
+      let next: Record<string, string>;
+      if (endIso && endIso >= startIso) {
+        next = { ...periodEnds, [startIso]: endIso };
+      } else {
+        const { [startIso]: _drop, ...rest } = periodEnds;
+        next = rest;
+      }
+      setPeriodEnds(next);
+      await saveJSON(KEYS.periodEnds, next);
+    },
+    [periodEnds]
+  );
+
+  // Save one day's cycle log (flow/symptoms/mood/note). An empty patch clears that day.
+  const logCycleDay = useCallback(
+    async (dateIso: string, patch: CycleDayLog) => {
+      const isEmpty = !patch.flow && (!patch.symptoms || patch.symptoms.length === 0) && !patch.mood && !patch.note;
+      let next: Record<string, CycleDayLog>;
+      if (isEmpty) {
+        const { [dateIso]: _drop, ...rest } = cycleDayLogs;
+        next = rest;
+      } else {
+        next = { ...cycleDayLogs, [dateIso]: patch };
+      }
+      setCycleDayLogs(next);
+      await saveJSON(KEYS.cycleDayLogs, next);
+    },
+    [cycleDayLogs]
   );
 
   // Save the average cycle length (days) used for predictions.
@@ -707,6 +756,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     splurgeFund,
     nightShield,
     periodStarts,
+    periodEnds,
+    cycleDayLogs,
     cycleLength,
     catBudgets,
     goals,
@@ -741,6 +792,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setNightShield,
     logPeriodStart,
     removePeriodStart,
+    setPeriodEnd,
+    logCycleDay,
     setCycleLength,
     setCatBudget,
     removeCatBudget,

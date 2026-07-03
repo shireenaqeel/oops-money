@@ -11,8 +11,10 @@ import { useTheme } from '../hooks/useTheme';
 import { useLang } from '../hooks/useLang';
 import { L } from '../i18n';
 import { fmtINR, fmtDateLabel, getToday } from '../utils';
-import { getCycleInfo, getCycleSpendInsight, Phase } from '../utils/cycle';
+import { getCycleInfo, getCycleSpendInsight, getCycleStats, effectiveCycleLength, effectivePeriodLength, nextPeriods, Phase } from '../utils/cycle';
 import CycleRing from '../components/CycleRing';
+import CycleCalendar from '../components/CycleCalendar';
+import DayLogSheet from '../components/DayLogSheet';
 
 // A short label for each phase (shown big on the hero card).
 const PHASE_TITLE: Record<Phase, [string, string]> = {
@@ -39,14 +41,21 @@ function isoOf(d: Date): string {
 }
 
 export default function CycleModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const { expenses, periodStarts, cycleLength, logPeriodStart, removePeriodStart, setCycleLength } = useAppContext();
+  const { expenses, periodStarts, periodEnds, cycleDayLogs, cycleLength, logPeriodStart, removePeriodStart, setCycleLength } = useAppContext();
   const colors = useTheme();
   const styles = makeStyles(colors);
   useLang(); // subscribe so text re-renders when language toggles
   const [showPicker, setShowPicker] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null); // day tapped in the calendar
 
-  const info = getCycleInfo(periodStarts, cycleLength, getToday());
-  const cycleSpend = getCycleSpendInsight(expenses, periodStarts, cycleLength, getToday());
+  const today = getToday();
+  // Learn the user's own averages from history; fall back to the manual number.
+  const stats = getCycleStats(periodStarts, periodEnds);
+  const effLen = effectiveCycleLength(stats, cycleLength);
+  const effPeriod = effectivePeriodLength(stats);
+  const info = getCycleInfo(periodStarts, effLen, today, effPeriod);
+  const cycleSpend = getCycleSpendInsight(expenses, periodStarts, effLen, today);
+  const upcoming = nextPeriods(periodStarts, effLen, 3);
 
   // hero card colour per phase
   const PHASE_BG: Record<Phase, string> = { period: colors.blush, fertile: colors.babyBlue, pms: colors.coral, normal: colors.sage, unknown: colors.periwinkle };
@@ -62,7 +71,7 @@ export default function CycleModal({ visible, onClose }: { visible: boolean; onC
 
           {/* cycle ring + current-phase banner */}
           <View style={styles.ringCard}>
-            <CycleRing dayOfCycle={info.dayOfCycle} cycleLength={cycleLength} phase={info.phase} daysToNext={info.daysToNext} />
+            <CycleRing dayOfCycle={info.dayOfCycle} cycleLength={effLen} phase={info.phase} daysToNext={info.daysToNext} periodLen={effPeriod} />
 
             {/* legend */}
             <View style={styles.legend}>
@@ -99,6 +108,45 @@ export default function CycleModal({ visible, onClose }: { visible: boolean; onC
             </View>
           ) : null}
 
+          {/* month calendar — tap any day to log it */}
+          <Text style={styles.calHint}>{L('kisi bhi din pe tap karke flow/symptoms/mood log karo 🌸', 'tap any day to log flow / symptoms / mood 🌸')}</Text>
+          <CycleCalendar
+            periodStarts={periodStarts}
+            periodEnds={periodEnds}
+            cycleDayLogs={cycleDayLogs}
+            effLen={effLen}
+            effPeriod={effPeriod}
+            todayIso={today}
+            onSelectDay={setSelectedDay}
+          />
+
+          {/* your cycle stats — learned from history */}
+          {stats.avgCycle || stats.avgPeriod ? (
+            <View style={styles.statsCard}>
+              <Text style={styles.sectionLabel}>{L('TUMHARA CYCLE 📊', 'YOUR CYCLE 📊')}</Text>
+              <View style={styles.statRow}>
+                <View style={styles.statCell}>
+                  <Text style={styles.statVal}>{stats.avgCycle ? L(`${stats.avgCycle} din`, `${stats.avgCycle} days`) : '—'}</Text>
+                  <Text style={styles.statLabel}>{L('avg cycle', 'avg cycle')}</Text>
+                </View>
+                <View style={styles.statCell}>
+                  <Text style={styles.statVal}>{stats.avgPeriod ? L(`${stats.avgPeriod} din`, `${stats.avgPeriod} days`) : '—'}</Text>
+                  <Text style={styles.statLabel}>{L('avg period', 'avg period')}</Text>
+                </View>
+                <View style={styles.statCell}>
+                  <Text style={styles.statVal}>{stats.regular == null ? '—' : stats.regular ? L('regular ✨', 'regular ✨') : L('thoda irregular', 'irregular')}</Text>
+                  <Text style={styles.statLabel}>{L('rhythm', 'rhythm')}</Text>
+                </View>
+              </View>
+              {stats.regular === false && stats.shortest && stats.longest ? (
+                <Text style={styles.statsNote}>{L(`tumhare cycle ${stats.shortest}–${stats.longest} din ke beech ghumte hain — prediction thodi aage-peeche ho sakti hai, normal hai 🤍`, `your cycles range ${stats.shortest}–${stats.longest} days — predictions may shift a little, totally normal 🤍`)}</Text>
+              ) : null}
+              {upcoming.length > 0 ? (
+                <Text style={styles.statsNote}>{L('agle periods: ', 'next periods: ')}{upcoming.map((d) => fmtDateLabel(d)).join(' • ')}</Text>
+              ) : null}
+            </View>
+          ) : null}
+
           {/* log buttons */}
           <View style={styles.btnRow}>
             <Pressable style={styles.logBtn} onPress={() => logPeriodStart(getToday())}>
@@ -122,9 +170,13 @@ export default function CycleModal({ visible, onClose }: { visible: boolean; onC
 
           {/* cycle length stepper */}
           <View style={styles.lenCard}>
-            <View>
+            <View style={{ flex: 1, paddingRight: spacing.md }}>
               <Text style={styles.lenLabel}>{L('cycle length', 'cycle length')}</Text>
-              <Text style={styles.lenHint}>{L('do periods ke beech ke din (default 28)', 'days between two periods (default 28)')}</Text>
+              <Text style={styles.lenHint}>
+                {stats.avgCycle
+                  ? L(`app ne tumhare periods se ${stats.avgCycle} din seekha — ye manual backup hai`, `app learned ${stats.avgCycle} days from your periods — this is a manual backup`)
+                  : L('do periods ke beech ke din (default 28)', 'days between two periods (default 28)')}
+              </Text>
             </View>
             <View style={styles.stepper}>
               <Pressable style={styles.stepBtn} onPress={() => setCycleLength(cycleLength - 1)} hitSlop={8}>
@@ -187,6 +239,9 @@ export default function CycleModal({ visible, onClose }: { visible: boolean; onC
           </Pressable>
         </ScrollView>
       </View>
+
+      {/* per-day log sheet, opened from the calendar */}
+      {selectedDay ? <DayLogSheet dateIso={selectedDay} onClose={() => setSelectedDay(null)} /> : null}
     </Modal>
   );
 }
@@ -231,6 +286,15 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   predEmoji: { fontSize: 18 },
   predLabel: { fontSize: typography.tiny.fontSize, color: colors.textLight, marginTop: spacing.xs },
   predVal: { fontSize: typography.small.fontSize, color: colors.text, fontWeight: '700', marginTop: 2, textAlign: 'center' },
+
+  // calendar + stats
+  calHint: { fontSize: typography.tiny.fontSize, color: colors.textLight, textAlign: 'center', marginBottom: spacing.sm },
+  statsCard: { backgroundColor: colors.cardBg, borderRadius: radius.cards, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border },
+  statRow: { flexDirection: 'row', gap: spacing.sm },
+  statCell: { flex: 1, backgroundColor: colors.cream, borderRadius: radius.inputs, paddingVertical: spacing.md, paddingHorizontal: spacing.xs, alignItems: 'center' },
+  statVal: { fontSize: typography.body.fontSize, fontWeight: '800', color: colors.text, textAlign: 'center' },
+  statLabel: { fontSize: typography.tiny.fontSize, color: colors.textLight, marginTop: 2 },
+  statsNote: { fontSize: typography.small.fontSize, color: colors.textLight, lineHeight: 18, marginTop: spacing.md },
 
   // log buttons
   btnRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
