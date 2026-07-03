@@ -9,6 +9,7 @@ import { useLang } from '../hooks/useLang';
 import { L } from '../i18n';
 import { getToday } from '../utils';
 import { getPaisaInsights, Tone } from '../utils/paisaAI';
+import PaisaChat from './PaisaChat';
 
 const SHOW = 3; // how many insights to show at once
 
@@ -18,6 +19,7 @@ export default function PaisaAIFeed() {
   const styles = makeStyles(colors);
   useLang(); // re-render on language toggle
   const [offset, setOffset] = useState(0);
+  const [showChat, setShowChat] = useState(false);
 
   const insights = getPaisaInsights({ expenses, incomes, budget, customCats, periodStarts, cycleLength, today: getToday() });
   if (insights.length === 0) return null; // nothing worth saying yet — stay quiet
@@ -56,11 +58,18 @@ export default function PaisaAIFeed() {
         );
       })}
 
-      {hasMore ? (
-        <Pressable style={styles.moreBtn} onPress={() => setOffset((o) => (o + SHOW) % insights.length)} hitSlop={6}>
-          <Text style={styles.moreText}>{L('🔄 aur batao', '🔄 tell me more')}</Text>
+      <View style={styles.actionRow}>
+        {hasMore ? (
+          <Pressable style={styles.moreBtn} onPress={() => setOffset((o) => (o + SHOW) % insights.length)} hitSlop={6}>
+            <Text style={styles.moreText}>{L('🔄 aur batao', '🔄 tell me more')}</Text>
+          </Pressable>
+        ) : <View />}
+        <Pressable style={styles.askBtn} onPress={() => setShowChat(true)} hitSlop={6}>
+          <Text style={styles.askText}>{L('💬 Paisa se pucho', '💬 Ask Paisa')}</Text>
         </Pressable>
-      ) : null}
+      </View>
+
+      <PaisaChat visible={showChat} onClose={() => setShowChat(false)} />
     </View>
   );
 }
@@ -75,6 +84,9 @@ const makeStyles = (colors: ThemeColors) =>
     row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderLeftWidth: 3, borderRadius: radius.small, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, marginBottom: spacing.sm },
     rowEmoji: { fontSize: 20 },
     rowText: { flex: 1, fontSize: typography.small.fontSize, color: colors.text, fontWeight: '600', lineHeight: 19 },
-    moreBtn: { alignSelf: 'center', paddingVertical: spacing.sm, paddingHorizontal: spacing.lg, marginTop: spacing.xs },
+    actionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.xs },
+    moreBtn: { paddingVertical: spacing.sm, paddingHorizontal: spacing.sm },
     moreText: { fontSize: typography.small.fontSize, color: colors.textLight, fontWeight: '700' },
+    askBtn: { backgroundColor: colors.lavender, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, borderRadius: radius.buttons },
+    askText: { fontSize: typography.small.fontSize, color: colors.onAccent, fontWeight: '700' },
   });

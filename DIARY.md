@@ -3,6 +3,16 @@
 
 ---
 
+## Feature — Quick-add ✨ + "Paisa se pucho" chat 💬 (smart-local) — 3 Jul 2026
+**What:** Two more on-device "AI feel" pieces, both free/offline/no-key:
+- **Quick-add bar** on Home — type `chai 40` or `swiggy 350` → it reads the amount + guesses the category, shows a **live preview** (`samjha: ₹40 · 🍽️ Khaana Peena · chai`), and logs on **log**/enter. Wrong/no amount → a gentle hint.
+- **"Paisa se pucho 💬"** chat — a ChatGPT-style sheet (opened from the Paisa AI card) that answers questions from your own data: *"kitna kharcha hua?"*, *"kitna bacha?"*, *"makeup pe kitna?"*, *"sabse zyada kahan?"*, *"is hafte kitna?"*, income/savings — with tappable suggestion chips. An "offline" badge makes clear it's private.
+**Why:** Continuing the smart-local half of the hybrid AI plan (she has no budget for a paid key). These make the app *feel* conversational/intelligent without any LLM.
+**How:** Quick-add reuses the existing `parseSpokenExpense` (amount + merchant/label → category) with a local `cleanNote()` to strip amount words; `QuickAddBar.tsx` is self-contained (uses `addExpense`), mounted on Home above the alerts. The chat brain is a new pure util `paisaChat.ts` — `answerPaisa(question, data)` does rule-based **intent** (budget-left, income, savings, a specific category, biggest category, total spend, greeting) × **timeframe** (aaj/kal/is hafte/is mahine) detection over expenses/incomes/budget, all localized via `L()`. `PaisaChat.tsx` is the chat UI (message bubbles + suggestion chips + input), launched from a **💬 Paisa se pucho** button added to `PaisaAIFeed`.
+**Files changed:** `src/components/QuickAddBar.tsx` (new), `src/utils/paisaChat.ts` (new), `src/components/PaisaChat.tsx` (new), `src/components/PaisaAIFeed.tsx` (ask button + chat), `src/screens/HomeScreen.tsx` (mounts quick-add).
+**How to test on phone:** Home → in the ✨ bar type `chai 40` → preview shows ₹40 + Khaana Peena → tap **log** → it appears in RECENT + "logged babe 🌸". Try `swiggy 350`, `uber 120`, `nykaa 2k`, `2 hazaar rent`. Then Insights → Paisa AI card → **💬 Paisa se pucho** → tap a chip or type "makeup pe kitna?", "kitna bacha?", "is hafte kitna?". Toggle language → everything flips.
+**Next up:** (optional) real AI coach via a free Gemini/Groq key pasted in Settings — only if she wants it.
+
 ## Feature — Paisa AI ✨ (smart-local, no LLM) — 3 Jul 2026
 **What:** A "Paisa AI" card at the top of Insights that reads your spending and writes short, natural-language observations — e.g. *"is rate se budget 24 tarikh ko khatam ho jayega 💀"*, *"Tuesday tumhara sabse mehenga din"*, *"Food Delivery pe is mahine 40% zyada"*, *"is mahine kamai ka 30% bachaya 🐷"*, *"PMS week mein ~25% zyada"*. Shows 3 at a time; **"🔄 aur batao"** cycles through the rest. An "on-device" badge makes clear it's private.
 **Why:** She wanted the app to feel "AI-powered" but has no budget for a paid API key. So step 1 is the **smart-local** half of a planned hybrid: pure on-device pattern-detection that *feels* intelligent — free forever, offline, private, on-brand. (Step 2 later: an optional real AI coach powered by a **free** Gemini/Groq key she pastes in, only if she wants it.)

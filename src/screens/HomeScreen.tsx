@@ -8,6 +8,7 @@ import IncomeHistoryModal from './IncomeHistoryModal';
 import RegretAuditModal from './RegretAuditModal';
 import BillDuePrompt from './BillDuePrompt';
 import AlertList from '../components/AlertList';
+import QuickAddBar from '../components/QuickAddBar';
 import { useAppContext } from '../hooks/useAppContext';
 import { Expense } from '../types';
 import { spacing, radius, typography, ThemeColors } from '../constants/theme';
@@ -204,6 +205,9 @@ export default function HomeScreen() {
             <Text style={styles.bestieArrow}>💌</Text>
           </Pressable>
         ) : null}
+
+        {/* ── quick add: type "chai 40" ── */}
+        <QuickAddBar />
 
         {/* ── danger alerts ── */}
         <AlertList alerts={alerts} />
