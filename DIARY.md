@@ -3,6 +3,14 @@
 
 ---
 
+## Feature — AI Monthly Wrapped ✨ — 4 Jul 2026
+**What:** The Monthly Wrapped recap now gets an **AI-written paragraph** — a witty, Spotify-Wrapped-style summary of your month in the app's sassy Hinglish voice — when a Gemini key is set. It auto-writes when you open Wrapped, has a **🔄 dubara** to regenerate, and is **included in the share text**. No key → Wrapped works exactly as before (just the stat tiles).
+**Why:** She asked for it as the natural next step after the AI coach — turns the dry stat grid into something fun and personal that's actually shareable.
+**How:** Added `generateWrapped(key, facts, hinglish)` to `src/utils/gemini.ts` (a one-shot `generateOnce` helper + a Wrapped-specific persona: 3-4 punchy sentences, celebrate wins, tease gently, ₹ formatting, chosen language). `MonthlyWrappedModal` builds a plain-facts string from the month's stats (spent, budget over/under, top category, biggest buy, transactions, no-spend days, jail savings, top mood, regrets) and calls it; a `useEffect` auto-generates on open (resets on close), with loading ("Paisa tumhara mahina likh rahi hai…") / error+retry states, and the paragraph is prepended to the shared recap.
+**Files changed:** `src/utils/gemini.ts` (+`generateWrapped`/`generateOnce`), `src/screens/MonthlyWrappedModal.tsx` (AI recap card + share).
+**How to test on phone (needs a Gemini key + internet):** Set the AI coach key (Settings → AI COACH 🤖). Log a bunch of this-month spends. Insights ✿ → **✨ see your Monthly Wrapped** → an **AI recap ✨** box writes your month in a few lines → tap **🔄 dubara** for a fresh take → **share it** and the paragraph is in the message. Remove the key → Wrapped shows just the tiles (no AI box).
+**Next up:** whatever's next on her list 🌸
+
 ## Feature — Real AI coach 🤖 via free Gemini key (optional) — 3 Jul 2026
 **What:** The "Paisa se pucho 💬" chat can now be a **real conversational AI money coach**, powered by the user's **own free Google Gemini key**. In Settings 🎀 → **AI COACH 🤖**, she pastes a free key → it's tested live → saved. After that the same chat replies with real AI (sassy, non-judgmental Hinglish coach, grounded in her actual numbers). **No key = the chat stays 100% offline/private** (the rule-based brain from before). If an AI call fails (bad key / free-tier limit / no internet) the chat **gracefully falls back** to the offline answer with a small note.
 **Why:** She wanted a genuinely AI-powered coach but has **no budget** — so it uses a *free* key she controls, pasted into the app. Personal-use safe; nothing billed, nothing stored by us.

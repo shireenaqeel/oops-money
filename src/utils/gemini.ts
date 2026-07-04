@@ -107,3 +107,42 @@ export async function askGeminiCoach(key: string, history: CoachTurn[], userMsg:
 export async function testGeminiKey(key: string): Promise<CoachResult> {
   return askGeminiCoach(key, [], 'Say hi in one short line.', { expenses: [], incomes: [], budget: '', customCats: [] });
 }
+
+// One-shot helper that POSTs a system + user prompt and returns the text (used by Wrapped).
+async function generateOnce(key: string, system: string, user: string): Promise<CoachResult> {
+  const body = {
+    system_instruction: { parts: [{ text: system }] },
+    contents: [{ role: 'user', parts: [{ text: user }] }],
+    generationConfig: { temperature: 0.9, maxOutputTokens: 300 },
+  };
+  try {
+    const res = await fetch(`${ENDPOINT}?key=${encodeURIComponent(key)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      if (res.status === 400 || res.status === 403) return { ok: false, text: 'invalid-key' };
+      if (res.status === 429) return { ok: false, text: 'rate-limit' };
+      return { ok: false, text: 'error' };
+    }
+    const json = await res.json();
+    const text: string | undefined = json?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? '').join('') ?? undefined;
+    if (!text || !text.trim()) return { ok: false, text: 'empty' };
+    return { ok: true, text: text.trim() };
+  } catch {
+    return { ok: false, text: 'network' };
+  }
+}
+
+// Write a fun, Spotify-Wrapped-style recap paragraph from the month's facts.
+export async function generateWrapped(key: string, facts: string, hinglish: boolean): Promise<CoachResult> {
+  const system = `You write a fun, punchy monthly money "Wrapped" recap for "Oops Money", an expense app for young Indian women. Like Spotify Wrapped but for spending.
+Rules:
+- ${hinglish ? 'Write in Hinglish (Hindi + English mixed, Latin script only — never Devanagari).' : 'Write in English.'}
+- 3 to 4 short punchy sentences, one flowing paragraph. Sassy, warm, playful, NEVER shaming — hype her up and tease gently.
+- Money is Indian Rupees; use ₹ and Indian formatting.
+- Use ONLY the facts given; don't invent numbers. A couple of emojis are welcome.
+- End on an encouraging or cheeky note.`;
+  return generateOnce(key, system, `Here are my month's money facts:\n${facts}\n\nWrite my Wrapped recap.`);
+}
